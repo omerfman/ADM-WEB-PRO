@@ -8,7 +8,9 @@ const { collection, query, where, getDocs, addDoc, deleteDoc, doc } = window.fir
 
 // Open create company modal
 function openCreateCompanyModal() {
+  console.log('📢 openCreateCompanyModal called');
   const modal = document.getElementById('createCompanyModal');
+  console.log('📌 Modal element:', modal);
   if (modal) {
     modal.classList.remove('hidden');
     modal.classList.add('active');
@@ -23,6 +25,7 @@ function openCreateCompanyModal() {
 
 // Close create company modal
 function closeCreateCompanyModal() {
+  console.log('📢 closeCreateCompanyModal called');
   const modal = document.getElementById('createCompanyModal');
   if (modal) {
     modal.classList.add('hidden');
@@ -34,11 +37,14 @@ function closeCreateCompanyModal() {
 // Handle create company form submission
 async function handleCreateCompany(event) {
   event.preventDefault();
+  console.log('📢 handleCreateCompany called');
 
   const name = document.getElementById('companyName').value;
   const email = document.getElementById('companyEmail').value;
   const phone = document.getElementById('companyPhone').value;
   const address = document.getElementById('companyAddress').value;
+
+  console.log('📋 Form data:', { name, email, phone, address });
 
   if (!name || !email) {
     alert('Lütfen şirket adı ve email alanlarını doldurunuz');
@@ -46,13 +52,7 @@ async function handleCreateCompany(event) {
   }
 
   try {
-    // Check if email is already used
-    try {
-      await db.collection('companies').where('email', '==', email).limit(1).get();
-    } catch (e) {
-      // Firestore doesn't support where on non-indexed fields in some cases
-    }
-
+    console.log('💾 Creating company in Firestore...');
     // Create company in Firestore
     const companyRef = await addDoc(collection(db, 'companies'), {
       name: name,
@@ -64,6 +64,7 @@ async function handleCreateCompany(event) {
       status: 'active'
     });
 
+    console.log('✅ Company created:', companyRef.id);
     alert('✅ Şirket başarıyla oluşturuldu');
     closeCreateCompanyModal();
     loadCompanies(); // Refresh companies list
@@ -135,7 +136,7 @@ function renderCompaniesList(companies) {
       : '-';
 
     return `
-      <div class="company-card" style="
+      <div class="company-card" data-company-id="${company.id}" style="
         background: var(--card-bg);
         border: 1px solid var(--border-color);
         border-radius: 8px;
@@ -195,11 +196,13 @@ function renderCompaniesList(companies) {
 
 // Delete company
 async function deleteCompany(companyId) {
+  console.log('📢 deleteCompany called for:', companyId);
   if (!confirm('Bu şirketi silmek istediğinize emin misiniz?\n\n⚠️ Tüm ilişkili veriler (kullanıcılar, projeler) de silinecektir.')) {
     return;
   }
 
   try {
+    console.log('🗑️ Deleting company:', companyId);
     // Delete company
     await deleteDoc(doc(db, 'companies', companyId));
 
@@ -213,14 +216,215 @@ async function deleteCompany(companyId) {
 
 // Edit company (for future implementation)
 function editCompany(companyId) {
-  console.log('Editing company:', companyId);
-  alert('Şirket düzenleme özelliği yakında eklenecek');
+  console.log('📢 editCompany called for:', companyId);
+  
+  // Load company data
+  db.collection('companies').doc(companyId).get().then(doc => {
+    if (!doc.exists) {
+      alert('Şirket bulunamadı');
+      return;
+    }
+    
+    const company = doc.data();
+    
+    // Create edit modal
+    const modal = document.createElement('div');
+    modal.className = 'modal active';
+    modal.id = 'editCompanyModal';
+    modal.innerHTML = `
+      <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+          <h2>✏️ Şirketi Düzenle</h2>
+          <button class="modal-close" onclick="document.getElementById('editCompanyModal').remove()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="editCompanyForm" onsubmit="handleEditCompany(event, '${companyId}')">
+            <div class="form-group">
+              <label for="editCompanyName">Şirket Adı *</label>
+              <input type="text" id="editCompanyName" value="${company.name}" placeholder="Şirket adı" required>
+            </div>
+            <div class="form-group">
+              <label for="editCompanyEmail">Şirket E-posta *</label>
+              <input type="email" id="editCompanyEmail" value="${company.email}" placeholder="contact@company.com" required>
+            </div>
+            <div class="form-group">
+              <label for="editCompanyPhone">Telefon</label>
+              <input type="tel" id="editCompanyPhone" value="${company.phone || ''}" placeholder="+90 XXX XXX XXXX">
+            </div>
+            <div class="form-group">
+              <label for="editCompanyAddress">Adres</label>
+              <textarea id="editCompanyAddress" placeholder="Şirket adresi" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; height: 80px;">${company.address || ''}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Kaydet</button>
+          </form>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+  }).catch(error => {
+    console.error('❌ Error loading company:', error);
+    alert('Hata: ' + error.message);
+  });
+}
+
+// Handle edit company form submission
+async function handleEditCompany(event, companyId) {
+  event.preventDefault();
+  console.log('📢 handleEditCompany called for:', companyId);
+  
+  const name = document.getElementById('editCompanyName').value;
+  const email = document.getElementById('editCompanyEmail').value;
+  const phone = document.getElementById('editCompanyPhone').value;
+  const address = document.getElementById('editCompanyAddress').value;
+  
+  try {
+    console.log('💾 Updating company:', companyId);
+    await db.collection('companies').doc(companyId).update({
+      name: name,
+      email: email,
+      phone: phone || '',
+      address: address || '',
+      updatedAt: new Date(),
+      updatedBy: auth.currentUser.uid
+    });
+    
+    console.log('✅ Company updated');
+    alert('✅ Şirket başarıyla güncellendi');
+    
+    // Close modal
+    const modal = document.getElementById('editCompanyModal');
+    if (modal) modal.remove();
+    
+    // Reload companies
+    loadCompanies();
+  } catch (error) {
+    console.error('❌ Error updating company:', error);
+    alert('Hata: ' + error.message);
+  }
 }
 
 // View company users
 function viewCompanyUsers(companyId) {
-  console.log('Viewing users for company:', companyId);
-  alert('Şirket kullanıcılarını görüntüleme özelliği yakında eklenecek');
+  console.log('📢 viewCompanyUsers called for:', companyId);
+  
+  // Get company name
+  const companyCard = document.querySelector(`[data-company-id="${companyId}"]`);
+  const companyName = companyCard ? companyCard.textContent.split('\n')[0] : companyId;
+  
+  // Create a modal to show company users
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.id = 'companyUsersModal';
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width: 700px;">
+      <div class="modal-header">
+        <h2>📋 ${companyName} - Kullanıcılar</h2>
+        <button class="modal-close" onclick="document.getElementById('companyUsersModal').remove()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="companyUsersList" style="max-height: 400px; overflow-y: auto;">
+          <p style="text-align: center; color: #999;">Yükleniyor...</p>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  // Load company users
+  loadCompanyUsersList(companyId);
+}
+
+// Load company users list
+async function loadCompanyUsersList(companyId) {
+  try {
+    console.log('📥 Loading users for company:', companyId);
+    
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, where('companyId', '==', companyId));
+    const snapshot = await getDocs(q);
+    
+    const users = [];
+    snapshot.forEach(doc => {
+      users.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+    
+    console.log('✅ Loaded users:', users.length);
+    
+    const usersList = document.getElementById('companyUsersList');
+    if (!usersList) return;
+    
+    if (users.length === 0) {
+      usersList.innerHTML = '<p style="text-align: center; color: #999;">Bu şirkette henüz kullanıcı yok</p>';
+      return;
+    }
+    
+    usersList.innerHTML = users.map(user => `
+      <div style="
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      ">
+        <div>
+          <strong>${user.fullName || user.email}</strong>
+          <div style="font-size: 0.85rem; color: #999;">
+            ${user.email} • ${user.role}
+          </div>
+        </div>
+        <div style="display: flex; gap: 5px;">
+          <button onclick="deleteUserFromCompany('${user.id}')" style="
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+          ">Sil</button>
+        </div>
+      </div>
+    `).join('');
+    
+  } catch (error) {
+    console.error('❌ Error loading company users:', error);
+    const usersList = document.getElementById('companyUsersList');
+    if (usersList) {
+      usersList.innerHTML = '<p style="text-align: center; color: #f44336;">Hata: ' + error.message + '</p>';
+    }
+  }
+}
+
+// Delete user from company
+async function deleteUserFromCompany(userId) {
+  if (!confirm('Bu kullanıcıyı silmek istediğinize emin misiniz?')) {
+    return;
+  }
+  
+  try {
+    console.log('🗑️ Deleting user:', userId);
+    await deleteDoc(doc(db, 'users', userId));
+    
+    alert('✅ Kullanıcı başarıyla silindi');
+    
+    // Refresh the list
+    const companyCard = document.querySelector('[data-company-id]');
+    if (companyCard) {
+      const companyId = companyCard.getAttribute('data-company-id');
+      loadCompanyUsersList(companyId);
+    }
+  } catch (error) {
+    console.error('❌ Error deleting user:', error);
+    alert('Hata: ' + error.message);
+  }
 }
 
 // Export functions to window for global access
@@ -230,4 +434,7 @@ window.handleCreateCompany = handleCreateCompany;
 window.loadCompanies = loadCompanies;
 window.deleteCompany = deleteCompany;
 window.editCompany = editCompany;
+window.handleEditCompany = handleEditCompany;
 window.viewCompanyUsers = viewCompanyUsers;
+window.loadCompanyUsersList = loadCompanyUsersList;
+window.deleteUserFromCompany = deleteUserFromCompany;

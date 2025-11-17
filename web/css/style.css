@@ -343,9 +343,14 @@ header nav button:hover {
   padding: 1rem;
 }
 
-.modal.show {
+.modal.show,
+.modal.active {
   display: flex;
   animation: fadeIn 0.3s ease;
+}
+
+.modal.hidden {
+  display: none !important;
 }
 
 @keyframes fadeIn {
