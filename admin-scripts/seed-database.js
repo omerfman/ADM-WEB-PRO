@@ -7,14 +7,36 @@
 
 require('dotenv').config();
 const admin = require('firebase-admin');
+const path = require('path');
+const fs = require('fs');
 
 // Initialize Firebase Admin
-const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
-  ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
-  : null;
+let serviceAccountKey = null;
+
+// Try to get from .env first
+if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+  try {
+    serviceAccountKey = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+  } catch (e) {
+    console.warn('⚠️ Could not parse FIREBASE_SERVICE_ACCOUNT_KEY from .env');
+  }
+}
+
+// If not in .env, try to load from file
+if (!serviceAccountKey) {
+  try {
+    const keyPath = path.join(__dirname, '..', 'serviceAccountKey.json');
+    if (fs.existsSync(keyPath)) {
+      serviceAccountKey = require(keyPath);
+      console.log('✅ Loaded serviceAccountKey.json from file');
+    }
+  } catch (e) {
+    console.error('❌ Could not load serviceAccountKey.json:', e.message);
+  }
+}
 
 if (!serviceAccountKey) {
-  console.error('❌ FIREBASE_SERVICE_ACCOUNT_KEY not found in .env file');
+  console.error('❌ FIREBASE_SERVICE_ACCOUNT_KEY not found in .env or serviceAccountKey.json file');
   process.exit(1);
 }
 

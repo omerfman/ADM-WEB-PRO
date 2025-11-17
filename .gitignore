@@ -36,3 +36,4 @@ secrets/
 # Temporary
 tmp/
 temp/
+.vercel

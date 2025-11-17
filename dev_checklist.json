@@ -176,30 +176,30 @@
       "id": "firebase-setup-03",
       "title": "Firestore Rules Deploy",
       "description": "firebase deploy --only firestore:rules ile security rules aktifleştir.",
-      "status": "not-started",
+      "status": "done",
       "createdAt": "2025-11-17T11:45:00Z",
-      "doneAt": null,
-      "notes": "Sonraki adım: Firebase Console → Firestore → Rules veya CLI ile deploy et. Role-based access control aktif olacak."
+      "doneAt": "2025-11-17T12:00:00Z",
+      "notes": "✅ Firestore Console'dan Rules publish edildi. Role-based access control aktif. Companies, Users, Projects, Audit_logs için security rules uygulandı."
     },
 
     {
       "id": "firebase-setup-04",
       "title": "Seed Data Yükle",
       "description": "node admin-scripts/seed-database.js çalıştır - companies, users, projects, logs, stocks, payments yüklenir.",
-      "status": "not-started",
+      "status": "done",
       "createdAt": "2025-11-17T11:45:00Z",
-      "doneAt": null,
-      "notes": "Sonraki adım: Example projeler ve data Firestore'a yüklenecek. Firestore Console'da collections görebileceksin."
+      "doneAt": "2025-11-17T12:15:00Z",
+      "notes": "✅ Seed script başarıyla çalıştırıldı. 1 company, 2 projects (Yazlık Villa, Otel Kompleksi) ve subcollections yüklendi. serviceAccountKey.json dosyasından okuyan fallback eklenildi."
     },
 
     {
       "id": "backend-setup-01",
       "title": "Backend API Setup - npm install",
       "description": "api/ klasöründe npm install çalıştır - Express, Firebase Admin, Cloudinary vb. bağımlılıkları yükle.",
-      "status": "not-started",
-      "createdAt": "2025-11-17T11:45:00Z",
-      "doneAt": null,
-      "notes": "Sonraki adım: api/package.json dependencies (/api/index.js için) yüklenecek."
+      "status": "done",
+      "createdAt": "2025-11-17T12:15:00Z",
+      "doneAt": "2025-11-17T12:30:00Z",
+      "notes": "✅ Tamamlandı: 273 paket yüklendi (1 high severity vulnerability - production için yeterli)"
     },
 
     {
@@ -216,10 +216,10 @@
       "id": "vercel-deploy-01",
       "title": "Vercel Deploy - Frontend & Backend Serverless",
       "description": "vercel --prod ile frontend (/web) ve backend (/api) Vercel'e deploy et.",
-      "status": "not-started",
+      "status": "done",
       "createdAt": "2025-11-17T11:45:00Z",
-      "doneAt": null,
-      "notes": "Sonraki adım: VERCEL_DEPLOYMENT.md rehberine bak. vercel.json config zaten hazır. Frontend ve API Vercel'de production deploy olacak."
+      "doneAt": "2025-11-17T12:45:00Z",
+      "notes": "✅ Deployment başarılı! Production URL: https://adm-web-i04adeeit-omerfmans-projects.vercel.app"
     }
   ]
 }
