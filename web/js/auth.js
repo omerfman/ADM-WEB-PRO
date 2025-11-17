@@ -1,4 +1,7 @@
 // Authentication Management
+// Firebase modular SDK uyumluluğu
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { auth, db } from "./firebase-config.js";
 
 async function handleLogin(event) {
   event.preventDefault();
@@ -7,7 +10,7 @@ async function handleLogin(event) {
   const password = document.getElementById('password').value;
   
   try {
-    const userCredential = await auth.signInWithEmailAndPassword(email, password);
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
     console.log('✅ Kullanıcı giriş yaptı:', userCredential.user.email);
     showAlert('Giriş başarılı!', 'success');
     await loadUserData();
@@ -20,7 +23,7 @@ async function handleLogin(event) {
 
 async function handleLogout() {
   try {
-    await auth.signOut();
+    await signOut(auth);
     console.log('✅ Kullanıcı çıkış yaptı');
     showAlert('Çıkış yapıldı', 'success');
     showLoginForm();
@@ -57,7 +60,7 @@ async function loadUserData() {
 }
 
 // Auth state listener
-auth.onAuthStateChanged(async (user) => {
+onAuthStateChanged(auth, async (user) => {
   if (user) {
     console.log('👤 Kullanıcı oturum açık:', user.email);
     await loadUserData();

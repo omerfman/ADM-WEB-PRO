@@ -1,4 +1,9 @@
-// Projects Management
+// Projects Management - Firebase Modular SDK v10.7.1
+import { auth, db } from "./firebase-config.js";
+import {
+  collection, query, where, orderBy, limit, getDocs,
+  doc, getDoc, addDoc, deleteDoc, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 let currentProjectId = null;
 let projects = [];
@@ -10,86 +15,113 @@ async function loadProjects() {
   try {
     const user = auth.currentUser;
     if (!user) {
-      console.warn('⚠️ User not authenticated');
+      console.warn('⚠️ Kullanıcı giriş yapmamış');
       return;
     }
 
-    // Get user's company ID (for demo, use 'default-company')
-    const userDoc = await db.collection('users').doc(user.uid).get();
-    const companyId = userDoc.data()?.companyId || 'default-company';
+    // Get user's company ID
+    const userDocRef = doc(db, 'users', user.uid);
+    const userDocSnap = await getDoc(userDocRef);
+    const companyId = userDocSnap.data()?.companyId || 'default-company';
 
-    // Query projects for user's company
-    const snapshot = await db.collection('projects')
-      .where('companyId', '==', companyId)
-      .orderBy('createdAt', 'desc')
-      .get();
+    // Query projects
+    const projectsRef = collection(db, 'projects');
+    const q = query(
+      projectsRef,
+      where('companyId', '==', companyId),
+      orderBy('createdAt', 'desc')
+    );
 
+    const snapshot = await getDocs(q);
     projects = [];
-    snapshot.forEach(doc => {
-      projects.push({ id: doc.id, ...doc.data() });
+    snapshot.forEach(docSnap => {
+      projects.push({ id: docSnap.id, ...docSnap.data() });
     });
 
-    console.log(`✅ ${projects.length} projects loaded for company: ${companyId}`);
-    renderProjectsList(projects);
+    renderProjectsList();
+    console.log(`✅ ${projects.length} proje yüklendi`);
   } catch (error) {
-    console.error('❌ Error loading projects:', error);
+    console.error('❌ Projeler yüklenirken hata:', error);
     showAlert('Projeler yüklenemedi: ' + error.message, 'danger');
   }
 }
 
 /**
- * Render projects list in the dashboard
+ * Render projects list
  */
-function renderProjectsList(projectsList) {
-  const container = document.getElementById('projectsList');
-  container.innerHTML = '';
+function renderProjectsList() {
+  const projectsList = document.getElementById('projectsList');
+  projectsList.innerHTML = '';
 
-  if (projectsList.length === 0) {
-    container.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999;">Henüz proje oluşturulmamış</p>';
+  if (projects.length === 0) {
+    projectsList.innerHTML = '<p style="color: #999; grid-column: 1/-1;">Henüz proje yok. + Yeni Proje butonuna tıklayın.</p>';
     return;
   }
 
-  projectsList.forEach(project => {
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.style.cursor = 'pointer';
-    
-    const progressBarColor = project.progress >= 75 ? '#27ae60' : 
-                            project.progress >= 50 ? '#f39c12' : '#e74c3c';
-    
-    card.innerHTML = `
-      <h3>${project.name}</h3>
-      <p><strong>Konum:</strong> ${project.location}</p>
-      <p style="color: #7f8c8d; font-size: 0.9rem;">${project.description}</p>
-      <div style="margin: 1rem 0;">
-        <small>İlerleme: ${project.progress}%</small>
-        <div style="width: 100%; height: 8px; background: #ecf0f1; border-radius: 4px; margin-top: 0.5rem; overflow: hidden;">
-          <div style="width: ${project.progress}%; height: 100%; background: ${progressBarColor};"></div>
-        </div>
+  projects.forEach(project => {
+    const projectCard = document.createElement('div');
+    projectCard.className = 'project-card';
+    projectCard.style.cssText = 'padding: 1.5rem; border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg); cursor: pointer; transition: box-shadow 0.3s;';
+    projectCard.onmouseover = () => projectCard.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+    projectCard.onmouseout = () => projectCard.style.boxShadow = 'none';
+    projectCard.onclick = () => openProjectDetail(project.id);
+
+    const status = project.status || 'planning';
+    const statusColors = {
+      'planning': '#FFA500',
+      'active': '#4CAF50',
+      'paused': '#FF9800',
+      'completed': '#2196F3'
+    };
+
+    projectCard.innerHTML = `
+      <h4 style="margin: 0 0 0.5rem 0; color: var(--primary-color);">${project.name || 'Unnamed'}</h4>
+      <p style="margin: 0.5rem 0; color: #666; font-size: 0.9rem;">${project.location || 'No location'}</p>
+      <p style="margin: 0.5rem 0; color: #666; font-size: 0.9rem;">${project.description || ''}</p>
+      <div style="display: flex; justify-content: space-between; margin-top: 1rem; align-items: center;">
+        <span style="background: ${statusColors[status]}; color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">
+          ${status.toUpperCase()}
+        </span>
+        <small style="color: #999;">${new Date(project.createdAt?.toDate?.() || new Date()).toLocaleDateString('tr-TR')}</small>
       </div>
-      <small style="color: #999;">Durum: <strong>${project.status}</strong></small>
     `;
-    card.onclick = () => openProjectDetail(project);
-    container.appendChild(card);
+    projectsList.appendChild(projectCard);
   });
 }
 
 /**
  * Open project detail modal
  */
-function openProjectDetail(project) {
-  currentProjectId = project.id;
-  document.getElementById('projectTitle').textContent = project.name;
+async function openProjectDetail(projectId) {
+  try {
+    const projectRef = doc(db, 'projects', projectId);
+    const projectSnap = await getDoc(projectRef);
 
-  // Show first tab (logs)
-  switchTab('logs');
+    if (!projectSnap.exists()) {
+      showAlert('Proje bulunamadı', 'danger');
+      return;
+    }
 
-  // Load project details
-  loadProjectLogs(project.id);
-  loadProjectStocks(project.id);
-  loadProjectPayments(project.id);
+    const project = projectSnap.data();
+    currentProjectId = projectId;
 
-  document.getElementById('projectDetailModal').classList.add('show');
+    // Update modal
+    document.getElementById('projectTitle').textContent = project.name;
+    document.getElementById('projectDetailDesc').textContent = project.description || 'Açıklama yok';
+    document.getElementById('projectDetailLocation').textContent = project.location || 'Lokasyon belirtilmemiş';
+
+    // Load tab contents
+    await loadProjectLogs(projectId);
+    await loadProjectStocks(projectId);
+    await loadProjectPayments(projectId);
+
+    // Show modal
+    document.getElementById('projectDetailModal').classList.add('show');
+    console.log(`✅ Proje açıldı: ${projectId}`);
+  } catch (error) {
+    console.error('❌ Proje açılırken hata:', error);
+    showAlert('Proje yüklenemedi: ' + error.message, 'danger');
+  }
 }
 
 /**
@@ -101,7 +133,7 @@ function closeProjectModal() {
 }
 
 /**
- * Switch between tabs in project detail
+ * Switch between tabs
  */
 function switchTab(tabName) {
   // Hide all tabs
@@ -109,7 +141,7 @@ function switchTab(tabName) {
     tab.classList.add('hidden');
   });
 
-  // Remove active state from buttons
+  // Remove active from buttons
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.style.borderBottom = 'none';
   });
@@ -119,7 +151,8 @@ function switchTab(tabName) {
   if (tabElement) {
     tabElement.classList.remove('hidden');
   }
-  
+
+  // Mark button as active
   const btnElement = document.querySelector('[data-tab="' + tabName + '"]');
   if (btnElement) {
     btnElement.style.borderBottom = '3px solid var(--accent-color)';
@@ -131,11 +164,9 @@ function switchTab(tabName) {
  */
 async function loadProjectLogs(projectId) {
   try {
-    const snapshot = await db.collection('projects').doc(projectId)
-      .collection('logs')
-      .orderBy('createdAt', 'desc')
-      .limit(10)
-      .get();
+    const logsRef = collection(db, 'projects', projectId, 'logs');
+    const q = query(logsRef, orderBy('createdAt', 'desc'), limit(10));
+    const snapshot = await getDocs(q);
 
     const logsList = document.getElementById('logsList');
     logsList.innerHTML = '';
@@ -145,23 +176,23 @@ async function loadProjectLogs(projectId) {
       return;
     }
 
-    snapshot.forEach(doc => {
-      const log = doc.data();
+    snapshot.forEach(docSnap => {
+      const log = docSnap.data();
       const logItem = document.createElement('div');
       logItem.style.cssText = 'padding: 0.75rem; border-bottom: 1px solid var(--border-color); font-size: 0.9rem;';
       logItem.innerHTML = `
-        <strong style="color: var(--primary-color);">${log.title}</strong>
-        <br>${log.description}
+        <strong style="color: var(--primary-color);">${log.title || 'Untitled'}</strong>
+        <br>${log.description || ''}
         <br><small style="color: #999;">
-          ${new Date(log.createdAt.toDate()).toLocaleDateString('tr-TR')} — ${log.createdBy}
+          ${new Date(log.createdAt?.toDate?.() || new Date()).toLocaleDateString('tr-TR')} — ${log.createdBy || 'Unknown'}
         </small>
       `;
       logsList.appendChild(logItem);
     });
 
-    console.log(`✅ ${snapshot.size} logs loaded`);
+    console.log(`✅ ${snapshot.size} log yüklendi`);
   } catch (error) {
-    console.error('❌ Error loading logs:', error);
+    console.error('❌ Loglar yüklenirken hata:', error);
     document.getElementById('logsList').innerHTML = '<p style="color: red;">Loglar yüklenemedi</p>';
   }
 }
@@ -171,10 +202,9 @@ async function loadProjectLogs(projectId) {
  */
 async function loadProjectStocks(projectId) {
   try {
-    const snapshot = await db.collection('projects').doc(projectId)
-      .collection('stocks')
-      .orderBy('lastUpdated', 'desc')
-      .get();
+    const stocksRef = collection(db, 'projects', projectId, 'stocks');
+    const q = query(stocksRef, orderBy('lastUpdated', 'desc'));
+    const snapshot = await getDocs(q);
 
     const stocksList = document.getElementById('stocksList');
     stocksList.innerHTML = '';
@@ -184,21 +214,21 @@ async function loadProjectStocks(projectId) {
       return;
     }
 
-    snapshot.forEach(doc => {
-      const stock = doc.data();
+    snapshot.forEach(docSnap => {
+      const stock = docSnap.data();
       const stockItem = document.createElement('div');
       stockItem.style.cssText = 'padding: 0.75rem; border-bottom: 1px solid var(--border-color); font-size: 0.9rem;';
       stockItem.innerHTML = `
-        <strong>${stock.name}</strong>
-        <br>Miktar: ${stock.quantity} ${stock.unit} | Birim Fiyat: ₺${stock.unitPrice.toLocaleString('tr-TR')}
-        <br>Tedarikçi: ${stock.supplier} | Durum: <span style="color: ${stock.status === 'in_stock' ? 'green' : 'orange'}">${stock.status}</span>
+        <strong>${stock.name || 'Unnamed'}</strong>
+        <br>Miktar: ${stock.quantity || 0} ${stock.unit || ''} | Birim Fiyat: ₺${(stock.unitPrice || 0).toLocaleString('tr-TR')}
+        <br>Tedarikçi: ${stock.supplier || 'N/A'} | Durum: <span style="color: ${stock.status === 'in_stock' ? 'green' : 'orange'}">${stock.status || 'unknown'}</span>
       `;
       stocksList.appendChild(stockItem);
     });
 
-    console.log(`✅ ${snapshot.size} stocks loaded`);
+    console.log(`✅ ${snapshot.size} malzeme yüklendi`);
   } catch (error) {
-    console.error('❌ Error loading stocks:', error);
+    console.error('❌ Malzemeler yüklenirken hata:', error);
     document.getElementById('stocksList').innerHTML = '<p style="color: red;">Malzemeler yüklenemedi</p>';
   }
 }
@@ -208,10 +238,9 @@ async function loadProjectStocks(projectId) {
  */
 async function loadProjectPayments(projectId) {
   try {
-    const snapshot = await db.collection('projects').doc(projectId)
-      .collection('payments')
-      .orderBy('dueDate', 'desc')
-      .get();
+    const paymentsRef = collection(db, 'projects', projectId, 'payments');
+    const q = query(paymentsRef, orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
 
     const paymentsList = document.getElementById('paymentsList');
     paymentsList.innerHTML = '';
@@ -221,61 +250,22 @@ async function loadProjectPayments(projectId) {
       return;
     }
 
-    snapshot.forEach(doc => {
-      const payment = doc.data();
-      const statusColor = payment.status === 'paid' ? 'green' : 
-                         payment.status === 'pending' ? 'orange' : 'red';
-      
+    snapshot.forEach(docSnap => {
+      const payment = docSnap.data();
       const paymentItem = document.createElement('div');
       paymentItem.style.cssText = 'padding: 0.75rem; border-bottom: 1px solid var(--border-color); font-size: 0.9rem;';
       paymentItem.innerHTML = `
-        <strong>₺${payment.amount.toLocaleString('tr-TR')} — ${payment.description}</strong>
-        <br>Durum: <span style="color: ${statusColor}; font-weight: bold;">${payment.status}</span> | Fatura: ${payment.invoiceNumber}
-        <br><small style="color: #999;">
-          Vade: ${new Date(payment.dueDate.toDate()).toLocaleDateString('tr-TR')}
-          ${payment.status === 'paid' ? ' | Ödeme: ' + new Date(payment.paidDate.toDate()).toLocaleDateString('tr-TR') : ''}
-        </small>
+        <strong>${payment.description || 'Unnamed'}</strong>
+        <br>Tutar: ₺${(payment.amount || 0).toLocaleString('tr-TR')} | Tarih: ${new Date(payment.createdAt?.toDate?.() || new Date()).toLocaleDateString('tr-TR')}
+        <br>Durum: <span style="color: ${payment.status === 'paid' ? 'green' : 'orange'}">${payment.status || 'pending'}</span>
       `;
       paymentsList.appendChild(paymentItem);
     });
 
-    console.log(`✅ ${snapshot.size} payments loaded`);
+    console.log(`✅ ${snapshot.size} ödeme yüklendi`);
   } catch (error) {
-    console.error('❌ Error loading payments:', error);
+    console.error('❌ Ödemeler yüklenirken hata:', error);
     document.getElementById('paymentsList').innerHTML = '<p style="color: red;">Ödemeler yüklenemedi</p>';
-  }
-}
-
-/**
- * Add log entry
- */
-function addLog() {
-  const text = prompt('Log metnini girin:');
-  if (text) {
-    console.log('📝 New log would be added:', text);
-    showAlert('Log ekleme özelliği yakında gelecek', 'warning');
-  }
-}
-
-/**
- * Add stock entry
- */
-function addStock() {
-  const name = prompt('Malzeme adı:');
-  if (name) {
-    console.log('📦 New stock would be added:', name);
-    showAlert('Malzeme ekleme özelliği yakında gelecek', 'warning');
-  }
-}
-
-/**
- * Add payment entry
- */
-function addPayment() {
-  const amount = prompt('Ödeme tutarı:');
-  if (amount) {
-    console.log('💰 New payment would be added:', amount);
-    showAlert('Ödeme ekleme özelliği yakında gelecek', 'warning');
   }
 }
 
@@ -312,11 +302,13 @@ async function handleCreateProject(event) {
     }
 
     // Get user's company ID
-    const userDoc = await db.collection('users').doc(user.uid).get();
-    const companyId = userDoc.data()?.companyId || 'default-company';
+    const userDocRef = doc(db, 'users', user.uid);
+    const userDocSnap = await getDoc(userDocRef);
+    const companyId = userDocSnap.data()?.companyId || 'default-company';
 
-    // Create project in Firestore
-    const projectRef = await db.collection('projects').add({
+    // Create project
+    const projectRef = collection(db, 'projects');
+    const newProjectRef = await addDoc(projectRef, {
       name,
       description: desc,
       location,
@@ -324,35 +316,37 @@ async function handleCreateProject(event) {
       status: 'planning',
       budget: 0,
       currency: 'TRY',
-      startDate: admin.firestore.Timestamp.now(),
       createdBy: user.uid,
-      createdAt: admin.firestore.Timestamp.now(),
-      updatedAt: admin.firestore.Timestamp.now(),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
       progress: 0,
-      tags: [],
+      tags: []
     });
 
-    // Write to audit log
-    await db.collection('audit_logs').add({
-      action: 'create',
-      entity: 'project',
-      entityId: projectRef.id,
-      entityName: name,
-      companyId,
-      performedBy: user.uid,
-      performedByName: user.displayName || user.email,
-      performedByEmail: user.email,
-      timestamp: admin.firestore.Timestamp.now(),
-      changes: {},
+    // Log action
+    const auditRef = collection(db, 'audit_logs');
+    await addDoc(auditRef, {
+      action: 'CREATE_PROJECT',
+      userId: user.uid,
+      projectId: newProjectRef.id,
+      details: { projectName: name },
+      timestamp: serverTimestamp()
     });
 
-    console.log('✅ Project created:', projectRef.id);
     showAlert('Proje başarıyla oluşturuldu!', 'success');
     closeCreateProjectModal();
     await loadProjects();
   } catch (error) {
-    console.error('❌ Error creating project:', error);
+    console.error('❌ Proje oluşturulamadı:', error);
     showAlert('Proje oluşturulamadı: ' + error.message, 'danger');
   }
 }
 
+// Export functions for global use
+window.loadProjects = loadProjects;
+window.openProjectDetail = openProjectDetail;
+window.closeProjectModal = closeProjectModal;
+window.switchTab = switchTab;
+window.openCreateProjectModal = openCreateProjectModal;
+window.closeCreateProjectModal = closeCreateProjectModal;
+window.handleCreateProject = handleCreateProject;
