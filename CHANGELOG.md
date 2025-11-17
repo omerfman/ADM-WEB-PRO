@@ -6,6 +6,8 @@ Tüm önemli değişiklikler bu dosyada kaydedilecektir.
 
 ### 2025-11-17
 
+- **Vercel Migration** — Claude-agent: Render'den Vercel'e geçiş yapıldı. `/api/index.js` oluşturuldu (Express uygulaması Vercel Serverless Functions için), `vercel.json` konfigürasyonu eklendi (frontend SPA rewrites, API routes), `web/js/config-vercel.js` oluşturuldu (ortama göre API URL yönetimi: development, staging, production), `api/package.json` Backend bağımlılıkları için oluşturuldu, `.env.example` Firebase Service Account detayları ile güncelleştirildi, `VERCEL_DEPLOYMENT.md` kapsamlı Vercel deployment rehberi oluşturuldu, README.md Vercel deployment talimatları ile güncellendi.
+
 - **Initial Setup** — Claude-agent: Proje yapısı oluşturuldu (web/, admin-api/, admin-scripts/), dev_checklist.json ve CHANGELOG.md dosyaları başlatıldı, .gitignore yapılandırıldı.
 
 - **Frontend Scaffold** — Claude-agent: index.html, CSS (style.css), ve JavaScript modülleri (auth.js, projects.js, app.js) oluşturuldu. Login formu, dashboard, proje listesi, ve proje detay modali (3 tab: Loglar, Malzemeler, Ödemeler) tamamlandı.
