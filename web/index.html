@@ -59,34 +59,157 @@
         <button class="modal-close" onclick="closeProjectModal()">&times;</button>
       </div>
       <div class="modal-body">
+        <p style="margin: 0.5rem 0; color: #666;"><strong>Konum:</strong> <span id="projectDetailLocation"></span></p>
+        <p style="margin: 0.5rem 0; color: #666;"><strong>Açıklama:</strong> <span id="projectDetailDesc"></span></p>
+        
         <!-- Tabs -->
-        <div style="border-bottom: 2px solid var(--border-color); margin-bottom: 1rem;">
-          <button class="tab-btn" data-tab="logs" style="background: none; border: none; padding: 0.75rem 1rem; cursor: pointer; font-weight: 500;" onclick="switchTab('logs')">📋 Loglar</button>
-          <button class="tab-btn" data-tab="stocks" style="background: none; border: none; padding: 0.75rem 1rem; cursor: pointer; font-weight: 500;" onclick="switchTab('stocks')">📦 Malzemeler</button>
-          <button class="tab-btn" data-tab="payments" style="background: none; border: none; padding: 0.75rem 1rem; cursor: pointer; font-weight: 500;" onclick="switchTab('payments')">💰 Ödemeler</button>
+        <div style="border-bottom: 2px solid var(--border-color); margin: 1.5rem 0 1rem 0;">
+          <button class="tab-btn" data-tab="logs" style="background: none; border: none; padding: 0.75rem 1rem; cursor: pointer; font-weight: 500; color: var(--primary-color);" onclick="switchTab('logs')">📋 Şantiye Günlüğü</button>
+          <button class="tab-btn" data-tab="stocks" style="background: none; border: none; padding: 0.75rem 1rem; cursor: pointer; font-weight: 500;" onclick="switchTab('stocks')">📦 Stok</button>
+          <button class="tab-btn" data-tab="payments" style="background: none; border: none; padding: 0.75rem 1rem; cursor: pointer; font-weight: 500;" onclick="switchTab('payments')">💰 Hakediş</button>
         </div>
 
         <!-- Tab Contents -->
         <div id="logs-tab" class="tab-content">
-          <h4>Proje Logları</h4>
-          <div id="logsList" style="max-height: 300px; overflow-y: auto;"></div>
-          <button class="btn btn-secondary" onclick="addLog()" style="width: auto; margin-top: 1rem;">+ Log Ekle</button>
+          <h4 style="margin-top: 0;">Şantiye Günlüğü</h4>
+          <div id="logsList" style="max-height: 300px; overflow-y: auto; margin-bottom: 1rem;"></div>
+          <button class="btn btn-secondary" onclick="openAddLogModal()" style="width: auto; margin-top: 1rem;">+ Log Ekle</button>
         </div>
 
         <div id="stocks-tab" class="tab-content hidden">
-          <h4>Malzeme Stokları</h4>
-          <div id="stocksList" style="max-height: 300px; overflow-y: auto;"></div>
-          <button class="btn btn-secondary" onclick="addStock()" style="width: auto; margin-top: 1rem;">+ Malzeme Ekle</button>
+          <h4 style="margin-top: 0;">Stok Takibi</h4>
+          <div id="stocksList" style="max-height: 300px; overflow-y: auto; margin-bottom: 1rem;"></div>
+          <button class="btn btn-secondary" onclick="openAddStockModal()" style="width: auto; margin-top: 1rem;">+ Ürün Ekle</button>
         </div>
 
         <div id="payments-tab" class="tab-content hidden">
-          <h4>Ödeme Kayıtları</h4>
-          <div id="paymentsList" style="max-height: 300px; overflow-y: auto;"></div>
-          <button class="btn btn-secondary" onclick="addPayment()" style="width: auto; margin-top: 1rem;">+ Ödeme Ekle</button>
+          <h4 style="margin-top: 0;">Hakediş Listesi</h4>
+          <div id="paymentsList" style="max-height: 300px; overflow-y: auto; margin-bottom: 1rem;"></div>
+          <div style="padding: 1rem; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 1rem;">
+            <strong>Toplam Hakediş: ₺<span id="totalPayments">0</span></strong>
+          </div>
+          <button class="btn btn-secondary" onclick="openAddPaymentModal()" style="width: auto; margin-top: 1rem;">+ Hakediş Ekle</button>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeProjectModal()">Kapat</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Log Modal -->
+  <div id="addLogModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Şantiye Günlüğü Ekle</h2>
+        <button class="modal-close" onclick="closeAddLogModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="addLogForm" onsubmit="handleAddLog(event)">
+          <div class="form-group">
+            <label for="logTitle">Yapılan İş *</label>
+            <input type="text" id="logTitle" placeholder="Örn: Temel kazısı tamamlandı" required>
+          </div>
+          <div class="form-group">
+            <label for="logDescription">Açıklama</label>
+            <textarea id="logDescription" placeholder="Detaylı açıklama (opsiyonel)" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; height: 100px;"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="logWorker">İşçi/Sorumluluk *</label>
+            <input type="text" id="logWorker" placeholder="Yapan kişi adı" required>
+          </div>
+          <div class="form-group">
+            <label for="logPhoto">Fotoğraf (opsiyonel)</label>
+            <input type="file" id="logPhoto" accept="image/*">
+            <small style="color: #999;">Max 5MB</small>
+          </div>
+          <button type="submit" class="btn btn-primary">Kaydet</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Stock Modal -->
+  <div id="addStockModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Stok Ekle</h2>
+        <button class="modal-close" onclick="closeAddStockModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="addStockForm" onsubmit="handleAddStock(event)">
+          <div class="form-group">
+            <label for="stockName">Ürün Adı *</label>
+            <input type="text" id="stockName" placeholder="Örn: Çimento, Çelik, Ahşap" required>
+          </div>
+          <div class="form-group">
+            <label for="stockUnit">Birim *</label>
+            <select id="stockUnit" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px;">
+              <option value="">Seç</option>
+              <option value="kg">Kg</option>
+              <option value="lt">Lt</option>
+              <option value="m">Metre</option>
+              <option value="m2">m²</option>
+              <option value="m3">m³</option>
+              <option value="adet">Adet</option>
+              <option value="ton">Ton</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="stockQuantity">Miktar *</label>
+            <input type="number" id="stockQuantity" placeholder="0" min="0" step="0.01" required>
+          </div>
+          <div class="form-group">
+            <label for="stockUnitPrice">Birim Fiyat (₺) *</label>
+            <input type="number" id="stockUnitPrice" placeholder="0" min="0" step="0.01" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Kaydet</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Payment Modal -->
+  <div id="addPaymentModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Hakediş Ekle</h2>
+        <button class="modal-close" onclick="closeAddPaymentModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="addPaymentForm" onsubmit="handleAddPayment(event)">
+          <div class="form-group">
+            <label for="paymentDescription">Yapılan İş *</label>
+            <input type="text" id="paymentDescription" placeholder="Örn: İnsan günü, Makine kiralama" required>
+          </div>
+          <div class="form-group">
+            <label for="paymentWorker">Kimin Yaptığı *</label>
+            <input type="text" id="paymentWorker" placeholder="İşçi/Müteahhit adı" required>
+          </div>
+          <div class="form-group">
+            <label for="paymentUnit">Birim *</label>
+            <select id="paymentUnit" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px;">
+              <option value="">Seç</option>
+              <option value="Insan Gunu">İnsan Günü</option>
+              <option value="Makine Saati">Makine Saati</option>
+              <option value="Makine Gunu">Makine Günü</option>
+              <option value="Proje">Proje Taşıma (toplamı)</option>
+              <option value="Adet">Adet</option>
+              <option value="m">Metre</option>
+              <option value="m2">m²</option>
+              <option value="m3">m³</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="paymentAmount">Birim Fiyatı (₺) *</label>
+            <input type="number" id="paymentAmount" placeholder="0" min="0" step="0.01" required>
+          </div>
+          <div class="form-group">
+            <label for="paymentQuantity">Miktar *</label>
+            <input type="number" id="paymentQuantity" placeholder="1" min="0.01" step="0.01" required value="1">
+          </div>
+          <button type="submit" class="btn btn-primary">Kaydet</button>
+        </form>
       </div>
     </div>
   </div>

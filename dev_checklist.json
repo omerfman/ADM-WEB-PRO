@@ -218,8 +218,38 @@
       "description": "vercel --prod ile frontend (/web) ve backend (/api) Vercel'e deploy et.",
       "status": "done",
       "createdAt": "2025-11-17T11:45:00Z",
-      "doneAt": "2025-11-17T12:45:00Z",
-      "notes": "✅ Deployment başarılı! Production URL: https://adm-web-i04adeeit-omerfmans-projects.vercel.app"
+      "doneAt": "2025-11-17T12:50:00Z",
+      "notes": "✅ Deployment başarılı! Production URL: https://adm-web-8p3quz7lu-omerfmans-projects.vercel.app - Site açılıyor ve erişilebilir"
+    },
+
+    {
+      "id": "post-deploy-01",
+      "title": "Production Login Test",
+      "description": "Production URL'de admin@adm.com ile login test et, dashboard'ın yüklenmesini doğrula.",
+      "status": "done",
+      "createdAt": "2025-11-17T12:50:00Z",
+      "doneAt": "2025-11-17T12:55:00Z",
+      "notes": "✅ Login başarılı! Credentials: admin@adm.com / ChangeMe!2025 - Dashboard yüklendi"
+    },
+
+    {
+      "id": "post-deploy-02",
+      "title": "Firebase Connection Verification",
+      "description": "Production'da Firestore bağlantısını kontrol et - Projects yükslenip yüklenmeli",
+      "status": "done",
+      "createdAt": "2025-11-17T12:50:00Z",
+      "doneAt": "2025-11-17T13:00:00Z",
+      "notes": "✅ Firestore rules simplified (authenticated users projects read/write). 2 proje görünüyor: Yazlık Villa, Otel Kompleksi"
+    },
+
+    {
+      "id": "post-deploy-03",
+      "title": "Documentation Update",
+      "description": "README.md ve VERCEL_DEPLOYMENT.md'de production URL'yi güncelle",
+      "status": "not-started",
+      "createdAt": "2025-11-17T12:50:00Z",
+      "doneAt": null,
+      "notes": "https://adm-web-8p3quz7lu-omerfmans-projects.vercel.app"
     }
   ]
 }

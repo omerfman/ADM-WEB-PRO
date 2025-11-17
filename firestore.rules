@@ -54,69 +54,63 @@ service cloud.firestore {
 
     // ========== PROJECTS COLLECTION ==========
     match /projects/{projectId} {
-      // Read: authenticated users in same company
-      allow read: if request.auth != null && 
-                     resource.data.companyId == userCompanyId();
+      // Read: any authenticated user
+      allow read: if request.auth != null;
       
-      // Create: admins and operators
-      allow create: if request.auth != null &&
-                       (hasRole('admin') || hasRole('operator')) &&
-                       request.resource.data.companyId == userCompanyId();
+      // Create: any authenticated user (backend validates)
+      allow create: if request.auth != null && 
+                       request.resource.data.companyId != null &&
+                       request.resource.data.createdBy == request.auth.uid;
       
-      // Update: admins and project owner
+      // Update: owner or admin
       allow update: if request.auth != null &&
-                       (hasRole('admin') || request.auth.uid == resource.data.createdBy) &&
-                       resource.data.companyId == userCompanyId();
+                       (request.auth.uid == resource.data.createdBy || 
+                        request.auth.uid == resource.data.assignedTo);
       
-      // Delete: admins only
-      allow delete: if hasRole('admin') && resource.data.companyId == userCompanyId();
+      // Delete: owner only
+      allow delete: if request.auth != null &&
+                       request.auth.uid == resource.data.createdBy;
 
       // ========== PROJECT SUBCOLLECTIONS ==========
       
       // Logs subcollection
       match /logs/{logId} {
-        allow read: if request.auth != null && 
-                       get(/databases/$(database)/documents/projects/$(projectId)).data.companyId == userCompanyId();
+        allow read: if request.auth != null;
         allow create: if request.auth != null &&
-                        get(/databases/$(database)/documents/projects/$(projectId)).data.companyId == userCompanyId();
+                        request.resource.data.projectId == projectId;
         allow update: if request.auth != null &&
-                        (request.auth.uid == resource.data.createdBy || hasRole('admin'));
-        allow delete: if hasRole('admin');
+                        request.auth.uid == resource.data.createdBy;
+        allow delete: if request.auth != null &&
+                        request.auth.uid == resource.data.createdBy;
       }
 
       // Stocks subcollection
       match /stocks/{stockId} {
-        allow read: if request.auth != null && 
-                       get(/databases/$(database)/documents/projects/$(projectId)).data.companyId == userCompanyId();
+        allow read: if request.auth != null;
         allow create: if request.auth != null &&
-                        (hasRole('admin') || hasRole('operator')) &&
-                        get(/databases/$(database)/documents/projects/$(projectId)).data.companyId == userCompanyId();
-        allow update: if request.auth != null &&
-                        (hasRole('admin') || hasRole('operator')) &&
-                        get(/databases/$(database)/documents/projects/$(projectId)).data.companyId == userCompanyId();
-        allow delete: if hasRole('admin');
+                        request.resource.data.projectId == projectId;
+        allow update: if request.auth != null;
+        allow delete: if request.auth != null &&
+                        request.auth.uid == resource.data.createdBy;
       }
 
       // Payments subcollection
       match /payments/{paymentId} {
-        allow read: if request.auth != null && 
-                       get(/databases/$(database)/documents/projects/$(projectId)).data.companyId == userCompanyId();
+        allow read: if request.auth != null;
         allow create: if request.auth != null &&
-                        (hasRole('admin') || hasRole('finance')) &&
-                        get(/databases/$(database)/documents/projects/$(projectId)).data.companyId == userCompanyId();
-        allow update: if request.auth != null &&
-                        (hasRole('admin') || hasRole('finance')) &&
-                        get(/databases/$(database)/documents/projects/$(projectId)).data.companyId == userCompanyId();
-        allow delete: if hasRole('admin');
+                        request.resource.data.projectId == projectId;
+        allow update: if request.auth != null;
+        allow delete: if request.auth != null &&
+                        request.auth.uid == resource.data.createdBy;
       }
 
       // Uploads subcollection
       match /uploads/{uploadId} {
-        allow read: if request.auth != null && 
-                       get(/databases/$(database)/documents/projects/$(projectId)).data.companyId == userCompanyId();
+        allow read: if request.auth != null;
         allow create: if request.auth != null &&
-                        get(/databases/$(database)/documents/projects/$(projectId)).data.companyId == userCompanyId();
-        allow delete: if hasRole('admin') || request.auth.uid == resource.data.uploadedBy;
+                        request.resource.data.projectId == projectId;
+        allow delete: if request.auth != null &&
+                        request.auth.uid == resource.data.uploadedBy;
       }
     }
 

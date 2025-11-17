@@ -1,36 +1,11 @@
 {
   "version": 2,
-  "public": "web",
-  "redirects": [
-    {
-      "source": "/api/:path*",
-      "destination": "https://adm-api.vercel.app/api/:path*"
-    }
-  ],
+  "buildCommand": "echo 'Static site'",
+  "outputDirectory": "web",
   "rewrites": [
     {
       "source": "/(.*)",
       "destination": "/index.html"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=3600, s-maxage=3600"
-        }
-      ]
-    },
-    {
-      "source": "/index.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=0, must-revalidate"
-        }
-      ]
     }
   ]
 }
