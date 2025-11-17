@@ -75,6 +75,8 @@ document.addEventListener('DOMContentLoaded', () => {
   verifyFirebaseConnection();
 });
 
-// Export for use in other modules
-export { firebase, auth, db, verifyFirebaseConnection };
+// Global window exports for non-module scripts
+window.auth = auth;
+window.db = db;
+window.verifyFirebaseConnection = verifyFirebaseConnection;
 

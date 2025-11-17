@@ -85,3 +85,11 @@ function showAlert(message, type = 'info') {
     alertDiv.classList.remove('show');
   }, 5000);
 }
+
+// Global window exports
+window.handleLogin = handleLogin;
+window.handleLogout = handleLogout;
+window.showLoginForm = showLoginForm;
+window.showDashboard = showDashboard;
+window.showAlert = showAlert;
+window.loadUserData = loadUserData;

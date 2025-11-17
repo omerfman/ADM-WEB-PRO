@@ -10,37 +10,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function setupEventListeners() {
   // Navigation logout button
-  document.getElementById('navLogout').addEventListener('click', handleLogout);
+  const logoutBtn = document.getElementById('navLogout');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', handleLogout);
+  }
   
   // Close modals when clicking outside
-  document.getElementById('projectDetailModal').addEventListener('click', (e) => {
-    if (e.target === document.getElementById('projectDetailModal')) {
-      closeProjectModal();
-    }
-  });
+  const projectDetailModal = document.getElementById('projectDetailModal');
+  if (projectDetailModal) {
+    projectDetailModal.addEventListener('click', (e) => {
+      if (e.target === projectDetailModal) {
+        closeProjectModal();
+      }
+    });
+  }
   
-  document.getElementById('createProjectModal').addEventListener('click', (e) => {
-    if (e.target === document.getElementById('createProjectModal')) {
-      closeCreateProjectModal();
-    }
-  });
+  const createProjectModal = document.getElementById('createProjectModal');
+  if (createProjectModal) {
+    createProjectModal.addEventListener('click', (e) => {
+      if (e.target === createProjectModal) {
+        closeCreateProjectModal();
+      }
+    });
+  }
   
   console.log('✅ Event listeners kuruldu');
 }
 
-// Global helper functions
-window.showLoginForm = showLoginForm;
-window.showDashboard = showDashboard;
-window.handleLogin = handleLogin;
-window.handleLogout = handleLogout;
-window.showAlert = showAlert;
-window.loadProjects = loadProjects;
-window.openProjectDetail = openProjectDetail;
-window.closeProjectModal = closeProjectModal;
-window.switchTab = switchTab;
-window.addLog = addLog;
-window.addStock = addStock;
-window.addPayment = addPayment;
-window.openCreateProjectModal = openCreateProjectModal;
-window.closeCreateProjectModal = closeCreateProjectModal;
-window.handleCreateProject = handleCreateProject;
+// App initialization on auth state change
+console.log('✅ app.js loaded - auth state listener will trigger on firebase-config.js');

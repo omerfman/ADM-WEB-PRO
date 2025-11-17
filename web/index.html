@@ -124,18 +124,23 @@
   <!-- Firebase SDK (modular v10.7.1) -->
   <!-- No longer needed - using ES modules in firebase-config.js -->
 
-  <!-- Firebase Config (loads first, imports Firebase SDK) -->
+  <!-- Firebase Config (loads first - global exports) -->
   <script type="module" src="js/firebase-config.js"></script>
-
-  <!-- App Scripts -->
+  
+  <!-- Auth Module (exports to window) -->
   <script type="module" src="js/auth.js"></script>
-  <!-- App Scripts (all ES modules) -->
+  
+  <!-- Projects Module (exports to window) -->
   <script type="module" src="js/projects.js"></script>
+  
+  <!-- Additional Modules -->
   <script type="module" src="js/upload.js"></script>
   <script type="module" src="js/audit.js"></script>
   <script type="module" src="js/security.js"></script>
   <script type="module" src="js/security-monitoring.js"></script>
   <script type="module" src="js/config-vercel.js"></script>
+  
+  <!-- App Initialization (last, uses window exports) -->
   <script type="module" src="js/app.js"></script>
 </body>
 </html>

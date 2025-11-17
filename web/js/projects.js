@@ -342,6 +342,39 @@ async function handleCreateProject(event) {
   }
 }
 
+/**
+ * Add log entry
+ */
+function addLog() {
+  const text = prompt('Log metnini girin:');
+  if (text) {
+    console.log('📝 New log would be added:', text);
+    showAlert('Log ekleme özelliği yakında gelecek', 'warning');
+  }
+}
+
+/**
+ * Add stock entry
+ */
+function addStock() {
+  const name = prompt('Malzeme adı:');
+  if (name) {
+    console.log('📦 New stock would be added:', name);
+    showAlert('Malzeme ekleme özelliği yakında gelecek', 'warning');
+  }
+}
+
+/**
+ * Add payment entry
+ */
+function addPayment() {
+  const amount = prompt('Ödeme tutarı:');
+  if (amount) {
+    console.log('💰 New payment would be added:', amount);
+    showAlert('Ödeme ekleme özelliği yakında gelecek', 'warning');
+  }
+}
+
 // Export functions for global use
 window.loadProjects = loadProjects;
 window.openProjectDetail = openProjectDetail;
@@ -350,3 +383,6 @@ window.switchTab = switchTab;
 window.openCreateProjectModal = openCreateProjectModal;
 window.closeCreateProjectModal = closeCreateProjectModal;
 window.handleCreateProject = handleCreateProject;
+window.addLog = addLog;
+window.addStock = addStock;
+window.addPayment = addPayment;
