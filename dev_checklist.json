@@ -26,10 +26,10 @@
       "id": "frontend-01",
       "title": "Frontend scaffold - index.html, temel CSS/JS",
       "description": "Basit login UI ve header. Live-server ile açılabilir olmalı.",
-      "status": "todo",
-      "createdAt": null,
-      "doneAt": null,
-      "notes": ""
+      "status": "done",
+      "createdAt": "2025-11-17T00:00:00Z",
+      "doneAt": "2025-11-17T01:00:00Z",
+      "notes": "index.html, style.css, auth.js, projects.js, app.js oluşturuldu. Login formu ve dashboard UI'ı tamamlandı."
     },
 
     {

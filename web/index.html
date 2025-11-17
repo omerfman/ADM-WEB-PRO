@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ADM İnşaat Proje Yönetim Sistemi</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>🏗️ ADM İnşaat</h1>
+    <nav id="navBar">
+      <a href="#" id="navDashboard" class="hidden">Dashboard</a>
+      <a href="#" id="navProjects" class="hidden">Projeler</a>
+      <button id="navLogout" class="hidden">Çıkış Yap</button>
+      <button id="navLogin" onclick="showLoginForm()">Giriş Yap</button>
+    </nav>
+  </header>
+
+  <div id="alertContainer"></div>
+
+  <!-- Login Form -->
+  <div id="loginContainer" class="login-container">
+    <h2>Giriş Yap</h2>
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label for="email">E-posta</label>
+        <input type="email" id="email" placeholder="örn: admin@adm.com" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Şifre</label>
+        <input type="password" id="password" placeholder="Şifrenizi girin" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Giriş Yap</button>
+    </form>
+  </div>
+
+  <!-- Dashboard (Hidden by default) -->
+  <div id="dashboard" class="container hidden">
+    <h2>Hoşgeldiniz, <span id="userNameDisplay"></span>!</h2>
+    <p>Proje yönetim sisteminize hoşgeldiniz.</p>
+    
+    <section id="projectsSection" style="margin-top: 2rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3>Projeler</h3>
+        <button class="btn btn-primary" onclick="openCreateProjectModal()" style="width: auto;">+ Yeni Proje</button>
+      </div>
+      <div id="projectsList" class="dashboard-grid">
+        <!-- Projects will be loaded here -->
+      </div>
+    </section>
+  </div>
+
+  <!-- Project Detail Modal -->
+  <div id="projectDetailModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="projectTitle"></h2>
+        <button class="modal-close" onclick="closeProjectModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Tabs -->
+        <div style="border-bottom: 2px solid var(--border-color); margin-bottom: 1rem;">
+          <button class="tab-btn" data-tab="logs" style="background: none; border: none; padding: 0.75rem 1rem; cursor: pointer; font-weight: 500;" onclick="switchTab('logs')">📋 Loglar</button>
+          <button class="tab-btn" data-tab="stocks" style="background: none; border: none; padding: 0.75rem 1rem; cursor: pointer; font-weight: 500;" onclick="switchTab('stocks')">📦 Malzemeler</button>
+          <button class="tab-btn" data-tab="payments" style="background: none; border: none; padding: 0.75rem 1rem; cursor: pointer; font-weight: 500;" onclick="switchTab('payments')">💰 Ödemeler</button>
+        </div>
+
+        <!-- Tab Contents -->
+        <div id="logs-tab" class="tab-content">
+          <h4>Proje Logları</h4>
+          <div id="logsList" style="max-height: 300px; overflow-y: auto;"></div>
+          <button class="btn btn-secondary" onclick="addLog()" style="width: auto; margin-top: 1rem;">+ Log Ekle</button>
+        </div>
+
+        <div id="stocks-tab" class="tab-content hidden">
+          <h4>Malzeme Stokları</h4>
+          <div id="stocksList" style="max-height: 300px; overflow-y: auto;"></div>
+          <button class="btn btn-secondary" onclick="addStock()" style="width: auto; margin-top: 1rem;">+ Malzeme Ekle</button>
+        </div>
+
+        <div id="payments-tab" class="tab-content hidden">
+          <h4>Ödeme Kayıtları</h4>
+          <div id="paymentsList" style="max-height: 300px; overflow-y: auto;"></div>
+          <button class="btn btn-secondary" onclick="addPayment()" style="width: auto; margin-top: 1rem;">+ Ödeme Ekle</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeProjectModal()">Kapat</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Project Modal -->
+  <div id="createProjectModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Yeni Proje Oluştur</h2>
+        <button class="modal-close" onclick="closeCreateProjectModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="createProjectForm" onsubmit="handleCreateProject(event)">
+          <div class="form-group">
+            <label for="projectName">Proje Adı</label>
+            <input type="text" id="projectName" placeholder="Proje adını girin" required>
+          </div>
+          <div class="form-group">
+            <label for="projectDesc">Açıklama</label>
+            <textarea id="projectDesc" placeholder="Proje açıklaması" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; resize: vertical; height: 100px;"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="projectLocation">Konum</label>
+            <input type="text" id="projectLocation" placeholder="Proje konumu" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Proje Oluştur</button>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeCreateProjectModal()">İptal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js"></script>
+
+  <!-- Firebase Config -->
+  <script src="js/firebase-config.js"></script>
+
+  <!-- App Scripts -->
+  <script src="js/auth.js"></script>
+  <script src="js/projects.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
