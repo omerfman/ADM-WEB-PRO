@@ -1,0 +1,38 @@
+# Environment
+.env
+.env.local
+.env.*.local
+serviceAccountKey.json
+
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build and dist
+dist/
+build/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Firebase
+.firebase/
+.firebaserc
+
+# Credentials
+credentials/
+secrets/
+
+# Temporary
+tmp/
+temp/

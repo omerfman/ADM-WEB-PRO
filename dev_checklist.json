@@ -1,0 +1,155 @@
+{
+  "project": "ADM İnşaat Proje Yönetim Sistemi",
+  "version": "1.0",
+  "updatedAt": "2025-11-17T00:00:00Z",
+  "tasks": [
+    {
+      "id": "setup-01",
+      "title": "Repo ve temel klasörleri oluştur",
+      "description": "Oluştur: web/, admin-api/, admin-scripts/. .gitignore oluştur (serviceAccountKey.json vb ignore edilecek).",
+      "status": "done",
+      "createdAt": "2025-11-17T00:00:00Z",
+      "doneAt": "2025-11-17T00:00:00Z",
+      "notes": "web/, admin-api/, admin-scripts/ klasörleri başarıyla oluşturuldu. .gitignore dosyası yapılandırıldı."
+    },
+    {
+      "id": "setup-02",
+      "title": "dev_checklist.json ve CHANGELOG.md oluştur",
+      "description": "Proje kökünde dev_checklist.json ve CHANGELOG.md dosyalarını başlat.",
+      "status": "done",
+      "createdAt": "2025-11-17T00:00:00Z",
+      "doneAt": "2025-11-17T00:00:00Z",
+      "notes": "CHANGELOG.md ve güncellenmiş dev_checklist.json başlatıldı. İlk girişler eklendi."
+    },
+
+    {
+      "id": "frontend-01",
+      "title": "Frontend scaffold - index.html, temel CSS/JS",
+      "description": "Basit login UI ve header. Live-server ile açılabilir olmalı.",
+      "status": "todo",
+      "createdAt": null,
+      "doneAt": null,
+      "notes": ""
+    },
+
+    {
+      "id": "firebase-01",
+      "title": "Firebase config (dev) örneği ekle",
+      "description": "web/js/firebase-config.js örnek dosyası (placeholders).",
+      "status": "todo",
+      "createdAt": null,
+      "doneAt": null,
+      "notes": ""
+    },
+
+    {
+      "id": "backend-01",
+      "title": "Backend scaffold (Express)",
+      "description": "admin-api/server.js - /health, CORS, basic logging, package.json",
+      "status": "todo",
+      "createdAt": null,
+      "doneAt": null,
+      "notes": ""
+    },
+
+    {
+      "id": "auth-01",
+      "title": "Auth & create-user endpoint",
+      "description": "/create-user endpoint implement (admin token ile), admin-scripts/create-superadmin.js",
+      "status": "todo",
+      "createdAt": null,
+      "doneAt": null,
+      "notes": ""
+    },
+
+    {
+      "id": "db-01",
+      "title": "Firestore schema seed",
+      "description": "companies, users, projects, audit_logs için örnek dokümanlar ekle (seed).",
+      "status": "todo",
+      "createdAt": null,
+      "doneAt": null,
+      "notes": ""
+    },
+
+    {
+      "id": "projects-01",
+      "title": "Projeler CRUD (frontend)",
+      "description": "Projeler listesi, create modal, open project detay (modal veya sayfa).",
+      "status": "todo",
+      "createdAt": null,
+      "doneAt": null,
+      "notes": ""
+    },
+
+    {
+      "id": "projecttabs-01",
+      "title": "Project Detail Tabs: Logs, Stocks, Payments UI",
+      "description": "Her tab için UI scaffold ve Firestore read/write temel akış.",
+      "status": "todo",
+      "createdAt": null,
+      "doneAt": null,
+      "notes": ""
+    },
+
+    {
+      "id": "uploads-01",
+      "title": "Resim upload: signed Cloudinary akışı",
+      "description": "Backend sign endpoint, frontend direct signed upload, complete endpoint saves metadata.",
+      "status": "todo",
+      "createdAt": null,
+      "doneAt": null,
+      "notes": ""
+    },
+
+    {
+      "id": "audit-01",
+      "title": "Audit logging",
+      "description": "actions -> audit_logs denormalize performedByName, projectName ve kayıt ekle.",
+      "status": "todo",
+      "createdAt": null,
+      "doneAt": null,
+      "notes": ""
+    },
+
+    {
+      "id": "rules-01",
+      "title": "Firestore Security Rules",
+      "description": "role & companyId bazlı kurallar. Test edilecek.",
+      "status": "todo",
+      "createdAt": null,
+      "doneAt": null,
+      "notes": ""
+    },
+
+    {
+      "id": "deploy-01",
+      "title": "Deploy hazırlığı: .env.example, README, firebase.json",
+      "description": "Frontend hosting config, backend deploy notes (Render/Cloud Run).",
+      "status": "todo",
+      "createdAt": null,
+      "doneAt": null,
+      "notes": ""
+    },
+
+    {
+      "id": "qa-01",
+      "title": "QA & security hardening",
+      "description": "Password policy, rate limits, Sentry stub, monitor config.",
+      "status": "todo",
+      "createdAt": null,
+      "doneAt": null,
+      "notes": ""
+    },
+
+    {
+      "id": "final-01",
+      "title": "Final acceptance test",
+      "description": "Acceptance kriterleri checklist'i tümünü doğrula, demo recording hazırla.",
+      "status": "todo",
+      "createdAt": null,
+      "doneAt": null,
+      "notes": ""
+    }
+  ]
+}
