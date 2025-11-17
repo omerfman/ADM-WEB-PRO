@@ -12,4 +12,7 @@ Tüm önemli değişiklikler bu dosyada kaydedilecektir.
 
 - **Backend Scaffold** — Claude-agent: Express.js server (admin-api/server.js) oluşturuldu. /health, /api/auth/create-user, /api/auth/set-custom-claims, /api/health/firestore, /api/uploads/sign, /api/uploads/complete endpoints tamamlandı. CORS, rate limiting, error handling ve Firebase Admin SDK integrations eklendi. package.json ve .env.example yapılandırıldı.
 
+- **Firebase Config & Auth Setup** — Claude-agent: web/js/firebase-config.js enhanced (offline persistence, emulator desteği, connection verification). admin-scripts/create-superadmin.js script'i oluşturuldu - Firebase Admin SDK kullanarak superadmin user oluşturabiliyor. Test user oluşturma workflow hazır.
+
+
 

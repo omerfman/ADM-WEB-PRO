@@ -36,10 +36,10 @@
       "id": "firebase-01",
       "title": "Firebase config (dev) örneği ekle",
       "description": "web/js/firebase-config.js örnek dosyası (placeholders).",
-      "status": "todo",
-      "createdAt": null,
-      "doneAt": null,
-      "notes": ""
+      "status": "done",
+      "createdAt": "2025-11-17T00:00:00Z",
+      "doneAt": "2025-11-17T03:00:00Z",
+      "notes": "firebase-config.js güncellendi: offline persistence, emulator desteği, connection verification eklendi. admin-scripts/create-superadmin.js script'i oluşturuldu."
     },
 
     {
@@ -56,10 +56,10 @@
       "id": "auth-01",
       "title": "Auth & create-user endpoint",
       "description": "/create-user endpoint implement (admin token ile), admin-scripts/create-superadmin.js",
-      "status": "todo",
-      "createdAt": null,
-      "doneAt": null,
-      "notes": ""
+      "status": "done",
+      "createdAt": "2025-11-17T00:00:00Z",
+      "doneAt": "2025-11-17T03:00:00Z",
+      "notes": "POST /api/auth/create-user endpoint tamamlandı. admin-scripts/create-superadmin.js Firebase Admin SDK ile superadmin oluşturabilir. Test user oluşturma hazır."
     },
 
     {
