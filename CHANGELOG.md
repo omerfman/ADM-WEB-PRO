@@ -24,6 +24,9 @@ Tüm önemli değişiklikler bu dosyada kaydedilecektir.
 
 - **Firestore Security Rules Testing** — Claude-agent: firestore.rules dosyası role-based access control (superadmin, admin, operator, finance, viewer) ve companyId bazlı kısıtlamalar ile tamamlandı. Security rules testing rehberi ve manual test senaryoları hazırlandı.
 
+- **Deploy Preparation** — Claude-agent: firebase.json (Firebase Hosting config), render.yaml (Render IaC), admin-api/build.sh, .env.example, README.md (kapsamlı documentasyon) oluşturuldu. Frontend Firebase Hosting ve Backend Render/Cloud Run deployment rehberleri hazırlandı.
+
+
 
 
 

@@ -1,0 +1,45 @@
+{
+  "projects": {
+    "default": "adm-construction"
+  },
+  "targets": {},
+  "etags": {},
+  "version": "1.0.0",
+  "hosting": [
+    {
+      "target": "web",
+      "public": "web",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "headers": [
+        {
+          "source": "**/*.@(js|css|svg)",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=1year"
+            }
+          ]
+        },
+        {
+          "source": "index.html",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=0"
+            }
+          ]
+        }
+      ],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ]
+    }
+  ]
+}

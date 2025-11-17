@@ -1,0 +1,63 @@
+services:
+  - type: web
+    name: adm-construction-admin-api
+    repo: https://github.com/your-repo/adm-web-pro.git
+    branch: feature/auto-build
+    rootDir: admin-api
+    
+    buildCommand: npm install
+    startCommand: npm start
+    
+    envVars:
+      - key: NODE_ENV
+        value: production
+      
+      - key: PORT
+        value: 3000
+      
+      - key: FRONTEND_URL
+        value: https://adm-construction.web.app
+      
+      - key: FIREBASE_PROJECT_ID
+        value: adm-construction
+        scope: build
+      
+      # Reference to secret environment variables
+      - key: FIREBASE_SERVICE_ACCOUNT_KEY
+        sync: false
+        # Set via Render dashboard - paste full JSON
+      
+      - key: FIREBASE_DATABASE_URL
+        value: https://adm-construction.firebaseio.com
+      
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+        # Set via Render dashboard
+      
+      - key: CLOUDINARY_API_KEY
+        sync: false
+        # Set via Render dashboard
+      
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+        # Set via Render dashboard
+      
+      - key: LOG_LEVEL
+        value: info
+    
+    region: frankfurt
+    plan: starter
+    
+    # Auto-deploy on push to feature/auto-build
+    autoDeploy: true
+    
+    # Health check
+    healthCheckPath: /health
+    
+    # Limits
+    maxInstances: 1
+    
+    # Cron jobs (optional)
+    crons:
+      - schedule: "0 2 * * *"  # 2 AM UTC daily
+        command: "curl https://your-domain/api/health/firestore"

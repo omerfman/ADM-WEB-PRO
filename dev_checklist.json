@@ -126,10 +126,10 @@
       "id": "deploy-01",
       "title": "Deploy hazırlığı: .env.example, README, firebase.json",
       "description": "Frontend hosting config, backend deploy notes (Render/Cloud Run).",
-      "status": "todo",
-      "createdAt": null,
-      "doneAt": null,
-      "notes": ""
+      "status": "done",
+      "createdAt": "2025-11-17T00:00:00Z",
+      "doneAt": "2025-11-17T09:00:00Z",
+      "notes": ".env.example, README.md (kapsamlı), firebase.json (hosting config), render.yaml (IaC), admin-api/build.sh oluşturuldu. Deploy rehberi tamamlandı."
     },
 
     {
