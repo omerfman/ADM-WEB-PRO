@@ -263,6 +263,165 @@ app.post('/api/uploads/complete', async (req, res) => {
   }
 });
 
+// ============ PROJECTS CRUD ENDPOINTS ============
+
+/**
+ * GET /api/projects
+ * Get projects for user's company
+ */
+app.get('/api/projects', async (req, res) => {
+  try {
+    if (!db) {
+      return res.status(500).json({ error: 'Firestore not configured' });
+    }
+    
+    const companyId = req.query.companyId || 'default-company';
+    
+    const snapshot = await db.collection('projects')
+      .where('companyId', '==', companyId)
+      .orderBy('createdAt', 'desc')
+      .get();
+    
+    const projects = [];
+    snapshot.forEach(doc => {
+      projects.push({ id: doc.id, ...doc.data() });
+    });
+    
+    res.json({
+      count: projects.length,
+      projects,
+    });
+  } catch (error) {
+    console.error('❌ Get projects error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /api/projects/:id
+ * Get single project details
+ */
+app.get('/api/projects/:id', async (req, res) => {
+  try {
+    if (!db) {
+      return res.status(500).json({ error: 'Firestore not configured' });
+    }
+    
+    const doc = await db.collection('projects').doc(req.params.id).get();
+    
+    if (!doc.exists) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+    
+    res.json({
+      id: doc.id,
+      ...doc.data(),
+    });
+  } catch (error) {
+    console.error('❌ Get project error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /api/projects
+ * Create new project
+ */
+app.post('/api/projects', async (req, res) => {
+  try {
+    if (!db) {
+      return res.status(500).json({ error: 'Firestore not configured' });
+    }
+    
+    const { name, description, location, companyId, status, budget } = req.body;
+    
+    if (!name || !location) {
+      return res.status(400).json({ error: 'name ve location zorunludur' });
+    }
+    
+    const projectRef = await db.collection('projects').add({
+      name,
+      description: description || '',
+      location,
+      companyId: companyId || 'default-company',
+      status: status || 'planning',
+      budget: budget || 0,
+      currency: 'TRY',
+      startDate: admin.firestore.Timestamp.now(),
+      createdBy: 'system',
+      createdAt: admin.firestore.Timestamp.now(),
+      updatedAt: admin.firestore.Timestamp.now(),
+      progress: 0,
+      tags: [],
+    });
+    
+    res.status(201).json({
+      id: projectRef.id,
+      message: 'Project created successfully',
+    });
+  } catch (error) {
+    console.error('❌ Create project error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * PUT /api/projects/:id
+ * Update project
+ */
+app.put('/api/projects/:id', async (req, res) => {
+  try {
+    if (!db) {
+      return res.status(500).json({ error: 'Firestore not configured' });
+    }
+    
+    const { name, description, status, progress, budget } = req.body;
+    
+    const updateData = {
+      updatedAt: admin.firestore.Timestamp.now(),
+    };
+    
+    if (name) updateData.name = name;
+    if (description) updateData.description = description;
+    if (status) updateData.status = status;
+    if (progress !== undefined) updateData.progress = progress;
+    if (budget !== undefined) updateData.budget = budget;
+    
+    await db.collection('projects').doc(req.params.id).update(updateData);
+    
+    res.json({
+      id: req.params.id,
+      message: 'Project updated successfully',
+    });
+  } catch (error) {
+    console.error('❌ Update project error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * DELETE /api/projects/:id
+ * Delete project
+ */
+app.delete('/api/projects/:id', async (req, res) => {
+  try {
+    if (!db) {
+      return res.status(500).json({ error: 'Firestore not configured' });
+    }
+    
+    await db.collection('projects').doc(req.params.id).delete();
+    
+    res.json({
+      id: req.params.id,
+      message: 'Project deleted successfully',
+    });
+  } catch (error) {
+    console.error('❌ Delete project error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 // ============ ERROR HANDLING ============
 
 // 404 handler
@@ -295,7 +454,12 @@ app.listen(PORT, () => {
   console.log('   POST /api/auth/set-custom-claims');
   console.log('   GET  /api/health/firestore');
   console.log('   POST /api/uploads/sign');
-  console.log('   POST /api/uploads/complete\n');
+  console.log('   POST /api/uploads/complete');
+  console.log('   GET  /api/projects');
+  console.log('   GET  /api/projects/:id');
+  console.log('   POST /api/projects');
+  console.log('   PUT  /api/projects/:id');
+  console.log('   DELETE /api/projects/:id\n');
 });
 
 module.exports = app;

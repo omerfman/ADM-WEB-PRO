@@ -76,20 +76,20 @@
       "id": "projects-01",
       "title": "Projeler CRUD (frontend)",
       "description": "Projeler listesi, create modal, open project detay (modal veya sayfa).",
-      "status": "todo",
-      "createdAt": null,
-      "doneAt": null,
-      "notes": ""
+      "status": "done",
+      "createdAt": "2025-11-17T00:00:00Z",
+      "doneAt": "2025-11-17T05:00:00Z",
+      "notes": "Frontend projects.js Firestore entegrasyonu tamamlandı (loadProjects, renderProjectsList, create, update). Backend /api/projects endpoints (GET, POST, PUT, DELETE) tamamlandı."
     },
 
     {
       "id": "projecttabs-01",
       "title": "Project Detail Tabs: Logs, Stocks, Payments UI",
       "description": "Her tab için UI scaffold ve Firestore read/write temel akış.",
-      "status": "todo",
-      "createdAt": null,
-      "doneAt": null,
-      "notes": ""
+      "status": "done",
+      "createdAt": "2025-11-17T00:00:00Z",
+      "doneAt": "2025-11-17T05:00:00Z",
+      "notes": "Proje detay modali 3 tab (Loglar, Malzemeler, Ödemeler) tamamlandı. Firestore'dan veri çekme ve render etme fonksiyonları hazır."
     },
 
     {

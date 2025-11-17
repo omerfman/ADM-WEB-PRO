@@ -16,6 +16,9 @@ Tüm önemli değişiklikler bu dosyada kaydedilecektir.
 
 - **Firestore Schema & Security Rules** — Claude-agent: firestore.rules oluşturuldu (role-based access control: superadmin, admin, operator, finance, viewer). FIRESTORE_SCHEMA.md kapsamlı dokumentasyon (collections, schema örnekleri, security rules özeti). admin-scripts/seed-database.js örnek veri yükleyebiliyor (companies, projects, logs, stocks, payments).
 
+- **Project CRUD & Tabs** — Claude-agent: Frontend projects.js Firestore entegrasyonu tamamlandı (loadProjects, renderProjectsList, create, update, delete operations). Backend /api/projects endpoints (GET, POST, PUT, DELETE) tamamlandı. Proje detay modali 3 tab (Loglar, Malzemeler, Ödemeler) Firestore'dan veri çekip render ediyor.
+
+
 
 
 
