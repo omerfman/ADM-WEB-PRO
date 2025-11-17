@@ -18,6 +18,9 @@ Tüm önemli değişiklikler bu dosyada kaydedilecektir.
 
 - **Project CRUD & Tabs** — Claude-agent: Frontend projects.js Firestore entegrasyonu tamamlandı (loadProjects, renderProjectsList, create, update, delete operations). Backend /api/projects endpoints (GET, POST, PUT, DELETE) tamamlandı. Proje detay modali 3 tab (Loglar, Malzemeler, Ödemeler) Firestore'dan veri çekip render ediyor.
 
+- **Photo Upload with Cloudinary Signed** — Claude-agent: web/js/upload.js oluşturuldu (Cloudinary signed upload akışı, file picker, metadata save). /api/uploads/sign ve /api/uploads/complete endpoints hazır. API_DOCUMENTATION.md kapsamlı API referansı (tüm endpoints, examples, error handling, rate limiting).
+
+
 
 
 

@@ -96,10 +96,10 @@
       "id": "uploads-01",
       "title": "Resim upload: signed Cloudinary akışı",
       "description": "Backend sign endpoint, frontend direct signed upload, complete endpoint saves metadata.",
-      "status": "todo",
-      "createdAt": null,
-      "doneAt": null,
-      "notes": ""
+      "status": "done",
+      "createdAt": "2025-11-17T00:00:00Z",
+      "doneAt": "2025-11-17T06:00:00Z",
+      "notes": "web/js/upload.js oluşturuldu (Cloudinary signed upload akışı). /api/uploads/sign ve /api/uploads/complete endpoints hazır. API_DOCUMENTATION.md tamamlandı."
     },
 
     {
