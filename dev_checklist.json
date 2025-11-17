@@ -246,10 +246,20 @@
       "id": "post-deploy-03",
       "title": "Documentation Update",
       "description": "README.md ve VERCEL_DEPLOYMENT.md'de production URL'yi güncelle",
-      "status": "not-started",
+      "status": "done",
       "createdAt": "2025-11-17T12:50:00Z",
-      "doneAt": null,
-      "notes": "https://adm-web-8p3quz7lu-omerfmans-projects.vercel.app"
+      "doneAt": "2025-11-17T13:15:00Z",
+      "notes": "✅ Production URL: https://adm-web-7hzewcmn6-omerfmans-projects.vercel.app"
+    },
+
+    {
+      "id": "feature-01",
+      "title": "Proje Detay Sayfası - Tamamlandı",
+      "description": "Proje sayfası - Şantiye günlüğü, stok, hakediş sekmeler ve CRUD işlemleri",
+      "status": "done",
+      "createdAt": "2025-11-17T13:05:00Z",
+      "doneAt": "2025-11-17T13:15:00Z",
+      "notes": "✅ Sekmeler çalışıyor. Şantiye Günlüğü: yeni giriş ekle/sil. Stok: ürün takibi (miktar, fiyat). Hakediş: otomatik toplam hesapla"
     }
   ]
 }
