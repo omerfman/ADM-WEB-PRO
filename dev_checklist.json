@@ -116,10 +116,10 @@
       "id": "rules-01",
       "title": "Firestore Security Rules",
       "description": "role & companyId bazlı kurallar. Test edilecek.",
-      "status": "todo",
-      "createdAt": null,
-      "doneAt": null,
-      "notes": ""
+      "status": "done",
+      "createdAt": "2025-11-17T00:00:00Z",
+      "doneAt": "2025-11-17T08:00:00Z",
+      "notes": "firestore.rules dosyası daha önce oluşturuldu ve role-based access control (superadmin, admin, operator, finance, viewer) ile companyId bazlı kısıtlamalar uygulandı. Security testing rehberi hazırlandı."
     },
 
     {

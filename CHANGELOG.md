@@ -22,6 +22,9 @@ Tüm önemli değişiklikler bu dosyada kaydedilecektir.
 
 - **Audit Logging System** — Claude-agent: web/js/audit.js oluşturuldu (logAuditAction, loadAuditLogs, renderAuditView, exportCSV, getAuditSummary). Backend /api/audit-logs endpoints (GET, POST, /summary) tamamlandı. Tüm actions audit_logs collection'ına yazılıyor (action type, entity, performedBy, changes, timestamp).
 
+- **Firestore Security Rules Testing** — Claude-agent: firestore.rules dosyası role-based access control (superadmin, admin, operator, finance, viewer) ve companyId bazlı kısıtlamalar ile tamamlandı. Security rules testing rehberi ve manual test senaryoları hazırlandı.
+
+
 
 
 
