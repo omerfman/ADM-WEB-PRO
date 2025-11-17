@@ -26,6 +26,57 @@ function toggleTheme() {
   console.log(`🎨 Theme changed to: ${theme}`);
 }
 
+// ========== DASHBOARD TAB SWITCHING ==========
+function switchDashboardTab(tabName) {
+  // Hide all tabs
+  document.querySelectorAll('.dashboard-tab-content').forEach(tab => {
+    tab.classList.add('hidden');
+  });
+
+  // Remove active from buttons
+  document.querySelectorAll('.dashboard-tab').forEach(btn => {
+    btn.classList.remove('active');
+  });
+
+  // Show selected tab
+  const tabElement = document.getElementById(tabName + 'Section');
+  if (tabElement) {
+    tabElement.classList.remove('hidden');
+  }
+
+  // Mark button as active
+  const btnElement = document.querySelector('[data-tab="' + tabName + '"]');
+  if (btnElement) {
+    btnElement.classList.add('active');
+  }
+
+  // Load tab-specific data
+  if (tabName === 'users' && typeof loadUsers !== 'undefined') {
+    loadUsers();
+  } else if (tabName === 'companies' && typeof loadCompanies !== 'undefined') {
+    loadCompanies();
+  } else if (tabName === 'projects' && typeof loadProjects !== 'undefined') {
+    loadProjects();
+  }
+}
+
+// ========== MODAL HELPERS (Global) ==========
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('active');
+  }
+}
+
+function openModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.classList.add('active');
+  }
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
   console.log('📄 DOM yüklendi');
@@ -106,3 +157,9 @@ function setupEventListeners() {
 
 // App initialization on auth state change
 console.log('✅ app.js loaded - auth state listener will trigger on firebase-config.js');
+
+// Export functions to window for global access
+window.switchDashboardTab = switchDashboardTab;
+window.toggleTheme = toggleTheme;
+window.closeModal = closeModal;
+window.openModal = openModal;

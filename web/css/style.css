@@ -432,6 +432,32 @@ header nav button:hover {
   color: var(--text-secondary);
 }
 
+/* Dashboard Tabs */
+.dashboard-tab {
+  background: none;
+  border: none;
+  padding: 0.75rem 1.25rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+  font-size: 0.95rem;
+}
+
+.dashboard-tab:hover {
+  color: var(--brand-red);
+}
+
+.dashboard-tab.active {
+  color: var(--brand-red);
+  border-bottom-color: var(--brand-red);
+}
+
+.dashboard-tab.hidden {
+  display: none;
+}
+
 /* ========== UTILITY CLASSES ========== */
 .hidden {
   display: none !important;

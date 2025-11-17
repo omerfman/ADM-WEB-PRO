@@ -187,6 +187,351 @@ app.post('/api/auth/set-custom-claims', verifyToken, async (req, res) => {
   }
 });
 
+// ====== USER ENDPOINTS ======
+
+// Get all users for a company (company_admin and super_admin)
+app.get('/api/users', apiLimiter, verifyToken, async (req, res) => {
+  try {
+    const { companyId } = req.query;
+    let query = db.collection('users');
+
+    // Only super_admin can view all users across companies
+    if (req.user.role !== 'super_admin') {
+      // Regular users can only see users from their own company
+      query = query.where('companyId', '==', req.user.companyId);
+    } else if (companyId) {
+      // Super admin can filter by specific company
+      query = query.where('companyId', '==', companyId);
+    }
+
+    const snapshot = await query.get();
+    const users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get single user
+app.get('/api/users/:id', verifyToken, async (req, res) => {
+  try {
+    const doc = await db.collection('users').doc(req.params.id).get();
+    if (!doc.exists) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json({ id: doc.id, ...doc.data() });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Create user (company_admin and super_admin)
+app.post('/api/users', apiLimiter, verifyToken, async (req, res) => {
+  try {
+    const { email, password, fullName, role, companyId } = req.body;
+
+    // Only company_admin and super_admin can create users
+    if (req.user.role !== 'company_admin' && req.user.role !== 'super_admin') {
+      return res.status(403).json({ error: 'Unauthorized: Only admins can create users' });
+    }
+
+    // Company admin can only create users for their own company
+    if (req.user.role === 'company_admin' && companyId !== req.user.companyId) {
+      return res.status(403).json({ error: 'Unauthorized: Cannot create users for other companies' });
+    }
+
+    if (!email || !password || !fullName || !role || !companyId) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+
+    // Create user in Firebase Auth
+    const userRecord = await auth.createUser({
+      email,
+      password,
+      displayName: fullName,
+      disabled: false
+    });
+
+    // Set custom claims
+    await auth.setCustomUserClaims(userRecord.uid, { role, companyId });
+
+    // Create user document in Firestore
+    await db.collection('users').doc(userRecord.uid).set({
+      email,
+      fullName,
+      role,
+      companyId,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdBy: req.user.uid,
+      status: 'active'
+    });
+
+    await logAudit('CREATE_USER', req.user.uid, null, {
+      newUserId: userRecord.uid,
+      email,
+      fullName,
+      role,
+      companyId,
+      requestId: req.id
+    });
+
+    res.json({
+      id: userRecord.uid,
+      email: userRecord.email,
+      fullName,
+      role,
+      companyId,
+      createdAt: new Date().toISOString()
+    });
+  } catch (error) {
+    // Handle Firebase specific errors
+    if (error.code === 'auth/email-already-exists') {
+      return res.status(400).json({ error: 'Email already exists' });
+    }
+    if (error.code === 'auth/invalid-email') {
+      return res.status(400).json({ error: 'Invalid email address' });
+    }
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update user
+app.put('/api/users/:id', apiLimiter, verifyToken, async (req, res) => {
+  try {
+    const { fullName, role, status } = req.body;
+    const userId = req.params.id;
+
+    // Get the user being updated
+    const userDoc = await db.collection('users').doc(userId).get();
+    if (!userDoc.exists) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const userData = userDoc.data();
+
+    // Check permissions
+    if (req.user.role !== 'super_admin' && userData.companyId !== req.user.companyId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    const updateData = {
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedBy: req.user.uid
+    };
+
+    if (fullName) updateData.fullName = fullName;
+    if (role) updateData.role = role;
+    if (status) updateData.status = status;
+
+    await db.collection('users').doc(userId).update(updateData);
+
+    // Update custom claims if role changed
+    if (role && role !== userData.role) {
+      await auth.setCustomUserClaims(userId, { 
+        role, 
+        companyId: userData.companyId 
+      });
+    }
+
+    await logAudit('UPDATE_USER', req.user.uid, null, {
+      updatedUserId: userId,
+      changes: updateData,
+      requestId: req.id
+    });
+
+    res.json({ id: userId, ...updateData });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete user
+app.delete('/api/users/:id', verifyToken, async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // Get the user being deleted
+    const userDoc = await db.collection('users').doc(userId).get();
+    if (!userDoc.exists) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const userData = userDoc.data();
+
+    // Check permissions
+    if (req.user.role !== 'super_admin' && userData.companyId !== req.user.companyId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    // Delete from Firebase Auth
+    await auth.deleteUser(userId);
+
+    // Delete from Firestore
+    await db.collection('users').doc(userId).delete();
+
+    await logAudit('DELETE_USER', req.user.uid, null, {
+      deletedUserId: userId,
+      email: userData.email,
+      requestId: req.id
+    });
+
+    res.json({ success: true, message: 'User deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ====== COMPANY ENDPOINTS ======
+
+// Get all companies (super_admin only)
+app.get('/api/companies', apiLimiter, verifyToken, async (req, res) => {
+  try {
+    // Only super_admin can view all companies
+    if (req.user.role !== 'super_admin') {
+      return res.status(403).json({ error: 'Unauthorized: Only super admin can view all companies' });
+    }
+
+    const snapshot = await db.collection('companies').get();
+    const companies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    res.json(companies);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get single company
+app.get('/api/companies/:id', verifyToken, async (req, res) => {
+  try {
+    const doc = await db.collection('companies').doc(req.params.id).get();
+    if (!doc.exists) {
+      return res.status(404).json({ error: 'Company not found' });
+    }
+    res.json({ id: doc.id, ...doc.data() });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Create company (super_admin only)
+app.post('/api/companies', apiLimiter, verifyToken, async (req, res) => {
+  try {
+    const { name, email, phone, address } = req.body;
+
+    // Only super_admin can create companies
+    if (req.user.role !== 'super_admin') {
+      return res.status(403).json({ error: 'Unauthorized: Only super admin can create companies' });
+    }
+
+    if (!name || !email) {
+      return res.status(400).json({ error: 'Missing required fields: name, email' });
+    }
+
+    const newCompany = {
+      name,
+      email,
+      phone: phone || '',
+      address: address || '',
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      createdBy: req.user.uid,
+      status: 'active'
+    };
+
+    const docRef = await db.collection('companies').add(newCompany);
+
+    await logAudit('CREATE_COMPANY', req.user.uid, null, {
+      companyId: docRef.id,
+      companyName: name,
+      requestId: req.id
+    });
+
+    res.json({ id: docRef.id, ...newCompany });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update company (super_admin only)
+app.put('/api/companies/:id', apiLimiter, verifyToken, async (req, res) => {
+  try {
+    const { name, email, phone, address, status } = req.body;
+
+    // Only super_admin can update companies
+    if (req.user.role !== 'super_admin') {
+      return res.status(403).json({ error: 'Unauthorized: Only super admin can update companies' });
+    }
+
+    const updateData = {
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedBy: req.user.uid
+    };
+
+    if (name) updateData.name = name;
+    if (email) updateData.email = email;
+    if (phone) updateData.phone = phone;
+    if (address) updateData.address = address;
+    if (status) updateData.status = status;
+
+    await db.collection('companies').doc(req.params.id).update(updateData);
+
+    await logAudit('UPDATE_COMPANY', req.user.uid, null, {
+      companyId: req.params.id,
+      changes: updateData,
+      requestId: req.id
+    });
+
+    res.json({ id: req.params.id, ...updateData });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete company (super_admin only)
+app.delete('/api/companies/:id', verifyToken, async (req, res) => {
+  try {
+    // Only super_admin can delete companies
+    if (req.user.role !== 'super_admin') {
+      return res.status(403).json({ error: 'Unauthorized: Only super admin can delete companies' });
+    }
+
+    const companyId = req.params.id;
+
+    // Delete all users in the company
+    const usersSnapshot = await db.collection('users')
+      .where('companyId', '==', companyId)
+      .get();
+
+    for (const userDoc of usersSnapshot.docs) {
+      await auth.deleteUser(userDoc.id);
+      await userDoc.ref.delete();
+    }
+
+    // Delete all projects in the company
+    const projectsSnapshot = await db.collection('projects')
+      .where('companyId', '==', companyId)
+      .get();
+
+    for (const projectDoc of projectsSnapshot.docs) {
+      await projectDoc.ref.delete();
+    }
+
+    // Delete company
+    await db.collection('companies').doc(companyId).delete();
+
+    await logAudit('DELETE_COMPANY', req.user.uid, null, {
+      companyId,
+      requestId: req.id
+    });
+
+    res.json({ success: true, message: 'Company deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ====== PROJECT ENDPOINTS ======
 
 // Get all projects

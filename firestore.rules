@@ -1,128 +1,152 @@
 /**
  * Firestore Rules for ADM Construction Project Management System
- * Security rules for role-based access control
+ * Role-Based Access Control with proper rule enforcement
  */
 
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Helper function: Check if user has a role
-    function hasRole(role) {
-      return request.auth != null && request.auth.token.role == role;
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
     }
-    
-    // Helper function: Check user's company
-    function userCompanyId() {
+
+    function getUserRole() {
+      return request.auth.token.role;
+    }
+
+    function getUserCompanyId() {
       return request.auth.token.companyId;
     }
-    
-    // Helper function: Can user read a document's companyId?
-    function userCanReadCompany(companyId) {
-      return request.auth != null && userCompanyId() == companyId;
+
+    function isSuperAdmin() {
+      return getUserRole() == 'super_admin';
+    }
+
+    function isCompanyAdmin() {
+      return getUserRole() == 'company_admin';
+    }
+
+    function isCompanyUser() {
+      return getUserRole() == 'user';
+    }
+
+    function hasCompanyAccess(companyId) {
+      return isSignedIn() && (isSuperAdmin() || getUserCompanyId() == companyId);
     }
 
     // ========== COMPANIES COLLECTION ==========
-    match /companies/{document=**} {
-      // Only superadmins can read/write companies
-      allow read: if hasRole('superadmin');
-      allow create: if hasRole('superadmin');
-      allow update: if hasRole('superadmin') && resource.data.companyId == userCompanyId();
-      allow delete: if hasRole('superadmin');
+    match /companies/{companyId} {
+      // Super admin can read all
+      allow read: if isSuperAdmin();
+      // Company admin/user can read their company
+      allow read: if hasCompanyAccess(companyId);
+      
+      // Only super admin can create
+      allow create: if isSuperAdmin() && 
+                       request.resource.data.name != null;
+      
+      // Only super admin can update
+      allow update: if isSuperAdmin();
+      
+      // Only super admin can delete
+      allow delete: if isSuperAdmin();
     }
 
     // ========== USERS COLLECTION ==========
     match /users/{userId} {
-      // Users can read their own document
+      // Users can read their own profile
       allow read: if request.auth.uid == userId;
-      // Admins can read users in their company
-      allow read: if hasRole('admin') && resource.data.companyId == userCompanyId();
-      // Superadmins can read all
-      allow read: if hasRole('superadmin');
       
-      // Only admins can create users
-      allow create: if hasRole('admin') && request.resource.data.companyId == userCompanyId();
+      // Company admin can read users in their company
+      allow read: if isCompanyAdmin() && 
+                     resource.data.companyId == getUserCompanyId();
+      
+      // Super admin can read all users
+      allow read: if isSuperAdmin();
+      
+      // Company admin can create users in their company
+      allow create: if isCompanyAdmin() && 
+                       request.resource.data.companyId == getUserCompanyId() &&
+                       request.resource.data.role in ['user', 'company_admin'];
+      
+      // Only super admin can create super_admin
+      allow create: if isSuperAdmin() && 
+                       request.resource.data.role in ['super_admin', 'company_admin', 'user'];
       
       // Users can update their own profile
-      allow update: if request.auth.uid == userId;
-      // Admins can update users in their company
-      allow update: if hasRole('admin') && resource.data.companyId == userCompanyId();
+      allow update: if request.auth.uid == userId &&
+                       !('role' in request.resource.data) && // Cannot change role
+                       !('companyId' in request.resource.data); // Cannot change company
       
-      // Only superadmins can delete
-      allow delete: if hasRole('superadmin');
+      // Company admin can update users in their company
+      allow update: if isCompanyAdmin() && 
+                       resource.data.companyId == getUserCompanyId() &&
+                       resource.data.role == 'user'; // Can only edit regular users
+      
+      // Super admin can update all
+      allow update: if isSuperAdmin();
+      
+      // Company admin and super admin can delete
+      allow delete: if (isCompanyAdmin() && resource.data.companyId == getUserCompanyId()) ||
+                       isSuperAdmin();
     }
 
     // ========== PROJECTS COLLECTION ==========
     match /projects/{projectId} {
-      // Read: any authenticated user
-      allow read: if request.auth != null;
+      // Read: authenticated users in same company
+      allow read: if isSignedIn() && hasCompanyAccess(resource.data.companyId);
       
-      // Create: any authenticated user (backend validates)
-      allow create: if request.auth != null && 
-                       request.resource.data.companyId != null &&
-                       request.resource.data.createdBy == request.auth.uid;
+      // Create: company admin and users in same company
+      allow create: if isSignedIn() &&
+                       hasCompanyAccess(request.resource.data.companyId) &&
+                       (isCompanyAdmin() || isCompanyUser());
       
-      // Update: owner or admin
-      allow update: if request.auth != null &&
-                       (request.auth.uid == resource.data.createdBy || 
-                        request.auth.uid == resource.data.assignedTo);
+      // Update: same company access
+      allow update: if isSignedIn() &&
+                       hasCompanyAccess(resource.data.companyId) &&
+                       (isCompanyAdmin() || 
+                        request.auth.uid == resource.data.createdBy);
       
-      // Delete: owner only
-      allow delete: if request.auth != null &&
-                       request.auth.uid == resource.data.createdBy;
+      // Delete: company admin or project owner
+      allow delete: if isCompanyAdmin() && 
+                       hasCompanyAccess(resource.data.companyId);
 
       // ========== PROJECT SUBCOLLECTIONS ==========
-      
-      // Logs subcollection
       match /logs/{logId} {
-        allow read: if request.auth != null;
-        allow create: if request.auth != null &&
-                        request.resource.data.projectId == projectId;
-        allow update: if request.auth != null &&
-                        request.auth.uid == resource.data.createdBy;
-        allow delete: if request.auth != null &&
-                        request.auth.uid == resource.data.createdBy;
+        allow read: if isSignedIn() && hasCompanyAccess(get(/databases/$(database)/documents/projects/$(projectId)).data.companyId);
+        allow create: if isSignedIn() && hasCompanyAccess(get(/databases/$(database)/documents/projects/$(projectId)).data.companyId);
+        allow update: if isSignedIn();
+        allow delete: if isSignedIn();
       }
 
-      // Stocks subcollection
       match /stocks/{stockId} {
-        allow read: if request.auth != null;
-        allow create: if request.auth != null &&
-                        request.resource.data.projectId == projectId;
-        allow update: if request.auth != null;
-        allow delete: if request.auth != null &&
-                        request.auth.uid == resource.data.createdBy;
+        allow read: if isSignedIn() && hasCompanyAccess(get(/databases/$(database)/documents/projects/$(projectId)).data.companyId);
+        allow create: if isSignedIn() && hasCompanyAccess(get(/databases/$(database)/documents/projects/$(projectId)).data.companyId);
+        allow update: if isSignedIn();
+        allow delete: if isSignedIn();
       }
 
-      // Payments subcollection
       match /payments/{paymentId} {
-        allow read: if request.auth != null;
-        allow create: if request.auth != null &&
-                        request.resource.data.projectId == projectId;
-        allow update: if request.auth != null;
-        allow delete: if request.auth != null &&
-                        request.auth.uid == resource.data.createdBy;
+        allow read: if isSignedIn() && hasCompanyAccess(get(/databases/$(database)/documents/projects/$(projectId)).data.companyId);
+        allow create: if isSignedIn() && hasCompanyAccess(get(/databases/$(database)/documents/projects/$(projectId)).data.companyId);
+        allow update: if isSignedIn();
+        allow delete: if isSignedIn();
       }
 
-      // Uploads subcollection
       match /uploads/{uploadId} {
-        allow read: if request.auth != null;
-        allow create: if request.auth != null &&
-                        request.resource.data.projectId == projectId;
-        allow delete: if request.auth != null &&
-                        request.auth.uid == resource.data.uploadedBy;
+        allow read: if isSignedIn() && hasCompanyAccess(get(/databases/$(database)/documents/projects/$(projectId)).data.companyId);
+        allow create: if isSignedIn() && hasCompanyAccess(get(/databases/$(database)/documents/projects/$(projectId)).data.companyId);
+        allow delete: if isSignedIn();
       }
     }
 
-    // ========== AUDIT LOGS COLLECTION ==========
+    // ========== AUDIT LOGS ==========
     match /audit_logs/{auditId} {
-      // Only admins can read audit logs
-      allow read: if hasRole('admin') && 
-                     resource.data.companyId == userCompanyId();
-      allow read: if hasRole('superadmin');
-      
-      // Automatic write by backend (trust via security token)
-      allow write: if request.auth != null;
+      allow read: if (isCompanyAdmin() && resource.data.companyId == getUserCompanyId()) ||
+                     isSuperAdmin();
+      allow write: if isSignedIn();
     }
 
     // ========== DEFAULT: DENY ALL ==========

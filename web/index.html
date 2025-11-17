@@ -39,15 +39,45 @@
   <!-- Dashboard (Hidden by default) -->
   <div id="dashboard" class="container hidden">
     <h2>Hoşgeldiniz, <span id="userNameDisplay"></span>!</h2>
-    <p>Proje yönetim sisteminize hoşgeldiniz.</p>
+    <p id="userRoleDisplay" style="color: var(--text-secondary); margin-bottom: 1.5rem;"></p>
     
-    <section id="projectsSection" style="margin-top: 2rem;">
+    <!-- Navigation Tabs for Different Roles -->
+    <div style="border-bottom: 2px solid var(--border-color); margin-bottom: 2rem; display: flex; gap: 0;">
+      <button class="dashboard-tab active" data-tab="projects" onclick="switchDashboardTab('projects')">📊 Projeler</button>
+      <button class="dashboard-tab hidden" id="usersTabBtn" data-tab="users" onclick="switchDashboardTab('users')">👥 Kullanıcılar</button>
+      <button class="dashboard-tab hidden" id="companiesTabBtn" data-tab="companies" onclick="switchDashboardTab('companies')">🏢 Şirketler</button>
+    </div>
+
+    <!-- Projects Section -->
+    <section id="projectsSection" class="dashboard-tab-content" style="margin-top: 2rem;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
         <h3>Projeler</h3>
         <button class="btn btn-primary" onclick="openCreateProjectModal()" style="width: auto;">+ Yeni Proje</button>
       </div>
       <div id="projectsList" class="dashboard-grid">
         <!-- Projects will be loaded here -->
+      </div>
+    </section>
+
+    <!-- Users Management Section (Company Admin) -->
+    <section id="usersSection" class="dashboard-tab-content hidden" style="margin-top: 2rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3>Kullanıcılar</h3>
+        <button class="btn btn-primary" onclick="openCreateUserModal()" style="width: auto;">+ Yeni Kullanıcı</button>
+      </div>
+      <div class="users-list" style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
+        <!-- Users will be loaded here -->
+      </div>
+    </section>
+
+    <!-- Companies Management Section (Super Admin) -->
+    <section id="companiesSection" class="dashboard-tab-content hidden" style="margin-top: 2rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3>Şirketler</h3>
+        <button class="btn btn-primary" onclick="openCreateCompanyModal()" style="width: auto;">+ Yeni Şirket</button>
+      </div>
+      <div class="companies-list" style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
+        <!-- Companies will be loaded here -->
       </div>
     </section>
   </div>
@@ -245,6 +275,72 @@
     </div>
   </div>
 
+  <!-- Create User Modal (Company Admin) -->
+  <div id="createUserModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Yeni Kullanıcı Oluştur</h2>
+        <button class="modal-close" onclick="closeCreateUserModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="createUserForm" onsubmit="handleCreateUser(event)">
+          <div class="form-group">
+            <label for="userEmail">E-posta *</label>
+            <input type="email" id="userEmail" placeholder="kullanici@example.com" required>
+          </div>
+          <div class="form-group">
+            <label for="userPassword">Şifre *</label>
+            <input type="password" id="userPassword" placeholder="En az 6 karakter" required minlength="6">
+          </div>
+          <div class="form-group">
+            <label for="userFullName">Ad Soyad *</label>
+            <input type="text" id="userFullName" placeholder="Tam adı girin" required>
+          </div>
+          <div class="form-group">
+            <label for="userRole">Rol *</label>
+            <select id="userRole" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px;">
+              <option value="">Seçiniz</option>
+              <option value="user">Kullanıcı</option>
+              <option value="company_admin">Şirket Admin</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Kullanıcı Oluştur</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Company Modal (Super Admin) -->
+  <div id="createCompanyModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Yeni Şirket Oluştur</h2>
+        <button class="modal-close" onclick="closeCreateCompanyModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="createCompanyForm" onsubmit="handleCreateCompany(event)">
+          <div class="form-group">
+            <label for="companyName">Şirket Adı *</label>
+            <input type="text" id="companyName" placeholder="Şirket adı" required>
+          </div>
+          <div class="form-group">
+            <label for="companyEmail">Şirket E-posta *</label>
+            <input type="email" id="companyEmail" placeholder="contact@company.com" required>
+          </div>
+          <div class="form-group">
+            <label for="companyPhone">Telefon</label>
+            <input type="tel" id="companyPhone" placeholder="+90 XXX XXX XXXX">
+          </div>
+          <div class="form-group">
+            <label for="companyAddress">Adres</label>
+            <textarea id="companyAddress" placeholder="Şirket adresi" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; height: 80px;"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Şirket Oluştur</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <!-- Firebase SDK (modular v10.7.1) -->
   <!-- No longer needed - using ES modules in firebase-config.js -->
 
@@ -257,6 +353,12 @@
   <!-- Projects Module (exports to window) -->
   <script type="module" src="js/projects.js"></script>
   
+  <!-- Users Management Module -->
+  <script type="module" src="js/users.js"></script>
+  
+  <!-- Companies Management Module -->
+  <script type="module" src="js/companies.js"></script>
+  
   <!-- Additional Modules -->
   <script type="module" src="js/upload.js"></script>
   <script type="module" src="js/audit.js"></script>
@@ -266,5 +368,8 @@
   
   <!-- App Initialization (last, uses window exports) -->
   <script type="module" src="js/app.js"></script>
+  
+  <!-- Debug Console (for testing - remove in production) -->
+  <script src="js/debug.js"></script>
 </body>
 </html>

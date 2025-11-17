@@ -55,7 +55,45 @@ function showDashboard() {
 async function loadUserData() {
   const user = auth.currentUser;
   if (user) {
-    document.getElementById('userNameDisplay').textContent = user.email.split('@')[0];
+    const email = user.email.split('@')[0];
+    document.getElementById('userNameDisplay').textContent = email;
+    
+    // Get user role from custom claims
+    const idTokenResult = await user.getIdTokenResult(true);
+    const role = idTokenResult.claims.role || 'user';
+    const companyId = idTokenResult.claims.companyId || null;
+    
+    console.log(`👤 User Role: ${role}, Company: ${companyId}`);
+    
+    // Display role
+    const roleDisplay = {
+      'super_admin': 'Super Admin',
+      'company_admin': 'Şirket Admin',
+      'user': 'Kullanıcı'
+    };
+    document.getElementById('userRoleDisplay').textContent = `Rol: ${roleDisplay[role] || role}`;
+    
+    // Show/hide admin tabs based on role
+    const usersTabBtn = document.getElementById('usersTabBtn');
+    const companiesTabBtn = document.getElementById('companiesTabBtn');
+    
+    // Company admin can see users tab
+    if (role === 'company_admin') {
+      usersTabBtn.classList.remove('hidden');
+    } else {
+      usersTabBtn.classList.add('hidden');
+    }
+    
+    // Super admin can see companies tab
+    if (role === 'super_admin') {
+      companiesTabBtn.classList.remove('hidden');
+    } else {
+      companiesTabBtn.classList.add('hidden');
+    }
+    
+    // Store role and company for later use
+    window.userRole = role;
+    window.userCompanyId = companyId;
   }
 }
 

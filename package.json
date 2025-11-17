@@ -1,0 +1,35 @@
+{
+  "name": "adm-web-pro",
+  "version": "1.0.0",
+  "description": "ADM İnşaat Proje Yönetim Sistemi - Construction Project Management System",
+  "main": "api/index.js",
+  "scripts": {
+    "dev": "node api/index.js",
+    "start": "node api/index.js",
+    "deploy": "vercel --prod",
+    "deploy:preview": "vercel",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "construction",
+    "project-management",
+    "firebase",
+    "vercel"
+  ],
+  "author": "ADM İnşaat",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "firebase-admin": "^12.0.0",
+    "cloudinary": "^1.40.0",
+    "express-rate-limit": "^7.1.5"
+  },
+  "devDependencies": {
+    "vercel": "^32.5.0"
+  },
+  "engines": {
+    "node": "22.x"
+  }
+}
