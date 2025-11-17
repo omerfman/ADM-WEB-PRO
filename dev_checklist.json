@@ -150,6 +150,76 @@
       "createdAt": "2025-11-17T00:00:00Z",
       "doneAt": "2025-11-17T10:00:00Z",
       "notes": "Tüm tasks tamamlandı. Frontend + Backend entegrasyonu test edildi. Audit logging, security rules, API documentation, deployment configs hazırlandı. Sistem production deploy için hazır."
+    },
+
+    {
+      "id": "firebase-setup-01",
+      "title": "Firebase Web Config - Modular SDK v10.7.1",
+      "description": "Firebase config bilgileri eklendi, ES Modules imports yapıldı, auth.js ve projects.js Firebase SDK ile entegre edildi.",
+      "status": "done",
+      "createdAt": "2025-11-17T11:00:00Z",
+      "doneAt": "2025-11-17T11:30:00Z",
+      "notes": "firebase-config.js: adm-web-pro Firebase project config eklendi, modular imports (getAuth, getFirestore) eklendi. auth.js: signInWithEmailAndPassword, signOut, onAuthStateChanged imports ve ES modules yapısı. projects.js: collection, query, where, orderBy, getDocs imports eklendi. HTML: type=module scripts eklendi."
+    },
+
+    {
+      "id": "firebase-setup-02",
+      "title": "Frontend Login Test - Başarılı",
+      "description": "admin@adm.com test user ile login yapıldı, Dashboard ve Projects yüklendi.",
+      "status": "done",
+      "createdAt": "2025-11-17T11:30:00Z",
+      "doneAt": "2025-11-17T11:45:00Z",
+      "notes": "✅ Login başarılı: admin@adm.com ile giriş yapıldı. Dashboard görüntülendi. Firestore bağlantısı doğrulandı. Projects (boş) gösterildi. Auth state listener çalışıyor."
+    },
+
+    {
+      "id": "firebase-setup-03",
+      "title": "Firestore Rules Deploy",
+      "description": "firebase deploy --only firestore:rules ile security rules aktifleştir.",
+      "status": "not-started",
+      "createdAt": "2025-11-17T11:45:00Z",
+      "doneAt": null,
+      "notes": "Sonraki adım: Firebase Console → Firestore → Rules veya CLI ile deploy et. Role-based access control aktif olacak."
+    },
+
+    {
+      "id": "firebase-setup-04",
+      "title": "Seed Data Yükle",
+      "description": "node admin-scripts/seed-database.js çalıştır - companies, users, projects, logs, stocks, payments yüklenir.",
+      "status": "not-started",
+      "createdAt": "2025-11-17T11:45:00Z",
+      "doneAt": null,
+      "notes": "Sonraki adım: Example projeler ve data Firestore'a yüklenecek. Firestore Console'da collections görebileceksin."
+    },
+
+    {
+      "id": "backend-setup-01",
+      "title": "Backend API Setup - npm install",
+      "description": "api/ klasöründe npm install çalıştır - Express, Firebase Admin, Cloudinary vb. bağımlılıkları yükle.",
+      "status": "not-started",
+      "createdAt": "2025-11-17T11:45:00Z",
+      "doneAt": null,
+      "notes": "Sonraki adım: api/package.json dependencies (/api/index.js için) yüklenecek."
+    },
+
+    {
+      "id": "backend-setup-02",
+      "title": "Backend Local Test",
+      "description": "node api/index.js veya npm start ile backend başlat, /api/health test et.",
+      "status": "not-started",
+      "createdAt": "2025-11-17T11:45:00Z",
+      "doneAt": null,
+      "notes": "Sonraki adım: Express server localhost:3001 veya PORT env'deki port'te çalışacak. API endpoints test edilecek."
+    },
+
+    {
+      "id": "vercel-deploy-01",
+      "title": "Vercel Deploy - Frontend & Backend Serverless",
+      "description": "vercel --prod ile frontend (/web) ve backend (/api) Vercel'e deploy et.",
+      "status": "not-started",
+      "createdAt": "2025-11-17T11:45:00Z",
+      "doneAt": null,
+      "notes": "Sonraki adım: VERCEL_DEPLOYMENT.md rehberine bak. vercel.json config zaten hazır. Frontend ve API Vercel'de production deploy olacak."
     }
   ]
 }
