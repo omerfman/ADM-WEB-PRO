@@ -106,10 +106,10 @@
       "id": "audit-01",
       "title": "Audit logging",
       "description": "actions -> audit_logs denormalize performedByName, projectName ve kayıt ekle.",
-      "status": "todo",
-      "createdAt": null,
-      "doneAt": null,
-      "notes": ""
+      "status": "done",
+      "createdAt": "2025-11-17T00:00:00Z",
+      "doneAt": "2025-11-17T07:00:00Z",
+      "notes": "web/js/audit.js oluşturuldu (logAuditAction, loadAuditLogs, renderAuditView, exportCSV, summary). Backend /api/audit-logs endpoints (GET, POST, /summary) tamamlandı."
     },
 
     {

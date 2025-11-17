@@ -421,6 +421,130 @@ app.delete('/api/projects/:id', async (req, res) => {
   }
 });
 
+// ============ AUDIT LOGS ENDPOINTS ============
+
+/**
+ * GET /api/audit-logs
+ * Get audit logs for a company
+ */
+app.get('/api/audit-logs', async (req, res) => {
+  try {
+    if (!db) {
+      return res.status(500).json({ error: 'Firestore not configured' });
+    }
+    
+    const companyId = req.query.companyId || 'default-company';
+    const limit = parseInt(req.query.limit) || 100;
+    
+    const snapshot = await db.collection('audit_logs')
+      .where('companyId', '==', companyId)
+      .orderBy('timestamp', 'desc')
+      .limit(limit)
+      .get();
+    
+    const logs = [];
+    snapshot.forEach(doc => {
+      logs.push({ id: doc.id, ...doc.data() });
+    });
+    
+    res.json({
+      count: logs.length,
+      logs,
+    });
+  } catch (error) {
+    console.error('❌ Get audit logs error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /api/audit-logs
+ * Create audit log entry (usually done by system)
+ */
+app.post('/api/audit-logs', async (req, res) => {
+  try {
+    if (!db) {
+      return res.status(500).json({ error: 'Firestore not configured' });
+    }
+    
+    const { action, entity, entityId, entityName, companyId, performedBy, changes } = req.body;
+    
+    if (!action || !entity || !entityId) {
+      return res.status(400).json({ 
+        error: 'action, entity, entityId zorunludur' 
+      });
+    }
+    
+    const logRef = await db.collection('audit_logs').add({
+      action,
+      entity,
+      entityId,
+      entityName: entityName || '',
+      companyId: companyId || 'default-company',
+      performedBy: performedBy || 'system',
+      performedByName: performedBy || 'System',
+      performedByEmail: 'system@adm.com',
+      changes: changes || {},
+      timestamp: admin.firestore.Timestamp.now(),
+    });
+    
+    res.status(201).json({
+      id: logRef.id,
+      message: 'Audit log created',
+    });
+  } catch (error) {
+    console.error('❌ Create audit log error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /api/audit-logs/summary
+ * Get audit logs summary statistics
+ */
+app.get('/api/audit-logs/summary', async (req, res) => {
+  try {
+    if (!db) {
+      return res.status(500).json({ error: 'Firestore not configured' });
+    }
+    
+    const companyId = req.query.companyId || 'default-company';
+    const days = parseInt(req.query.days) || 7;
+    
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    
+    const snapshot = await db.collection('audit_logs')
+      .where('companyId', '==', companyId)
+      .where('timestamp', '>=', admin.firestore.Timestamp.fromDate(startDate))
+      .get();
+    
+    const summary = {
+      total: snapshot.size,
+      byAction: {},
+      byEntity: {},
+      topUsers: {},
+    };
+    
+    snapshot.forEach(doc => {
+      const log = doc.data();
+      
+      summary.byAction[log.action] = (summary.byAction[log.action] || 0) + 1;
+      summary.byEntity[log.entity] = (summary.byEntity[log.entity] || 0) + 1;
+      summary.topUsers[log.performedByName] = (summary.topUsers[log.performedByName] || 0) + 1;
+    });
+    
+    res.json({
+      period: { days, startDate },
+      summary,
+    });
+  } catch (error) {
+    console.error('❌ Get audit summary error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 
 // ============ ERROR HANDLING ============
 

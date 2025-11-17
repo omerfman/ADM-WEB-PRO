@@ -20,6 +20,9 @@ Tüm önemli değişiklikler bu dosyada kaydedilecektir.
 
 - **Photo Upload with Cloudinary Signed** — Claude-agent: web/js/upload.js oluşturuldu (Cloudinary signed upload akışı, file picker, metadata save). /api/uploads/sign ve /api/uploads/complete endpoints hazır. API_DOCUMENTATION.md kapsamlı API referansı (tüm endpoints, examples, error handling, rate limiting).
 
+- **Audit Logging System** — Claude-agent: web/js/audit.js oluşturuldu (logAuditAction, loadAuditLogs, renderAuditView, exportCSV, getAuditSummary). Backend /api/audit-logs endpoints (GET, POST, /summary) tamamlandı. Tüm actions audit_logs collection'ına yazılıyor (action type, entity, performedBy, changes, timestamp).
+
+
 
 
 
