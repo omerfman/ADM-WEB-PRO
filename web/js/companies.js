@@ -219,13 +219,14 @@ function editCompany(companyId) {
   console.log('📢 editCompany called for:', companyId);
   
   // Load company data
-  db.collection('companies').doc(companyId).get().then(doc => {
-    if (!doc.exists) {
+  getDoc(doc(db, 'companies', companyId)).then(snapshot => {
+    if (!snapshot.exists()) {
       alert('Şirket bulunamadı');
       return;
     }
     
-    const company = doc.data();
+    const company = snapshot.data();
+    console.log('📋 Company data:', company);
     
     // Create edit modal
     const modal = document.createElement('div');
@@ -241,11 +242,11 @@ function editCompany(companyId) {
           <form id="editCompanyForm" onsubmit="handleEditCompany(event, '${companyId}')">
             <div class="form-group">
               <label for="editCompanyName">Şirket Adı *</label>
-              <input type="text" id="editCompanyName" value="${company.name}" placeholder="Şirket adı" required>
+              <input type="text" id="editCompanyName" value="${company.name || ''}" placeholder="Şirket adı" required>
             </div>
             <div class="form-group">
               <label for="editCompanyEmail">Şirket E-posta *</label>
-              <input type="email" id="editCompanyEmail" value="${company.email}" placeholder="contact@company.com" required>
+              <input type="email" id="editCompanyEmail" value="${company.email || ''}" placeholder="contact@company.com" required>
             </div>
             <div class="form-group">
               <label for="editCompanyPhone">Telefon</label>
@@ -280,7 +281,8 @@ async function handleEditCompany(event, companyId) {
   
   try {
     console.log('💾 Updating company:', companyId);
-    await db.collection('companies').doc(companyId).update({
+    const { updateDoc } = window.firestore;
+    await updateDoc(doc(db, 'companies', companyId), {
       name: name,
       email: email,
       phone: phone || '',
@@ -310,7 +312,7 @@ function viewCompanyUsers(companyId) {
   
   // Get company name
   const companyCard = document.querySelector(`[data-company-id="${companyId}"]`);
-  const companyName = companyCard ? companyCard.textContent.split('\n')[0] : companyId;
+  const companyName = companyCard ? companyCard.querySelector('strong').textContent : companyId;
   
   // Create a modal to show company users
   const modal = document.createElement('div');
@@ -323,6 +325,9 @@ function viewCompanyUsers(companyId) {
         <button class="modal-close" onclick="document.getElementById('companyUsersModal').remove()">&times;</button>
       </div>
       <div class="modal-body">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
+          <button class="btn btn-primary" onclick="openAddCompanyUserModal('${companyId}')" style="width: auto;">+ Yeni Kullanıcı</button>
+        </div>
         <div id="companyUsersList" style="max-height: 400px; overflow-y: auto;">
           <p style="text-align: center; color: #999;">Yükleniyor...</p>
         </div>
@@ -427,6 +432,103 @@ async function deleteUserFromCompany(userId) {
   }
 }
 
+// Open add company user modal
+function openAddCompanyUserModal(companyId) {
+  console.log('📢 openAddCompanyUserModal called for:', companyId);
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal active';
+  modal.id = 'addCompanyUserModal';
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <h2>➕ Yeni Kullanıcı Ekle</h2>
+        <button class="modal-close" onclick="document.getElementById('addCompanyUserModal').remove()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="addCompanyUserForm" onsubmit="handleAddCompanyUser(event, '${companyId}')">
+          <div class="form-group">
+            <label for="newUserEmail">E-posta *</label>
+            <input type="email" id="newUserEmail" placeholder="kullanici@example.com" required>
+          </div>
+          <div class="form-group">
+            <label for="newUserPassword">Şifre *</label>
+            <input type="password" id="newUserPassword" placeholder="En az 6 karakter" required minlength="6">
+          </div>
+          <div class="form-group">
+            <label for="newUserFullName">Ad Soyad *</label>
+            <input type="text" id="newUserFullName" placeholder="Tam adı girin" required>
+          </div>
+          <div class="form-group">
+            <label for="newUserRole">Rol *</label>
+            <select id="newUserRole" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px;">
+              <option value="">Seçiniz</option>
+              <option value="user">Kullanıcı</option>
+              <option value="company_admin">Şirket Admin</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Kullanıcı Oluştur</button>
+        </form>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+}
+
+// Handle add company user form submission
+async function handleAddCompanyUser(event, companyId) {
+  event.preventDefault();
+  console.log('📢 handleAddCompanyUser called for company:', companyId);
+  
+  const email = document.getElementById('newUserEmail').value;
+  const password = document.getElementById('newUserPassword').value;
+  const fullName = document.getElementById('newUserFullName').value;
+  const role = document.getElementById('newUserRole').value;
+  
+  if (!email || !password || !fullName || !role) {
+    alert('Lütfen tüm alanları doldurunuz');
+    return;
+  }
+  
+  if (password.length < 6) {
+    alert('Şifre en az 6 karakter olmalıdır');
+    return;
+  }
+  
+  try {
+    console.log('📤 Creating user via Firestore for company:', companyId);
+    
+    // Create user document in Firestore
+    const userRef = await addDoc(collection(db, 'users'), {
+      email: email,
+      fullName: fullName,
+      role: role,
+      companyId: companyId,
+      createdAt: new Date(),
+      createdBy: auth.currentUser.uid,
+      status: 'active'
+    });
+    
+    console.log('✅ User created in Firestore:', userRef.id);
+    
+    // Note: In production, you should also create user in Firebase Auth via backend API
+    // For now, we're just creating in Firestore
+    
+    alert('✅ Kullanıcı başarıyla oluşturuldu');
+    
+    // Close modal
+    const modal = document.getElementById('addCompanyUserModal');
+    if (modal) modal.remove();
+    
+    // Reload company users list
+    loadCompanyUsersList(companyId);
+  } catch (error) {
+    console.error('❌ Error creating user:', error);
+    alert('Hata: ' + error.message);
+  }
+}
+
 // Export functions to window for global access
 window.openCreateCompanyModal = openCreateCompanyModal;
 window.closeCreateCompanyModal = closeCreateCompanyModal;
@@ -438,3 +540,5 @@ window.handleEditCompany = handleEditCompany;
 window.viewCompanyUsers = viewCompanyUsers;
 window.loadCompanyUsersList = loadCompanyUsersList;
 window.deleteUserFromCompany = deleteUserFromCompany;
+window.openAddCompanyUserModal = openAddCompanyUserModal;
+window.handleAddCompanyUser = handleAddCompanyUser;
