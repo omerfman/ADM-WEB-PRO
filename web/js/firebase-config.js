@@ -80,3 +80,6 @@ window.auth = auth;
 window.db = db;
 window.verifyFirebaseConnection = verifyFirebaseConnection;
 
+// ES Module exports (for import statements)
+export { auth, db, verifyFirebaseConnection };
+
