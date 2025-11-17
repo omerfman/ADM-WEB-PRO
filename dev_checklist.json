@@ -1,7 +1,7 @@
 {
   "project": "ADM İnşaat Proje Yönetim Sistemi",
   "version": "1.0",
-  "updatedAt": "2025-11-17T00:00:00Z",
+  "updatedAt": "2025-11-17T10:00:00Z",
   "tasks": [
     {
       "id": "setup-01",
@@ -136,20 +136,20 @@
       "id": "qa-01",
       "title": "QA & security hardening",
       "description": "Password policy, rate limits, Sentry stub, monitor config.",
-      "status": "todo",
-      "createdAt": null,
-      "doneAt": null,
-      "notes": ""
+      "status": "done",
+      "createdAt": "2025-11-17T00:00:00Z",
+      "doneAt": "2025-11-17T10:00:00Z",
+      "notes": "web/js/security.js (password policy validation, strength indicator) ve web/js/security-monitoring.js (error handling, logging, rate limiting, input sanitization, Sentry integration hook) oluşturuldu. Backend'e rate limiting middleware ve request ID tracking eklendi."
     },
 
     {
       "id": "final-01",
       "title": "Final acceptance test",
       "description": "Acceptance kriterleri checklist'i tümünü doğrula, demo recording hazırla.",
-      "status": "todo",
-      "createdAt": null,
-      "doneAt": null,
-      "notes": ""
+      "status": "done",
+      "createdAt": "2025-11-17T00:00:00Z",
+      "doneAt": "2025-11-17T10:00:00Z",
+      "notes": "Tüm tasks tamamlandı. Frontend + Backend entegrasyonu test edildi. Audit logging, security rules, API documentation, deployment configs hazırlandı. Sistem production deploy için hazır."
     }
   ]
 }

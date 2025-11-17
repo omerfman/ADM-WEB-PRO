@@ -35,6 +35,14 @@ app.use((req, res, next) => {
   next();
 });
 
+// Request ID for tracking
+app.use((req, res, next) => {
+  req.id = require('crypto').randomBytes(16).toString('hex');
+  res.set('X-Request-ID', req.id);
+  next();
+});
+
+
 // Firebase Admin SDK Initialize (placeholder - gerçek config gerekli)
 let admin;
 try {
