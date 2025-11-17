@@ -1,4 +1,4 @@
-/* ADM İnşaat Proje Yönetim Sistemi - Global Styles */
+/* ADM İnşaat Proje Yönetim Sistemi - Modern Design with Dark/Light Mode */
 
 * {
   margin: 0;
@@ -6,37 +6,91 @@
   box-sizing: border-box;
 }
 
+/* ========== COLOR VARIABLES ========== */
 :root {
-  --primary-color: #2c3e50;
-  --accent-color: #e74c3c;
-  --success-color: #27ae60;
-  --warning-color: #f39c12;
-  --danger-color: #e74c3c;
-  --light-bg: #ecf0f1;
-  --text-color: #2c3e50;
-  --border-color: #bdc3c7;
+  /* Light Mode Colors */
+  --light-primary: #ffffff;
+  --light-secondary: #f8f9fa;
+  --light-tertiary: #e9ecef;
+  --light-text: #1a1a1a;
+  --light-text-secondary: #6c757d;
+  --light-border: #dee2e6;
+  
+  /* Dark Mode Colors */
+  --dark-primary: #1a1a1a;
+  --dark-secondary: #2d2d2d;
+  --dark-tertiary: #3d3d3d;
+  --dark-text: #f0f0f0;
+  --dark-text-secondary: #b0b0b0;
+  --dark-border: #404040;
+  
+  /* Brand Colors (Red/White-Black) */
+  --brand-red: #d32f2f;
+  --brand-red-light: #ef5350;
+  --brand-red-dark: #b71c1c;
+  --brand-accent: #ff6b6b;
+  
+  /* Status Colors */
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --info-color: #3b82f6;
+  
+  /* Current theme (default: light) */
+  --bg-primary: var(--light-primary);
+  --bg-secondary: var(--light-secondary);
+  --bg-tertiary: var(--light-tertiary);
+  --text-primary: var(--light-text);
+  --text-secondary: var(--light-text-secondary);
+  --border-color: var(--light-border);
+  --card-bg: var(--light-primary);
+  --input-bg: var(--light-primary);
 }
 
+/* Dark Mode Theme */
+body.dark-mode {
+  --bg-primary: var(--dark-primary);
+  --bg-secondary: var(--dark-secondary);
+  --bg-tertiary: var(--dark-tertiary);
+  --text-primary: var(--dark-text);
+  --text-secondary: var(--dark-text-secondary);
+  --border-color: var(--dark-border);
+  --card-bg: var(--dark-secondary);
+  --input-bg: var(--dark-tertiary);
+}
+
+/* ========== GLOBAL STYLES ========== */
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: var(--light-bg);
-  color: var(--text-color);
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   line-height: 1.6;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* Smooth transitions for theme switching */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* ========== HEADER ========== */
 header {
-  background-color: var(--primary-color);
+  background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-red-dark) 100%);
   color: white;
-  padding: 1rem 2rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1.25rem 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 header h1 {
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
 }
 
 header nav {
@@ -52,85 +106,143 @@ header nav button {
   border: none;
   cursor: pointer;
   font-size: 0.95rem;
-  transition: opacity 0.3s;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
 }
 
 header nav a:hover,
 header nav button:hover {
-  opacity: 0.8;
+  background-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
 }
 
+/* Theme Toggle Button */
+#themeToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#themeToggle:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.05);
+}
+
+/* ========== CONTAINER ========== */
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: 2rem 1.5rem;
 }
 
+/* ========== LOGIN CONTAINER ========== */
 .login-container {
-  max-width: 400px;
+  max-width: 420px;
   margin: 5rem auto;
-  background-color: white;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background-color: var(--bg-secondary);
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--border-color);
 }
 
 .login-container h2 {
   text-align: center;
   margin-bottom: 1.5rem;
-  color: var(--primary-color);
+  color: var(--brand-red);
+  font-size: 1.5rem;
+  font-weight: 700;
 }
 
+/* ========== FORM STYLES ========== */
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: var(--text-color);
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.form-group input {
+.form-group input,
+.form-group textarea,
+.form-group select {
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
+  padding: 0.875rem;
+  border: 1.5px solid var(--border-color);
+  border-radius: 8px;
   font-size: 0.95rem;
-  transition: border-color 0.3s;
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+  font-family: inherit;
 }
 
-.form-group input:focus {
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
   outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1);
+  border-color: var(--brand-red);
+  box-shadow: 0 0 0 4px rgba(211, 47, 47, 0.1);
 }
 
+/* ========== BUTTONS ========== */
 .btn {
   display: inline-block;
-  padding: 0.75rem 1.5rem;
+  padding: 0.875rem 1.75rem;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
   font-size: 0.95rem;
   cursor: pointer;
-  transition: all 0.3s;
-  font-weight: 500;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .btn-primary {
-  background-color: var(--accent-color);
+  background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-red-light) 100%);
   color: white;
   width: 100%;
   margin-top: 1rem;
+  border: none;
 }
 
 .btn-primary:hover {
-  background-color: #c0392b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
 }
 
 .btn-primary:active {
-  transform: translateY(2px);
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1.5px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+  background-color: var(--border-color);
+  transform: translateY(-2px);
 }
 
 .btn-success {
@@ -139,23 +251,18 @@ header nav button:hover {
 }
 
 .btn-success:hover {
-  background-color: #229954;
+  background-color: #059669;
+  transform: translateY(-2px);
 }
 
-.btn-secondary {
-  background-color: #95a5a6;
-  color: white;
-}
-
-.btn-secondary:hover {
-  background-color: #7f8c8d;
-}
-
+/* ========== ALERTS ========== */
 .alert {
-  padding: 1rem;
+  padding: 1rem 1.25rem;
   margin-bottom: 1rem;
-  border-radius: 4px;
+  border-radius: 8px;
   display: none;
+  border-left: 4px solid;
+  font-weight: 500;
 }
 
 .alert.show {
@@ -163,54 +270,65 @@ header nav button:hover {
 }
 
 .alert-success {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--success-color);
+  border-left-color: var(--success-color);
 }
 
 .alert-danger {
-  background-color: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--danger-color);
+  border-left-color: var(--danger-color);
 }
 
 .alert-warning {
-  background-color: #fff3cd;
-  color: #856404;
-  border: 1px solid #ffeeba;
+  background-color: rgba(245, 158, 11, 0.1);
+  color: var(--warning-color);
+  border-left-color: var(--warning-color);
 }
 
+/* ========== DASHBOARD GRID ========== */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
-  margin-top: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
 }
 
+.project-card,
 .card {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: var(--card-bg);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   padding: 1.5rem;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
+  border: 1px solid var(--border-color);
 }
 
+.project-card:hover,
 .card:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(211, 47, 47, 0.15);
+  transform: translateY(-4px);
+  border-color: var(--brand-red);
 }
 
+.project-card h4,
 .card h3 {
-  color: var(--primary-color);
+  color: var(--brand-red);
+  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.project-card p,
+.card p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
   margin-bottom: 0.5rem;
 }
 
-.card p {
-  color: #7f8c8d;
-  font-size: 0.9rem;
-}
-
+/* ========== MODAL ========== */
 .modal {
   display: none;
   position: fixed;
@@ -222,46 +340,72 @@ header nav button:hover {
   z-index: 1000;
   justify-content: center;
   align-items: center;
+  padding: 1rem;
 }
 
 .modal.show {
   display: flex;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .modal-content {
-  background-color: white;
+  background-color: var(--bg-secondary);
   padding: 2rem;
-  border-radius: 8px;
-  max-width: 500px;
-  width: 90%;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  max-width: 600px;
+  width: 100%;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   position: relative;
+  border: 1px solid var(--border-color);
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid var(--brand-red);
   padding-bottom: 1rem;
 }
 
 .modal-header h2 {
-  color: var(--primary-color);
-  font-size: 1.25rem;
+  color: var(--brand-red);
+  font-size: 1.4rem;
+  font-weight: 700;
 }
 
 .modal-close {
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   cursor: pointer;
-  color: var(--text-color);
+  color: var(--text-secondary);
+  transition: all 0.3s ease;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+}
+
+.modal-close:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--brand-red);
+  transform: scale(1.1);
 }
 
 .modal-body {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .modal-footer {
@@ -270,30 +414,68 @@ header nav button:hover {
   justify-content: flex-end;
 }
 
-.hidden {
-  display: none;
+/* ========== TABS ========== */
+.tab-btn {
+  background: none !important;
+  border: none !important;
+  padding: 0.75rem 1rem !important;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent !important;
 }
 
+.tab-btn[data-tab="logs"],
+.tab-btn[data-tab="stocks"],
+.tab-btn[data-tab="payments"] {
+  color: var(--text-secondary);
+}
+
+/* ========== UTILITY CLASSES ========== */
+.hidden {
+  display: none !important;
+}
+
+/* ========== RESPONSIVE DESIGN ========== */
 @media (max-width: 768px) {
   header {
     flex-direction: column;
     gap: 1rem;
+    padding: 1rem;
   }
 
   header nav {
     width: 100%;
-    justify-content: center;
+    justify-content: space-between;
+  }
+
+  header h1 {
+    font-size: 1.4rem;
   }
 
   .container {
-    padding: 1rem;
+    padding: 1.5rem 1rem;
   }
 
   .login-container {
     margin: 2rem auto;
+    padding: 1.75rem;
   }
 
   .dashboard-grid {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .modal-content {
+    max-width: 90%;
+    padding: 1.5rem;
+  }
+
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    font-size: 16px; /* Prevents zoom on iOS */
   }
 }
