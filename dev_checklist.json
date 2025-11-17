@@ -66,10 +66,10 @@
       "id": "db-01",
       "title": "Firestore schema seed",
       "description": "companies, users, projects, audit_logs için örnek dokümanlar ekle (seed).",
-      "status": "todo",
-      "createdAt": null,
-      "doneAt": null,
-      "notes": ""
+      "status": "done",
+      "createdAt": "2025-11-17T00:00:00Z",
+      "doneAt": "2025-11-17T04:00:00Z",
+      "notes": "firestore.rules oluşturuldu (role-based access control). FIRESTORE_SCHEMA.md dokumentasyonu oluşturuldu. admin-scripts/seed-database.js örnek veri yükleyebiliyor."
     },
 
     {

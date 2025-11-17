@@ -14,5 +14,8 @@ Tüm önemli değişiklikler bu dosyada kaydedilecektir.
 
 - **Firebase Config & Auth Setup** — Claude-agent: web/js/firebase-config.js enhanced (offline persistence, emulator desteği, connection verification). admin-scripts/create-superadmin.js script'i oluşturuldu - Firebase Admin SDK kullanarak superadmin user oluşturabiliyor. Test user oluşturma workflow hazır.
 
+- **Firestore Schema & Security Rules** — Claude-agent: firestore.rules oluşturuldu (role-based access control: superadmin, admin, operator, finance, viewer). FIRESTORE_SCHEMA.md kapsamlı dokumentasyon (collections, schema örnekleri, security rules özeti). admin-scripts/seed-database.js örnek veri yükleyebiliyor (companies, projects, logs, stocks, payments).
+
+
 
 

@@ -1,0 +1,139 @@
+/**
+ * Firestore Rules for ADM Construction Project Management System
+ * Security rules for role-based access control
+ */
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function: Check if user has a role
+    function hasRole(role) {
+      return request.auth != null && request.auth.token.role == role;
+    }
+    
+    // Helper function: Check user's company
+    function userCompanyId() {
+      return request.auth.token.companyId;
+    }
+    
+    // Helper function: Can user read a document's companyId?
+    function userCanReadCompany(companyId) {
+      return request.auth != null && userCompanyId() == companyId;
+    }
+
+    // ========== COMPANIES COLLECTION ==========
+    match /companies/{document=**} {
+      // Only superadmins can read/write companies
+      allow read: if hasRole('superadmin');
+      allow create: if hasRole('superadmin');
+      allow update: if hasRole('superadmin') && resource.data.companyId == userCompanyId();
+      allow delete: if hasRole('superadmin');
+    }
+
+    // ========== USERS COLLECTION ==========
+    match /users/{userId} {
+      // Users can read their own document
+      allow read: if request.auth.uid == userId;
+      // Admins can read users in their company
+      allow read: if hasRole('admin') && resource.data.companyId == userCompanyId();
+      // Superadmins can read all
+      allow read: if hasRole('superadmin');
+      
+      // Only admins can create users
+      allow create: if hasRole('admin') && request.resource.data.companyId == userCompanyId();
+      
+      // Users can update their own profile
+      allow update: if request.auth.uid == userId;
+      // Admins can update users in their company
+      allow update: if hasRole('admin') && resource.data.companyId == userCompanyId();
+      
+      // Only superadmins can delete
+      allow delete: if hasRole('superadmin');
+    }
+
+    // ========== PROJECTS COLLECTION ==========
+    match /projects/{projectId} {
+      // Read: authenticated users in same company
+      allow read: if request.auth != null && 
+                     resource.data.companyId == userCompanyId();
+      
+      // Create: admins and operators
+      allow create: if request.auth != null &&
+                       (hasRole('admin') || hasRole('operator')) &&
+                       request.resource.data.companyId == userCompanyId();
+      
+      // Update: admins and project owner
+      allow update: if request.auth != null &&
+                       (hasRole('admin') || request.auth.uid == resource.data.createdBy) &&
+                       resource.data.companyId == userCompanyId();
+      
+      // Delete: admins only
+      allow delete: if hasRole('admin') && resource.data.companyId == userCompanyId();
+
+      // ========== PROJECT SUBCOLLECTIONS ==========
+      
+      // Logs subcollection
+      match /logs/{logId} {
+        allow read: if request.auth != null && 
+                       get(/databases/$(database)/documents/projects/$(projectId)).data.companyId == userCompanyId();
+        allow create: if request.auth != null &&
+                        get(/databases/$(database)/documents/projects/$(projectId)).data.companyId == userCompanyId();
+        allow update: if request.auth != null &&
+                        (request.auth.uid == resource.data.createdBy || hasRole('admin'));
+        allow delete: if hasRole('admin');
+      }
+
+      // Stocks subcollection
+      match /stocks/{stockId} {
+        allow read: if request.auth != null && 
+                       get(/databases/$(database)/documents/projects/$(projectId)).data.companyId == userCompanyId();
+        allow create: if request.auth != null &&
+                        (hasRole('admin') || hasRole('operator')) &&
+                        get(/databases/$(database)/documents/projects/$(projectId)).data.companyId == userCompanyId();
+        allow update: if request.auth != null &&
+                        (hasRole('admin') || hasRole('operator')) &&
+                        get(/databases/$(database)/documents/projects/$(projectId)).data.companyId == userCompanyId();
+        allow delete: if hasRole('admin');
+      }
+
+      // Payments subcollection
+      match /payments/{paymentId} {
+        allow read: if request.auth != null && 
+                       get(/databases/$(database)/documents/projects/$(projectId)).data.companyId == userCompanyId();
+        allow create: if request.auth != null &&
+                        (hasRole('admin') || hasRole('finance')) &&
+                        get(/databases/$(database)/documents/projects/$(projectId)).data.companyId == userCompanyId();
+        allow update: if request.auth != null &&
+                        (hasRole('admin') || hasRole('finance')) &&
+                        get(/databases/$(database)/documents/projects/$(projectId)).data.companyId == userCompanyId();
+        allow delete: if hasRole('admin');
+      }
+
+      // Uploads subcollection
+      match /uploads/{uploadId} {
+        allow read: if request.auth != null && 
+                       get(/databases/$(database)/documents/projects/$(projectId)).data.companyId == userCompanyId();
+        allow create: if request.auth != null &&
+                        get(/databases/$(database)/documents/projects/$(projectId)).data.companyId == userCompanyId();
+        allow delete: if hasRole('admin') || request.auth.uid == resource.data.uploadedBy;
+      }
+    }
+
+    // ========== AUDIT LOGS COLLECTION ==========
+    match /audit_logs/{auditId} {
+      // Only admins can read audit logs
+      allow read: if hasRole('admin') && 
+                     resource.data.companyId == userCompanyId();
+      allow read: if hasRole('superadmin');
+      
+      // Automatic write by backend (trust via security token)
+      allow write: if request.auth != null;
+    }
+
+    // ========== DEFAULT: DENY ALL ==========
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
