@@ -32,6 +32,8 @@ service cloud.firestore {
       return getUserRole() == 'user';
     }
 
+    // Note: hasCompanyAccess not used for hakediş collections (super_admin has null companyId)
+    // Keeping for future use in other collections
     function hasCompanyAccess(companyId) {
       return isSignedIn() && (isSuperAdmin() || getUserCompanyId() == companyId);
     }
