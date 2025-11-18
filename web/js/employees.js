@@ -233,25 +233,31 @@ function renderEmployeesList(employees) {
             ">${statusText}</span>
           </div>
         </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.75rem; border-top: 1px solid var(--border-color);">
-          <div style="font-size: 0.85rem;">
+        <div style="padding-top: 0.75rem; border-top: 1px solid var(--border-color);">
+          <div style="font-size: 0.85rem; margin-bottom: 0.75rem;">
             <strong>Yetki:</strong> ${roleDisplay[emp.role] || emp.role}
           </div>
-          <div style="display: flex; gap: 0.5rem;">
+          <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
             <button onclick="editEmployee('${emp.id}')" class="btn btn-secondary" style="
-              padding: 0.5rem 1rem;
-              font-size: 0.85rem;
-              width: auto;
+              padding: 0.4rem 0.75rem;
+              font-size: 0.8rem;
+              flex: 1;
+              min-width: 90px;
+              white-space: nowrap;
             ">✏️ Düzenle</button>
             <button onclick="toggleEmployeeStatus('${emp.id}', '${emp.status}')" class="btn ${emp.status === 'active' ? 'btn-secondary' : 'btn-success'}" style="
-              padding: 0.5rem 1rem;
-              font-size: 0.85rem;
-              width: auto;
-            ">${emp.status === 'active' ? '🚫 Pasifleştir' : '✅ Aktifleştir'}</button>
+              padding: 0.4rem 0.75rem;
+              font-size: 0.8rem;
+              flex: 1;
+              min-width: 110px;
+              white-space: nowrap;
+            ">${emp.status === 'active' ? '🚫 Pasif' : '✅ Aktif'}</button>
             <button onclick="deleteEmployee('${emp.id}', '${emp.fullName || emp.email}')" class="btn btn-danger" style="
-              padding: 0.5rem 1rem;
-              font-size: 0.85rem;
-              width: auto;
+              padding: 0.4rem 0.75rem;
+              font-size: 0.8rem;
+              flex: 1;
+              min-width: 80px;
+              white-space: nowrap;
             ">🗑️ Sil</button>
           </div>
         </div>
@@ -456,4 +462,5 @@ window.loadEmployees = loadEmployees;
 window.editEmployee = editEmployee;
 window.handleEditEmployee = handleEditEmployee;
 window.toggleEmployeeStatus = toggleEmployeeStatus;
+window.deleteEmployee = deleteEmployee;
 window.filterEmployees = filterEmployees;
