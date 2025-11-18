@@ -23,18 +23,28 @@ async function loadProjects() {
       return;
     }
 
-    // Get user's company ID
+    // Get user's company ID and role
     const userDocRef = doc(db, 'users', user.uid);
     const userDocSnap = await getDoc(userDocRef);
     const companyId = userDocSnap.data()?.companyId || 'default-company';
+    const userRole = window.userRole || userDocSnap.data()?.role;
 
     // Query projects
     const projectsRef = collection(db, 'projects');
-    const q = query(
-      projectsRef,
-      where('companyId', '==', companyId),
-      orderBy('createdAt', 'desc')
-    );
+    let q;
+    
+    // Super admin can see all projects
+    if (userRole === 'super_admin') {
+      q = query(projectsRef, orderBy('createdAt', 'desc'));
+      console.log('🔑 Super admin: Tüm projeler yükleniyor');
+    } else {
+      // Regular users only see their company's projects
+      q = query(
+        projectsRef,
+        where('companyId', '==', companyId),
+        orderBy('createdAt', 'desc')
+      );
+    }
 
     const snapshot = await getDocs(q);
     projects = [];

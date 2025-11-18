@@ -106,10 +106,11 @@ async function loadUsers() {
   try {
     const userId = auth.currentUser.uid;
     const companyId = window.userCompanyId;
+    const userRole = window.userRole;
 
-    console.log('📥 Loading users for company:', companyId);
+    console.log('📥 Loading users for company:', companyId, '| Role:', userRole);
 
-    if (!companyId) {
+    if (!companyId && userRole !== 'super_admin') {
       console.log('❌ No company ID for user');
       const usersSection = document.getElementById('usersSection');
       if (usersSection) {
@@ -124,10 +125,15 @@ async function loadUsers() {
 
     // Get users from Firestore
     const usersRef = collection(db, 'users');
-    const q = query(
-      usersRef,
-      where('companyId', '==', companyId)
-    );
+    let q;
+    
+    // Super admin can see all users
+    if (userRole === 'super_admin') {
+      q = query(usersRef);
+      console.log('🔑 Super admin: Tüm kullanıcılar yükleniyor');
+    } else {
+      q = query(usersRef, where('companyId', '==', companyId));
+    }
 
     const snapshot = await getDocs(q);
     const users = [];

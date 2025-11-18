@@ -93,8 +93,9 @@ async function handleCreateEmployee(event) {
 async function loadEmployees() {
   try {
     const companyId = window.userCompanyId;
+    const userRole = window.userRole;
 
-    if (!companyId) {
+    if (!companyId && userRole !== 'super_admin') {
       console.log('❌ No company ID');
       const employeesSection = document.getElementById('employeesSection');
       if (employeesSection) {
@@ -106,11 +107,20 @@ async function loadEmployees() {
       return;
     }
 
-    console.log('📥 Loading employees for company:', companyId);
+    console.log('📥 Loading employees for company:', companyId, '| Role:', userRole);
 
     // Get users/employees from Firestore
     const usersRef = collection(db, 'users');
-    const q = query(usersRef, where('companyId', '==', companyId));
+    let q;
+    
+    // Super admin can see all employees
+    if (userRole === 'super_admin') {
+      q = query(usersRef);
+      console.log('🔑 Super admin: Tüm çalışanlar yükleniyor');
+    } else {
+      q = query(usersRef, where('companyId', '==', companyId));
+    }
+    
     const snapshot = await getDocs(q);
     
     const employees = [];
