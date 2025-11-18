@@ -250,26 +250,36 @@ app.get('/api/users/:id', verifyToken, async (req, res) => {
 // Create user (company_admin and super_admin)
 app.post('/api/users', apiLimiter, verifyToken, async (req, res) => {
   try {
+    console.log('📥 POST /api/users - Request received');
+    console.log('User role:', req.user?.role);
+    console.log('Request body:', { ...req.body, password: '***' });
+    
     const { email, password, fullName, role, companyId } = req.body;
 
     // Only company_admin and super_admin can create users
     if (req.user.role !== 'company_admin' && req.user.role !== 'super_admin') {
+      console.log('❌ Unauthorized: User role is', req.user.role);
       return res.status(403).json({ error: 'Unauthorized: Only admins can create users' });
     }
 
     // Company admin can only create users for their own company
     if (req.user.role === 'company_admin' && companyId !== req.user.companyId) {
+      console.log('❌ Company mismatch:', companyId, 'vs', req.user.companyId);
       return res.status(403).json({ error: 'Unauthorized: Cannot create users for other companies' });
     }
 
     if (!email || !password || !fullName || !role || !companyId) {
+      console.log('❌ Missing fields:', { email: !!email, password: !!password, fullName: !!fullName, role: !!role, companyId: !!companyId });
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
     if (password.length < 6) {
+      console.log('❌ Password too short');
       return res.status(400).json({ error: 'Password must be at least 6 characters' });
     }
 
+    console.log('✅ Validation passed, creating user...');
+    
     // Create user in Firebase Auth
     const userRecord = await auth.createUser({
       email,
@@ -278,8 +288,11 @@ app.post('/api/users', apiLimiter, verifyToken, async (req, res) => {
       disabled: false
     });
 
+    console.log('✅ Firebase Auth user created:', userRecord.uid);
+    
     // Set custom claims
     await auth.setCustomUserClaims(userRecord.uid, { role, companyId });
+    console.log('✅ Custom claims set');
 
     // Create user document in Firestore
     await db.collection('users').doc(userRecord.uid).set({
@@ -291,6 +304,7 @@ app.post('/api/users', apiLimiter, verifyToken, async (req, res) => {
       createdBy: req.user.uid,
       status: 'active'
     });
+    console.log('✅ Firestore document created');
 
     await logAudit('CREATE_USER', req.user.uid, null, {
       newUserId: userRecord.uid,
@@ -301,15 +315,19 @@ app.post('/api/users', apiLimiter, verifyToken, async (req, res) => {
       requestId: req.id
     });
 
-    res.json({
+    const responseData = {
       id: userRecord.uid,
       email: userRecord.email,
       fullName,
       role,
       companyId,
       createdAt: new Date().toISOString()
-    });
+    };
+    
+    console.log('✅ User created successfully:', responseData);
+    res.status(200).json(responseData);
   } catch (error) {
+    console.error('❌ Error in POST /api/users:', error);
     // Handle Firebase specific errors
     if (error.code === 'auth/email-already-exists') {
       return res.status(400).json({ error: 'Email already exists' });
@@ -317,7 +335,7 @@ app.post('/api/users', apiLimiter, verifyToken, async (req, res) => {
     if (error.code === 'auth/invalid-email') {
       return res.status(400).json({ error: 'Invalid email address' });
     }
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error.message, stack: error.stack });
   }
 });
 

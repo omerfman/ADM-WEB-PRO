@@ -56,6 +56,13 @@ async function handleCreateEmployee(event) {
     const idToken = await auth.currentUser.getIdToken();
     const apiBaseUrl = window.API_BASE_URL || '';
     
+    console.log('🔄 Creating employee with data:', {
+      email,
+      fullName,
+      role,
+      companyId: window.userCompanyId
+    });
+    
     const response = await fetch(`${apiBaseUrl}/api/users`, {
       method: 'POST',
       headers: {
@@ -73,7 +80,19 @@ async function handleCreateEmployee(event) {
       })
     });
 
+    console.log('📡 Response status:', response.status, response.statusText);
+
+    // Check if response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const textResponse = await response.text();
+      console.error('❌ Non-JSON response:', textResponse.substring(0, 500));
+      alert('API Hatası: Sunucu beklenmeyen yanıt döndü. Lütfen konsolu kontrol edin.');
+      return;
+    }
+
     const data = await response.json();
+    console.log('📦 Response data:', data);
 
     if (!response.ok) {
       alert('Hata: ' + (data.error || data.message || 'Bilinmeyen hata'));
