@@ -2,7 +2,7 @@
 
 import { auth, db } from "./firebase-config.js";
 import {
-  doc, getDoc, collection, query, orderBy, getDocs, deleteDoc
+  doc, getDoc, collection, query, orderBy, getDocs, deleteDoc, addDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 let currentProjectId = null;
@@ -468,14 +468,13 @@ async function handleAddLog(event) {
       showAlert('Fotoğraf yükleniyor...', 'info');
       
       if (window.uploadPhotoToImgBB) {
-        photoUrl = await window.uploadPhotoToImgBB(photoFile);
+        photoUrl = await window.uploadPhotoToImgBB(photoFile, currentProjectId);
       } else {
         throw new Error('Fotoğraf yükleme modülü yüklenmedi');
       }
     }
     
-    // Add log to Firestore
-    const { addDoc, collection, serverTimestamp } = window.firestore;
+    // Add log to Firestore - use direct imports
     const logsRef = collection(db, 'projects', currentProjectId, 'logs');
     
     await addDoc(logsRef, {
@@ -507,7 +506,6 @@ async function handleAddStock(event) {
     const quantity = parseFloat(document.getElementById('stockQuantity').value);
     const unitPrice = parseFloat(document.getElementById('stockUnitPrice').value);
     
-    const { addDoc, collection, serverTimestamp } = window.firestore;
     const stocksRef = collection(db, 'projects', currentProjectId, 'stocks');
     
     await addDoc(stocksRef, {
@@ -522,6 +520,7 @@ async function handleAddStock(event) {
     
     showAlert('Stok eklendi', 'success');
     closeAddStockModal();
+    await loadProjectStocks();
     await loadProjectStats();
     
   } catch (error) {
@@ -540,7 +539,6 @@ async function handleAddPayment(event) {
     const quantity = parseFloat(document.getElementById('paymentQuantity').value);
     const unitPrice = parseFloat(document.getElementById('paymentUnitPrice').value);
     
-    const { addDoc, collection, serverTimestamp } = window.firestore;
     const paymentsRef = collection(db, 'projects', currentProjectId, 'payments');
     
     await addDoc(paymentsRef, {
@@ -556,6 +554,7 @@ async function handleAddPayment(event) {
     
     showAlert('Hakediş eklendi', 'success');
     closeAddPaymentModal();
+    await loadProjectPayments();
     await loadProjectStats();
     
   } catch (error) {
