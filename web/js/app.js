@@ -15,6 +15,20 @@ function updateThemeButton(theme) {
   if (themeToggle) {
     themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
   }
+  
+  // Update sidebar theme toggle
+  const lightOption = document.querySelector('.light-option');
+  const darkOption = document.querySelector('.dark-option');
+  
+  if (lightOption && darkOption) {
+    if (theme === 'dark') {
+      lightOption.classList.remove('active');
+      darkOption.classList.add('active');
+    } else {
+      darkOption.classList.remove('active');
+      lightOption.classList.add('active');
+    }
+  }
 }
 
 function toggleTheme() {

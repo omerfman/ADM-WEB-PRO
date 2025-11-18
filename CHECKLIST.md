@@ -338,3 +338,359 @@ SyntaxError: Unexpected end of JSON input
 - Gelişmiş arama ve filtreleme
 
 ---
+
+---
+
+## ?? Yeni �zellikler ve yile�tirmeler (18 Kas�m 2025 - Gece)
+
+### [ ] 1. Proje Detay Sayfas� - Modal Yerine Tam Sayfa
+**Durum:** ? BEKLEMEDE
+**�ncelik:** Y�KSEK
+
+**Yap�lacaklar:**
+- [ ] Yeni `project-detail.html` sayfas� olu�tur
+- [ ] Proje-spesifik sidebar (G�nl�k, Stok, Hakedi�, B�t�e)
+- [ ] Modal i�eri�ini yeni sayfaya ta��
+- [ ] URL routing ile proje ID'si (?id=PROJECT_ID)
+- [ ] Breadcrumb navigasyon (Dashboard > Projeler > Proje Ad�)
+- [ ] Responsive tasar�m
+
+---
+
+### [ ] 2. Logo Arka Plan Rengi - Mode'a G�re De�i�im
+**Durum:** ? BEKLEMEDE
+**�ncelik:** ORTA
+
+**Problem:** Logo PNG arka plan� s�rekli beyaz kal�yor
+
+**Yap�lacaklar:**
+- [ ] CSS'de `.login-logo` i�in theme-aware background
+- [ ] Light mode: beyaz/a��k gri arka plan
+- [ ] Dark mode: koyu gri/siyah arka plan
+- [ ] Transition animasyonu ekle
+
+---
+
+### [ ] 3. Theme Toggle konlar� yile�tirme
+**Durum:** ? BEKLEMEDE
+**�ncelik:** D���K
+
+**Yap�lacaklar:**
+- [ ] Light mode ikonu: Beyaz yuvarlak + \"Light\" yaz�s�
+- [ ] Dark mode ikonu: Siyah yuvarlak + \"Dark\" yaz�s�
+- [ ] CSS ile modern g�r�n�m
+- [ ] Hover efektleri
+
+---
+
+### [ ] 4. Projeler Filtreleme Sistemi
+**Durum:** ? BEKLEMEDE
+**�ncelik:** Y�KSEK
+
+**Yap�lacaklar:**
+- [ ] Filtre UI komponenti (search bar + dropdown'lar)
+- [ ] Proje ad� aramas� (live search)
+- [ ] Durum filtresi (Aktif, Tamamland�, Beklemede)
+- [ ] Tarih aral��� filtresi
+- [ ] �irket filtresi (super admin i�in)
+- [ ] Temizle butonu
+
+---
+
+### [ ] 5. Dashboard �zet Sayfas�
+**Durum:** ? BEKLEMEDE
+**�ncelik:** Y�KSEK
+
+**�erik:**
+- [ ] Toplam proje say�s� (aktif/toplam)
+- [ ] Toplam b�t�e kullan�m� (grafik)
+- [ ] Son aktiviteler (5 kay�t)
+- [ ] Kritik uyar�lar (b�t�e a��m�, d���k stok)
+- [ ] H�zl� eri�im kartlar�
+- [ ] Haftal�k/ayl�k istatistikler
+- [ ] Giri� yap�nca ilk sayfa olarak g�ster
+
+**Widget'lar:**
+- ?? Proje �zeti
+- ?? B�t�e Durumu
+- ?? Stok Durumu
+- ?? Aktif Personel
+- ?? Son Aktiviteler
+- ?? Uyar�lar ve Bildirimler
+
+---
+
+### [ ] 6. Proje D�zenleme Butonu ve Modal�
+**Durum:** ? BEKLEMEDE
+**�ncelik:** ORTA
+
+**Yap�lacaklar:**
+- [ ] Proje kartlar�na \"?? D�zenle\" butonu ekle
+- [ ] D�zenleme modal� tasarla
+- [ ] Proje bilgilerini g�ncelleme fonksiyonu
+- [ ] Form validasyonu
+- [ ] Ba�ar�/hata mesajlar�
+- [ ] Activity log kayd�
+
+**D�zenlenebilir Alanlar:**
+- Proje ad�
+- A��klama
+- B�t�e
+- Ba�lang��/biti� tarihleri
+- M��teri bilgileri
+- Durum (aktif/tamamland�/beklemede)
+
+---
+
+## ?? lerleme �zeti (Yeni G�revler)
+
+**Toplam Yeni G�rev:** 6
+**Tamamlanan:** 0
+**Devam Eden:** 0
+**Bekleyen:** 6
+
+**�ncelik S�ralamas�:**
+1. ?? Proje Detay Sayfas�
+2. ?? Projeler Filtreleme
+3. ?? Dashboard �zet Sayfas�
+4. ?? Proje D�zenleme
+5. ?? Logo Arka Plan
+6. ?? Theme Toggle konlar�
+
+---
+
+## 🎯 Yeni Görev Listesi (18 Kasım 2025 - Gece Güncellemesi)
+
+### [x] 1. Logo PNG Arka Plan - Theme Uyumlu (Sidebar Sol Üst)
+**Durum:** ✅ TAMAMLANDI
+**Öncelik:** YÜKSEK
+
+**Problem:**
+Sidebar'daki sol üstteki logo PNG arka planı sürekli beyaz kalıyor.
+
+**Yapılacaklar:**
+- [ ] Sidebar `.logo` CSS'ini theme-aware yap
+- [ ] Light mode: beyaz/açık gri arka plan (#ffffff veya #f5f5f5)
+- [ ] Dark mode: koyu gri/siyah arka plan (#1a1a1a veya transparent)
+- [ ] Smooth transition animasyonu (0.3s)
+- [ ] Login sayfası logo için de aynı düzenleme
+- [ ] Test: Light/Dark geçişlerinde logo arka planı
+
+---
+
+### [x] 2. Çıkış Yap Butonu - İkon Kaldır, Yazı Ekle
+**Durum:** ✅ TAMAMLANDI
+**Öncelik:** YÜKSEK
+
+**Açıklama:**
+Çıkış yap butonundaki ikonu kaldır, yerine "Çıkış Yap" yazısı ekle.
+
+**Yapılacaklar:**
+- [ ] Sidebar çıkış butonu HTML'ini güncelle
+- [ ] İkon (<i> tag) kaldır
+- [ ] "Çıkış Yap" yazısı ekle
+- [ ] CSS düzenlemesi (padding, font-size)
+- [ ] Hover efekti koru
+
+---
+
+### [x] 3. Proje Modal → Tam Sayfa Dönüşümü
+**Durum:** ⏳ ERTELENDİ (Dashboard önceliği)
+**Öncelik:** YÜKSEK
+
+**Açıklama:**
+Projeler listelendikten sonra bir projeye tıkladığımızda modal olarak açma yerine yeni bir sayfa olarak aç ve sayfanın tasarımını kullanışlı olacak şekilde düzenle.
+
+**Yapılacaklar:**
+- [ ] Yeni `project-detail.html` sayfası oluştur
+- [ ] Modal içeriğini tam sayfaya taşı
+- [ ] Proje-spesifik sidebar (Günlük, Stok, Hakediş, Bütçe, Fotoğraflar)
+- [ ] URL routing ile proje ID'si (?id=PROJECT_ID)
+- [ ] Breadcrumb navigasyon (Dashboard > Projeler > Proje Adı)
+- [ ] Responsive ve kullanışlı tasarım
+- [ ] Geri dön butonu
+- [ ] Proje özet bilgileri (başlık, tarih, bütçe, ilerleme)
+
+---
+
+### [ ] 2. Logo PNG Arka Plan - Theme Uyumlu
+**Durum:** ⏳ BEKLEMEDE
+**Öncelik:** YÜKSEK
+
+**Problem:**
+Logoyu PNG olarak yükledim arkasında kalan alan sürekli beyaz olarak kalıyor. Bu sorun hala çözülmedi. Light mode ve dark mode'a göre arkasındaki renk değişsin.
+
+**Yapılacaklar:**
+- [ ] `.login-logo` CSS'ini theme-aware yap
+- [ ] Light mode: beyaz/açık gri arka plan (#ffffff veya #f5f5f5)
+- [ ] Dark mode: koyu gri/siyah arka plan (#1a1a1a veya transparent)
+- [ ] Smooth transition animasyonu (0.3s)
+- [ ] Dashboard logo için de aynı düzenleme
+- [ ] Test: Light/Dark geçişlerinde logo arka planı
+
+**CSS Örneği:**
+```css
+.login-logo {
+  background-color: var(--logo-bg);
+  transition: background-color 0.3s ease;
+}
+
+[data-theme="light"] {
+  --logo-bg: #ffffff;
+}
+
+[data-theme="dark"] {
+  --logo-bg: #1a1a1a;
+}
+```
+
+---
+
+### [x] 4. Theme Toggle İkonları ve Yazılar
+**Durum:** ✅ TAMAMLANDI
+**Öncelik:** ORTA
+
+**Açıklama:**
+Light mode için kullandığın ikonu beyaz bir yuvarlakla değiştir. Dark mode için kullandığın ikonu da siyah bir yuvarlakla değiştir yanlarına da "Dark", "Light" yaz.
+
+**Yapılacaklar:**
+- [ ] Light mode: ⚪ Beyaz yuvarlak + "Light" yazısı
+- [ ] Dark mode: ⚫ Siyah yuvarlak + "Dark" yazısı
+- [ ] Modern toggle button tasarımı
+- [ ] Hover efektleri
+- [ ] Active state animasyonu
+- [ ] Mobil uyumlu boyutlar
+
+**Tasarım:**
+```
+[Dark Mode]  ⚫ Dark  ⚪ Light
+[Light Mode] ⚫ Dark  ⚪ Light (beyaz aktif)
+```
+
+---
+
+### [x] 5. Projeler Filtreleme Sistemi
+**Durum:** ✅ TAMAMLANDI
+**Öncelik:** YÜKSEK
+
+**Açıklama:**
+Projelerin listelendiği bölüme filtreleme özelliği ekle.
+
+**Yapılacaklar:**
+- [ ] Filtre UI komponenti oluştur
+- [ ] Proje adı arama (live search)
+- [ ] Durum filtresi (Aktif, Tamamlandı, Beklemede, Tümü)
+- [ ] Tarih aralığı filtresi (başlangıç-bitiş)
+- [ ] Şirket filtresi (super_admin için)
+- [ ] Bütçe aralığı filtresi (min-max)
+- [ ] Temizle/Sıfırla butonu
+- [ ] Sonuç sayısı gösterimi
+
+**Filtre Özellikleri:**
+- Arama kutusu (anlık arama)
+- Dropdown'lar (durum, şirket)
+- Date picker (tarih aralığı)
+- Range slider (bütçe)
+- "X sonuç bulundu" mesajı
+
+---
+
+### [ ] 6. Dashboard Özet Ana Sayfası
+**Durum:** ⏳ BEKLEMEDE
+**Öncelik:** YÜKSEK
+
+**Açıklama:**
+Bir özet sayfası oluştur. Giriş yapıldığında ilk bu sayfa açılsın. Burda genel olarak kullanıcının görmek isteyeceği şeyleri özet niteliğinde tut.
+
+**Gösterilecek Bilgiler:**
+
+**Super Admin İçin:**
+- 📊 Toplam şirket sayısı
+- 🏗️ Toplam proje sayısı (tüm şirketler)
+- 💰 Toplam bütçe kullanımı (tüm projeler)
+- 👥 Toplam kullanıcı sayısı
+- 📈 Aylık aktivite grafiği
+- ⚠️ Kritik uyarılar (bütçe aşımları)
+- 🔥 Son aktiviteler (tüm şirketler)
+
+**Company Admin İçin:**
+- 🏗️ Şirket projeleri (aktif/toplam)
+- 💰 Toplam bütçe durumu (grafik)
+- 👷 Aktif çalışan sayısı
+- 📋 Devam eden işler
+- 📊 Haftalık ilerleme grafiği
+- ⚠️ Dikkat gerektiren projeler (bütçe aşımı, gecikme)
+- 🔔 Son 5 aktivite
+
+**User İçin:**
+- 📝 Atanmış görevler
+- 🏗️ Dahil olduğu projeler
+- 📅 Son yapılan işler
+- 📊 Kişisel istatistikler
+
+**Widget Kartları:**
+- Toplam Projeler (sayı + grafik)
+- Bütçe Özeti (kullanılan/kalan + progress bar)
+- Aktif Personel (sayı + son eklenenler)
+- Son Aktiviteler (timeline)
+- Uyarılar (badge'li liste)
+- Hızlı Erişim (butonlar: Yeni Proje, Yeni Çalışan, Raporlar)
+
+---
+
+### [ ] 7. Proje Düzenleme Butonu ve Fonksiyonu
+**Durum:** ⏳ BEKLEMEDE
+**Öncelik:** YÜKSEK
+
+**Açıklama:**
+Projelerin listelendiği sayfada proje düzenleme butonu ekle. Buradan oluşturduğumuz projeyle ilgili düzenlemeleri yapalım.
+
+**Yapılacaklar:**
+- [ ] Proje kartlarına "✏️ Düzenle" butonu ekle
+- [ ] Düzenleme modal'ı tasarla
+- [ ] Form validasyonu
+- [ ] Firestore update fonksiyonu
+- [ ] Activity log kaydı (kim, ne zaman, ne değişti)
+- [ ] Başarı/hata mesajları
+- [ ] Yetki kontrolü (sadece admin'ler düzenleyebilsin)
+
+**Düzenlenebilir Alanlar:**
+- Proje adı
+- Açıklama/notlar
+- Başlangıç tarihi
+- Bitiş tarihi (tahmini)
+- Müşteri bilgileri
+- Toplam bütçe
+- Durum (Aktif, Tamamlandı, Beklemede, İptal)
+- Şirket (super_admin için)
+- Sorumlu kişi
+
+**Özellikler:**
+- Değişiklik geçmişi (hangi alan değişti)
+- Otomatik log kaydı
+- Onay mesajı (önemli değişiklikler için)
+- Form validasyonu (tarih, bütçe kontrolü)
+
+---
+
+## 📊 Yeni Görevler İlerleme Özeti
+
+**Toplam Görev:** 7
+**Tamamlanan:** 0
+**Devam Eden:** 0
+**Bekleyen:** 7
+
+**Öncelik Sıralaması:**
+1. 🔥 Logo PNG Arka Plan - Sidebar Sol Üst (1. görev)
+2. 🔥 Çıkış Yap Butonu Düzenleme (2. görev)
+3. 🔥 Theme Toggle İkonları (4. görev)
+4. 🔥 Proje Modal → Tam Sayfa (3. görev)
+5. 🔥 Projeler Filtreleme (5. görev)
+6. 🔥 Dashboard Özet Sayfası (6. görev)
+7. 🔥 Proje Düzenleme (7. görev)
+
+**Tahmini Süre:**
+- Görev 1-2: 2-3 saat (sayfa yapısı)
+- Görev 3-4: 3-4 saat (filtreleme + dashboard)
+- Görev 5-6: 2-3 saat (düzenleme + tema)
+- **Toplam:** ~8-10 saat

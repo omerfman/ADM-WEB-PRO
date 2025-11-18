@@ -8,6 +8,7 @@ import { uploadPhotoToImgBB } from "./upload.js";
 
 let currentProjectId = null;
 let projects = [];
+let filteredProjects = [];
 
 // Export currentProjectId globally for budget module
 window.currentProjectId = null;
@@ -60,6 +61,9 @@ async function loadProjects() {
 
     renderProjectsList();
     console.log(`✅ ${projects.length} proje yüklendi`);
+    
+    // Initialize filters after projects are loaded
+    initializeProjectFilters();
   } catch (error) {
     console.error('❌ Projeler yüklenirken hata:', error);
     showAlert('Projeler yüklenemedi: ' + error.message, 'danger');
@@ -73,12 +77,19 @@ function renderProjectsList() {
   const projectsList = document.getElementById('projectsList');
   projectsList.innerHTML = '';
 
-  if (projects.length === 0) {
+  // Use filtered projects if filters are active, otherwise use all projects
+  const projectsToRender = filteredProjects.length > 0 || isFilterActive() ? filteredProjects : projects;
+
+  if (projectsToRender.length === 0) {
     projectsList.innerHTML = '<p style="color: #999; grid-column: 1/-1;">Henüz proje yok. + Yeni Proje butonuna tıklayın.</p>';
+    updateFilterResults(0);
     return;
   }
 
-  projects.forEach(project => {
+  // Update filter results count
+  updateFilterResults(projectsToRender.length);
+
+  projectsToRender.forEach(project => {
     const projectCard = document.createElement('div');
     projectCard.className = 'project-card';
     projectCard.style.cssText = 'padding: 1.5rem; border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg); cursor: pointer; transition: box-shadow 0.3s;';
@@ -642,6 +653,122 @@ async function deletePayment(projectId, paymentId) {
   }
 }
 
+// ========== PROJECT FILTERS ==========
+
+/**
+ * Initialize project filters
+ */
+function initializeProjectFilters() {
+  const searchInput = document.getElementById('projectSearchInput');
+  const statusFilter = document.getElementById('projectStatusFilter');
+  const startDateFilter = document.getElementById('projectStartDateFilter');
+  const endDateFilter = document.getElementById('projectEndDateFilter');
+
+  if (searchInput) {
+    searchInput.addEventListener('input', applyProjectFilters);
+  }
+  if (statusFilter) {
+    statusFilter.addEventListener('change', applyProjectFilters);
+  }
+  if (startDateFilter) {
+    startDateFilter.addEventListener('change', applyProjectFilters);
+  }
+  if (endDateFilter) {
+    endDateFilter.addEventListener('change', applyProjectFilters);
+  }
+
+  // Initial filter results
+  updateFilterResults(projects.length);
+}
+
+/**
+ * Check if any filter is active
+ */
+function isFilterActive() {
+  const searchInput = document.getElementById('projectSearchInput');
+  const statusFilter = document.getElementById('projectStatusFilter');
+  const startDateFilter = document.getElementById('projectStartDateFilter');
+  const endDateFilter = document.getElementById('projectEndDateFilter');
+
+  return (searchInput && searchInput.value.trim()) ||
+         (statusFilter && statusFilter.value) ||
+         (startDateFilter && startDateFilter.value) ||
+         (endDateFilter && endDateFilter.value);
+}
+
+/**
+ * Apply project filters
+ */
+function applyProjectFilters() {
+  const searchTerm = document.getElementById('projectSearchInput')?.value.toLowerCase().trim() || '';
+  const statusFilter = document.getElementById('projectStatusFilter')?.value || '';
+  const startDate = document.getElementById('projectStartDateFilter')?.value || '';
+  const endDate = document.getElementById('projectEndDateFilter')?.value || '';
+
+  filteredProjects = projects.filter(project => {
+    // Search filter (project name)
+    const matchesSearch = !searchTerm || 
+      project.name?.toLowerCase().includes(searchTerm) ||
+      project.description?.toLowerCase().includes(searchTerm);
+
+    // Status filter
+    const matchesStatus = !statusFilter || project.status === statusFilter;
+
+    // Date range filter
+    let matchesDateRange = true;
+    if (startDate || endDate) {
+      const projectDate = project.createdAt?.toDate?.() || new Date(0);
+      const projectDateStr = projectDate.toISOString().split('T')[0];
+
+      if (startDate && projectDateStr < startDate) {
+        matchesDateRange = false;
+      }
+      if (endDate && projectDateStr > endDate) {
+        matchesDateRange = false;
+      }
+    }
+
+    return matchesSearch && matchesStatus && matchesDateRange;
+  });
+
+  renderProjectsList();
+}
+
+/**
+ * Clear all filters
+ */
+function clearProjectFilters() {
+  const searchInput = document.getElementById('projectSearchInput');
+  const statusFilter = document.getElementById('projectStatusFilter');
+  const startDateFilter = document.getElementById('projectStartDateFilter');
+  const endDateFilter = document.getElementById('projectEndDateFilter');
+
+  if (searchInput) searchInput.value = '';
+  if (statusFilter) statusFilter.value = '';
+  if (startDateFilter) startDateFilter.value = '';
+  if (endDateFilter) endDateFilter.value = '';
+
+  filteredProjects = [];
+  renderProjectsList();
+  updateFilterResults(projects.length);
+}
+
+/**
+ * Update filter results count
+ */
+function updateFilterResults(count) {
+  const resultsDiv = document.getElementById('projectFilterResults');
+  if (resultsDiv) {
+    if (isFilterActive()) {
+      resultsDiv.textContent = `${count} sonuç bulundu`;
+      resultsDiv.style.color = 'var(--brand-red)';
+    } else {
+      resultsDiv.textContent = `Toplam ${count} proje`;
+      resultsDiv.style.color = 'var(--text-secondary)';
+    }
+  }
+}
+
 // Export functions for global use
 window.loadProjects = loadProjects;
 window.openProjectDetail = openProjectDetail;
@@ -665,3 +792,5 @@ window.openAddPaymentModal = openAddPaymentModal;
 window.closeAddPaymentModal = closeAddPaymentModal;
 window.handleAddPayment = handleAddPayment;
 window.deletePayment = deletePayment;
+window.clearProjectFilters = clearProjectFilters;
+window.applyProjectFilters = applyProjectFilters;

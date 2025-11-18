@@ -49,8 +49,17 @@
           </div>
         </div>
         <div class="sidebar-actions">
-          <button id="sidebarThemeToggle" class="icon-btn" title="Dark/Light Mode">🌙</button>
-          <button id="logoutBtn" class="icon-btn" title="Çıkış Yap" onclick="handleLogout()">🚪</button>
+          <button id="sidebarThemeToggle" class="theme-toggle-btn" onclick="toggleTheme()">
+            <span class="theme-option light-option">
+              <span class="theme-circle light-circle">⚪</span>
+              <span class="theme-label">Light</span>
+            </span>
+            <span class="theme-option dark-option active">
+              <span class="theme-circle dark-circle">⚫</span>
+              <span class="theme-label">Dark</span>
+            </span>
+          </button>
+          <button id="logoutBtn" class="logout-btn" onclick="handleLogout()">Çıkış Yap</button>
         </div>
       </div>
     </aside>
@@ -74,6 +83,32 @@
           <h3>Tüm Projeler</h3>
           <button class="btn btn-primary" onclick="openCreateProjectModal()">+ Yeni Proje</button>
         </div>
+        
+        <!-- Project Filters -->
+        <div class="filter-bar" style="margin-bottom: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+          <input type="text" id="projectSearchInput" placeholder="Proje adı ara..." style="flex: 1; min-width: 200px; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+          
+          <select id="projectStatusFilter" style="padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+            <option value="">Tüm Durumlar</option>
+            <option value="Devam Ediyor">Devam Ediyor</option>
+            <option value="Tamamlandı">Tamamlandı</option>
+            <option value="Beklemede">Beklemede</option>
+          </select>
+          
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <label style="color: var(--text-secondary); font-size: 0.9rem;">Tarih:</label>
+            <input type="date" id="projectStartDateFilter" style="padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+            <span style="color: var(--text-secondary);">-</span>
+            <input type="date" id="projectEndDateFilter" style="padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+          </div>
+          
+          <button class="btn btn-secondary" onclick="clearProjectFilters()" style="padding: 0.75rem 1.25rem;">🔄 Temizle</button>
+          
+          <div id="projectFilterResults" style="margin-left: auto; color: var(--text-secondary); font-size: 0.9rem; font-weight: 600;">
+            <!-- Results count will be shown here -->
+          </div>
+        </div>
+        
         <div id="projectsList" class="dashboard-grid">
           <!-- Projects will be loaded here -->
         </div>
