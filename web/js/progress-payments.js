@@ -28,6 +28,12 @@ async function loadProgressPayments(projectId) {
   console.log(`💰 Loading progress payments for project: ${projectId}`);
   currentProjectId = projectId;
 
+  // Show list view, hide detail view
+  const listContainer = document.getElementById('progressPaymentsContainer');
+  const detailContainer = document.getElementById('paymentDetailContainer');
+  if (listContainer) listContainer.style.display = 'block';
+  if (detailContainer) detailContainer.style.display = 'none';
+
   try {
     // Get project details
     const projectDoc = await getDoc(doc(db, 'projects', projectId));
@@ -489,7 +495,20 @@ async function createPaymentPeriod(event) {
 
 // Stub functions
 function viewPaymentDetail(paymentId) {
-  alert(`Hakediş detay sayfası yakında eklenecek: ${paymentId}`);
+  console.log(`👁️ View payment detail: ${paymentId}`);
+  
+  // Hide list view, show detail view
+  const listContainer = document.getElementById('progressPaymentsContainer');
+  const detailContainer = document.getElementById('paymentDetailContainer');
+  
+  if (listContainer) listContainer.style.display = 'none';
+  if (detailContainer) {
+    detailContainer.style.display = 'block';
+    // Load payment detail from measurement-entry module
+    if (window.loadPaymentDetail) {
+      window.loadPaymentDetail(paymentId);
+    }
+  }
 }
 
 function editPayment(paymentId) {
