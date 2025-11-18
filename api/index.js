@@ -6,7 +6,6 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const admin = require('firebase-admin');
 const cloudinary = require('cloudinary').v2;
-const rateLimit = require('express-rate-limit');
 
 dotenv.config();
 
@@ -27,14 +26,18 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // ====== FIREBASE SETUP ======
 if (!admin.apps.length) {
   try {
+    console.log('🔧 Initializing Firebase Admin SDK...');
+    
     // Try to use environment variable first (for Vercel)
     if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+      console.log('📦 Using FIREBASE_SERVICE_ACCOUNT env var');
       const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount)
       });
       console.log('✅ Firebase initialized with environment variable');
     } else if (process.env.FIREBASE_PROJECT_ID) {
+      console.log('📦 Using individual Firebase env vars');
       // Use individual environment variables
       admin.initializeApp({
         credential: admin.credential.cert({
@@ -51,6 +54,7 @@ if (!admin.apps.length) {
       });
       console.log('✅ Firebase initialized with individual env vars');
     } else {
+      console.log('📦 Using local serviceAccountKey.json');
       // Fallback to service account file (for local development)
       const serviceAccount = require('../serviceAccountKey.json');
       admin.initializeApp({
@@ -59,8 +63,12 @@ if (!admin.apps.length) {
       console.log('✅ Firebase initialized with serviceAccountKey.json');
     }
   } catch (error) {
-    console.error('❌ Firebase initialization error:', error);
+    console.error('❌ CRITICAL: Firebase initialization error:', error);
+    console.error('Stack:', error.stack);
+    throw error; // Re-throw to prevent app from starting without Firebase
   }
+} else {
+  console.log('♻️ Firebase already initialized');
 }
 
 const db = admin.firestore();
@@ -82,21 +90,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// Rate limiting
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5,
-  message: 'Too many login attempts, please try again later',
-  standardHeaders: true,
-  legacyHeaders: false
-});
-
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  standardHeaders: true,
-  legacyHeaders: false
-});
+// Rate limiting removed for Vercel serverless compatibility
+// Vercel has built-in rate limiting and DDoS protection
 
 // ====== UTILITY FUNCTIONS ======
 
@@ -153,7 +148,7 @@ app.get('/api/health/firestore', async (req, res) => {
 // ====== AUTH ENDPOINTS ======
 
 // Create user with role
-app.post('/api/auth/create-user', loginLimiter, verifyToken, async (req, res) => {
+app.post('/api/auth/create-user', verifyToken, async (req, res) => {
   try {
     const { email, password, displayName, role, companyId } = req.body;
 
@@ -212,7 +207,7 @@ app.post('/api/auth/set-custom-claims', verifyToken, async (req, res) => {
 // ====== USER ENDPOINTS ======
 
 // Get all users for a company (company_admin and super_admin)
-app.get('/api/users', apiLimiter, verifyToken, async (req, res) => {
+app.get('/api/users', verifyToken, async (req, res) => {
   try {
     const { companyId } = req.query;
     let query = db.collection('users');
@@ -248,7 +243,7 @@ app.get('/api/users/:id', verifyToken, async (req, res) => {
 });
 
 // Create user (company_admin and super_admin)
-app.post('/api/users', apiLimiter, verifyToken, async (req, res) => {
+app.post('/api/users', verifyToken, async (req, res) => {
   try {
     console.log('📥 POST /api/users - Request received');
     console.log('User role:', req.user?.role);
@@ -340,7 +335,7 @@ app.post('/api/users', apiLimiter, verifyToken, async (req, res) => {
 });
 
 // Update user
-app.put('/api/users/:id', apiLimiter, verifyToken, async (req, res) => {
+app.put('/api/users/:id', verifyToken, async (req, res) => {
   try {
     const { fullName, role, status } = req.body;
     const userId = req.params.id;
@@ -428,7 +423,7 @@ app.delete('/api/users/:id', verifyToken, async (req, res) => {
 // ====== COMPANY ENDPOINTS ======
 
 // Get all companies (super_admin only)
-app.get('/api/companies', apiLimiter, verifyToken, async (req, res) => {
+app.get('/api/companies', verifyToken, async (req, res) => {
   try {
     // Only super_admin can view all companies
     if (req.user.role !== 'super_admin') {
@@ -457,7 +452,7 @@ app.get('/api/companies/:id', verifyToken, async (req, res) => {
 });
 
 // Create company (super_admin only)
-app.post('/api/companies', apiLimiter, verifyToken, async (req, res) => {
+app.post('/api/companies', verifyToken, async (req, res) => {
   try {
     const { name, email, phone, address } = req.body;
 
@@ -495,7 +490,7 @@ app.post('/api/companies', apiLimiter, verifyToken, async (req, res) => {
 });
 
 // Update company (super_admin only)
-app.put('/api/companies/:id', apiLimiter, verifyToken, async (req, res) => {
+app.put('/api/companies/:id', verifyToken, async (req, res) => {
   try {
     const { name, email, phone, address, status } = req.body;
 
@@ -575,7 +570,7 @@ app.delete('/api/companies/:id', verifyToken, async (req, res) => {
 // ====== PROJECT ENDPOINTS ======
 
 // Get all projects
-app.get('/api/projects', apiLimiter, verifyToken, async (req, res) => {
+app.get('/api/projects', verifyToken, async (req, res) => {
   try {
     const snapshot = await db.collection('projects')
       .where('companyId', '==', req.user.companyId)
@@ -601,7 +596,7 @@ app.get('/api/projects/:id', verifyToken, async (req, res) => {
 });
 
 // Create project
-app.post('/api/projects', apiLimiter, verifyToken, async (req, res) => {
+app.post('/api/projects', verifyToken, async (req, res) => {
   try {
     const { name, description, budget, startDate, endDate, clientName } = req.body;
     const newProject = {
@@ -625,7 +620,7 @@ app.post('/api/projects', apiLimiter, verifyToken, async (req, res) => {
 });
 
 // Update project
-app.put('/api/projects/:id', apiLimiter, verifyToken, async (req, res) => {
+app.put('/api/projects/:id', verifyToken, async (req, res) => {
   try {
     const { name, description, budget, startDate, endDate, clientName, status } = req.body;
     const updateData = {
@@ -661,7 +656,7 @@ app.delete('/api/projects/:id', verifyToken, async (req, res) => {
 // ====== UPLOAD ENDPOINTS ======
 
 // Get signed upload URL
-app.post('/api/uploads/sign', apiLimiter, verifyToken, async (req, res) => {
+app.post('/api/uploads/sign', verifyToken, async (req, res) => {
   try {
     const { folder, resourceType } = req.body;
     const timestamp = Math.round(new Date().getTime() / 1000);
@@ -687,7 +682,7 @@ app.post('/api/uploads/sign', apiLimiter, verifyToken, async (req, res) => {
 });
 
 // Complete upload and save metadata
-app.post('/api/uploads/complete', apiLimiter, verifyToken, async (req, res) => {
+app.post('/api/uploads/complete', verifyToken, async (req, res) => {
   try {
     const { publicId, projectId, fileName, fileSize, uploadedBy } = req.body;
     const uploadMetadata = {
@@ -719,7 +714,7 @@ app.post('/api/uploads/complete', apiLimiter, verifyToken, async (req, res) => {
 // ====== AUDIT LOG ENDPOINTS ======
 
 // Get audit logs
-app.get('/api/audit-logs', apiLimiter, verifyToken, async (req, res) => {
+app.get('/api/audit-logs', verifyToken, async (req, res) => {
   try {
     const snapshot = await db.collection('audit_logs')
       .where('companyId', '==', req.user.companyId || req.user.uid)
@@ -735,7 +730,7 @@ app.get('/api/audit-logs', apiLimiter, verifyToken, async (req, res) => {
 });
 
 // Create audit log
-app.post('/api/audit-logs', apiLimiter, verifyToken, async (req, res) => {
+app.post('/api/audit-logs', verifyToken, async (req, res) => {
   try {
     const { action, projectId, details } = req.body;
     await logAudit(action, req.user.uid, projectId, { ...details, requestId: req.id });
@@ -746,7 +741,7 @@ app.post('/api/audit-logs', apiLimiter, verifyToken, async (req, res) => {
 });
 
 // Get audit logs summary
-app.get('/api/audit-logs/summary', apiLimiter, verifyToken, async (req, res) => {
+app.get('/api/audit-logs/summary', verifyToken, async (req, res) => {
   try {
     const snapshot = await db.collection('audit_logs')
       .where('companyId', '==', req.user.companyId || req.user.uid)
