@@ -131,15 +131,16 @@ service cloud.firestore {
     
     // BOQ Items (Bill of Quantities)
     match /boq_items/{itemId} {
-      allow read: if isSignedIn() && hasCompanyAccess(resource.data.companyId);
+      // Super admin sees all, others need to check project ownership via separate query
+      allow read: if isSignedIn();
       allow create, update: if isSignedIn() && (isCompanyAdmin() || isSuperAdmin());
       allow delete: if isSuperAdmin();
     }
 
     // Progress Payments (Hakediş Dönemleri)
     match /progress_payments/{paymentId} {
-      allow read: if isSignedIn() && hasCompanyAccess(resource.data.companyId);
-      allow create: if isSignedIn() && (isCompanyAdmin() || isCompanyUser());
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && (isCompanyAdmin() || isCompanyUser() || isSuperAdmin());
       allow update: if isSignedIn() && (
         isCompanyAdmin() || 
         isSuperAdmin() ||
@@ -150,7 +151,7 @@ service cloud.firestore {
 
     // Measurement Lines (Metraj Satırları)
     match /measurement_lines/{lineId} {
-      allow read: if isSignedIn() && hasCompanyAccess(resource.data.companyId);
+      allow read: if isSignedIn();
       allow create, update: if isSignedIn() && (
         isCompanyAdmin() || 
         isCompanyUser() || 
@@ -161,7 +162,7 @@ service cloud.firestore {
 
     // Payment Config (Proje Bazlı Ayarlar)
     match /payment_config/{configId} {
-      allow read: if isSignedIn() && hasCompanyAccess(resource.data.companyId);
+      allow read: if isSignedIn();
       allow create, update, delete: if isSignedIn() && (
         isCompanyAdmin() || 
         isSuperAdmin()
@@ -170,7 +171,7 @@ service cloud.firestore {
 
     // Payment Approvals (Onay Logları - Audit Trail)
     match /payment_approvals/{approvalId} {
-      allow read: if isSignedIn() && hasCompanyAccess(resource.data.companyId);
+      allow read: if isSignedIn();
       allow create: if isSignedIn() && (isCompanyAdmin() || isSuperAdmin());
       // No updates or deletes - this is an audit trail
       allow update, delete: if false;

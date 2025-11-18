@@ -37,7 +37,7 @@ async function initProjectDetail() {
     await loadProjectOverview();
     await loadProjectLogs();
     await loadProjectStocks();
-    await loadProjectPayments();
+    // Note: loadProjectPayments() removed - using progress-payments.js module
     await loadBudgetTabSummary();
 
   } catch (error) {
@@ -260,62 +260,10 @@ async function loadProjectStocks() {
 }
 
 /**
- * Load Project Payments
+ * DEPRECATED: Old loadProjectPayments function - now using progress-payments.js module
+ * This function is kept for reference but no longer called
  */
-async function loadProjectPayments() {
-  try {
-    const paymentsRef = collection(db, 'projects', currentProjectId, 'payments');
-    const paymentsQuery = query(paymentsRef, orderBy('createdAt', 'desc'));
-    const paymentsSnap = await getDocs(paymentsQuery);
-
-    const paymentsList = document.getElementById('paymentsList');
-    
-    if (paymentsSnap.empty) {
-      paymentsList.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 2rem;">Henüz hakediş kaydı yok</p>';
-      return;
-    }
-
-    const payments = [];
-    paymentsSnap.forEach(doc => {
-      payments.push({ id: doc.id, ...doc.data() });
-    });
-
-    let totalPayments = 0;
-
-    paymentsList.innerHTML = payments.map(payment => {
-      const totalPrice = (payment.quantity || 0) * (payment.unitPrice || 0);
-      totalPayments += totalPrice;
-
-      return `
-        <div class="card" style="margin-bottom: 1rem;">
-          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
-            <div style="flex: 1;">
-              <div style="font-weight: 600; color: var(--brand-red); font-size: 1.1rem; margin-bottom: 0.5rem;">
-                ${payment.description || 'Yapılan İş'}
-              </div>
-              <div style="margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">
-                👤 ${payment.performedBy || 'Bilinmeyen'}
-              </div>
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">
-                <div>⚙️ Birim: <strong>${payment.unit || ''}</strong></div>
-                <div>📦 Miktar: <strong>${payment.quantity || 0}</strong></div>
-                <div>💰 Birim Fiyat: <strong>${formatCurrency(payment.unitPrice || 0)}</strong></div>
-                <div>📊 Toplam: <strong style="color: var(--brand-red);">${formatCurrency(totalPrice)}</strong></div>
-              </div>
-            </div>
-            <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem;" onclick="deletePayment('${payment.id}')">
-              🗑️ Sil
-            </button>
-          </div>
-        </div>
-      `;
-    }).join('');
-
-  } catch (error) {
-    console.error('❌ Hakediş yüklenemedi:', error);
-    showAlert('Hakediş yüklenemedi: ' + error.message, 'danger');
-  }
-}
+// async function loadProjectPayments() { ... }
 
 /**
  * Load Project Overview
