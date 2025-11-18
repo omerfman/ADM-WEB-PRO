@@ -103,6 +103,10 @@ function renderProjectsList() {
       'Beklemede': '#FFA500'
     };
 
+    // Check if user can delete (only super_admin and company_admin)
+    const userRole = window.userRole;
+    const canDelete = userRole === 'super_admin' || userRole === 'company_admin';
+
     projectCard.innerHTML = `
       <div onclick="openProjectDetail('${project.id}')" style="cursor: pointer;">
         <h4 style="margin: 0 0 0.5rem 0; color: var(--brand-red);">${project.name || 'Unnamed'}</h4>
@@ -115,13 +119,24 @@ function renderProjectsList() {
           <small style="color: var(--text-secondary);">${new Date(project.createdAt?.toDate?.() || new Date()).toLocaleDateString('tr-TR')}</small>
         </div>
       </div>
-      <button 
-        onclick="event.stopPropagation(); openEditProjectModal('${project.id}')" 
-        class="btn btn-secondary" 
-        style="margin-top: 1rem; width: 100%; padding: 0.5rem; font-size: 0.9rem;"
-      >
-        ✏️ Düzenle
-      </button>
+      <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;">
+        <button 
+          onclick="event.stopPropagation(); openEditProjectModal('${project.id}')" 
+          class="btn btn-secondary" 
+          style="flex: 1; min-width: 120px; padding: 0.5rem; font-size: 0.9rem;"
+        >
+          ✏️ Düzenle
+        </button>
+        ${canDelete ? `
+        <button 
+          onclick="event.stopPropagation(); deleteProject('${project.id}', '${project.name || 'Unnamed'}')" 
+          class="btn btn-danger" 
+          style="flex: 1; min-width: 100px; padding: 0.5rem; font-size: 0.9rem;"
+        >
+          🗑️ Sil
+        </button>
+        ` : ''}
+      </div>
     `;
     projectsList.appendChild(projectCard);
   });
@@ -179,6 +194,14 @@ async function loadProjectPayments(projectId) {
  * Open create project modal
  */
 function openCreateProjectModal() {
+  const userRole = window.userRole;
+  
+  // Check permissions
+  if (userRole !== 'super_admin' && userRole !== 'company_admin') {
+    showAlert('Yetkiniz yok! Sadece yöneticiler proje oluşturabilir.', 'danger');
+    return;
+  }
+  
   document.getElementById('createProjectModal').classList.add('show');
 }
 
@@ -726,6 +749,95 @@ async function handleUpdateProject(event) {
   }
 }
 
+/**
+ * Delete project
+ */
+async function deleteProject(projectId, projectName) {
+  const userRole = window.userRole;
+  
+  // Check permissions
+  if (userRole !== 'super_admin' && userRole !== 'company_admin') {
+    showAlert('Yetkiniz yok! Sadece yöneticiler proje silebilir.', 'danger');
+    return;
+  }
+
+  const confirmMsg = `"${projectName}" projesini kalıcı olarak silmek istediğinize emin misiniz?\n\nBu işlem:\n- Projenin tüm günlük kayıtlarını\n- Tüm stok kayıtlarını\n- Tüm ödeme kayıtlarını\n- Tüm bütçe verilerini\nsilecektir ve GERİ ALINAMAZ!`;
+  
+  if (!confirm(confirmMsg)) return;
+
+  // Double confirmation for critical action
+  const doubleConfirm = confirm('⚠️ SON UYARI: Bu işlem geri alınamaz! Devam edilsin mi?');
+  if (!doubleConfirm) return;
+
+  try {
+    const user = auth.currentUser;
+    if (!user) {
+      showAlert('Oturum açmanız gerekiyor', 'danger');
+      return;
+    }
+
+    // Get user data for logging
+    const userDocRef = doc(db, 'users', user.uid);
+    const userDocSnap = await getDoc(userDocRef);
+    const userData = userDocSnap.data();
+
+    // Delete project
+    await deleteDoc(doc(db, 'projects', projectId));
+
+    // Delete all related logs
+    const logsQuery = query(collection(db, 'logs'), where('projectId', '==', projectId));
+    const logsSnapshot = await getDocs(logsQuery);
+    logsSnapshot.forEach(async (logDoc) => {
+      await deleteDoc(logDoc.ref);
+    });
+
+    // Delete all related stocks
+    const stocksQuery = query(collection(db, 'stocks'), where('projectId', '==', projectId));
+    const stocksSnapshot = await getDocs(stocksQuery);
+    stocksSnapshot.forEach(async (stockDoc) => {
+      await deleteDoc(stockDoc.ref);
+    });
+
+    // Delete all related payments
+    const paymentsQuery = query(collection(db, 'payments'), where('projectId', '==', projectId));
+    const paymentsSnapshot = await getDocs(paymentsQuery);
+    paymentsSnapshot.forEach(async (paymentDoc) => {
+      await deleteDoc(paymentDoc.ref);
+    });
+
+    // Delete all related budget categories
+    const categoriesQuery = query(collection(db, 'budget_categories'), where('projectId', '==', projectId));
+    const categoriesSnapshot = await getDocs(categoriesQuery);
+    categoriesSnapshot.forEach(async (categoryDoc) => {
+      await deleteDoc(categoryDoc.ref);
+    });
+
+    // Delete all related budget expenses
+    const expensesQuery = query(collection(db, 'budget_expenses'), where('projectId', '==', projectId));
+    const expensesSnapshot = await getDocs(expensesQuery);
+    expensesSnapshot.forEach(async (expenseDoc) => {
+      await deleteDoc(expenseDoc.ref);
+    });
+
+    // Log activity
+    await addDoc(collection(db, 'activity_logs'), {
+      userId: user.uid,
+      userName: userData?.displayName || user.email,
+      companyId: userData?.companyId || 'default-company',
+      action: 'delete',
+      description: `"${projectName}" projesi silindi`,
+      timestamp: serverTimestamp()
+    });
+
+    showAlert('✅ Proje ve tüm ilgili veriler başarıyla silindi', 'success');
+    await loadProjects(); // Refresh project list
+
+  } catch (error) {
+    console.error('❌ Proje silinirken hata:', error);
+    showAlert('Proje silinirken hata: ' + error.message, 'danger');
+  }
+}
+
 // Export functions for global use
 window.loadProjects = loadProjects;
 window.openProjectDetail = openProjectDetail;
@@ -753,4 +865,5 @@ window.clearProjectFilters = clearProjectFilters;
 window.applyProjectFilters = applyProjectFilters;
 window.openEditProjectModal = openEditProjectModal;
 window.closeEditProjectModal = closeEditProjectModal;
+window.deleteProject = deleteProject;
 window.handleUpdateProject = handleUpdateProject;

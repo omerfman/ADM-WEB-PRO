@@ -91,6 +91,16 @@ async function loadUserData() {
       activityNavBtn.classList.remove('hidden');
     }
     
+    // Show/hide "Yeni Proje" button based on role
+    const createProjectBtn = document.getElementById('createProjectBtn');
+    if (createProjectBtn) {
+      if (role === 'super_admin' || role === 'company_admin') {
+        createProjectBtn.style.display = 'block';
+      } else {
+        createProjectBtn.style.display = 'none';
+      }
+    }
+    
     // Company admin can see employees
     if (role === 'company_admin') {
       if (employeesNavBtn) employeesNavBtn.classList.remove('hidden');
