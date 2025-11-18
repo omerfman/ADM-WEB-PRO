@@ -4,6 +4,7 @@ import {
   collection, query, where, orderBy, limit, getDocs,
   doc, getDoc, addDoc, deleteDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { uploadPhotoToImgBB } from "./upload.js";
 
 let currentProjectId = null;
 let projects = [];
@@ -462,7 +463,7 @@ async function handleAddLog(event) {
     if (photoFile) {
       try {
         showAlert('Fotoğraf yükleniyor...', 'warning');
-        photoUrl = await window.uploadPhotoToImgBB(photoFile, currentProjectId);
+        photoUrl = await uploadPhotoToImgBB(photoFile, currentProjectId);
         console.log('✅ Photo uploaded to ImgBB:', photoUrl);
       } catch (error) {
         console.error('❌ Photo upload failed:', error);
