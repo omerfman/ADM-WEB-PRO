@@ -29,7 +29,9 @@ try {
 
 // Enable offline persistence for better UX (skip on mobile for faster load)
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-if (!isMobile) {
+const isSlowConnection = navigator.connection && (navigator.connection.effectiveType === 'slow-2g' || navigator.connection.effectiveType === '2g');
+
+if (!isMobile && !isSlowConnection) {
   enableIndexedDbPersistence(db)
     .catch((error) => {
       if (error.code === 'failed-precondition') {
@@ -41,7 +43,7 @@ if (!isMobile) {
       }
     });
 } else {
-  console.log('📱 Mobile device detected - skipping IndexedDB persistence for faster load');
+  console.log('📱 Mobile device or slow connection detected - skipping IndexedDB persistence for faster load');
 }
 
 // Enable Auth persistence
