@@ -127,6 +127,55 @@ service cloud.firestore {
       allow update, delete: if isSuperAdmin();
     }
 
+    // ========== HAKEDIŞ (PROGRESS PAYMENT) COLLECTIONS ==========
+    
+    // BOQ Items (Bill of Quantities)
+    match /boq_items/{itemId} {
+      allow read: if isSignedIn() && hasCompanyAccess(resource.data.companyId);
+      allow create, update: if isSignedIn() && (isCompanyAdmin() || isSuperAdmin());
+      allow delete: if isSuperAdmin();
+    }
+
+    // Progress Payments (Hakediş Dönemleri)
+    match /progress_payments/{paymentId} {
+      allow read: if isSignedIn() && hasCompanyAccess(resource.data.companyId);
+      allow create: if isSignedIn() && (isCompanyAdmin() || isCompanyUser());
+      allow update: if isSignedIn() && (
+        isCompanyAdmin() || 
+        isSuperAdmin() ||
+        (isCompanyUser() && resource.data.status == 'draft')
+      );
+      allow delete: if isSuperAdmin();
+    }
+
+    // Measurement Lines (Metraj Satırları)
+    match /measurement_lines/{lineId} {
+      allow read: if isSignedIn() && hasCompanyAccess(resource.data.companyId);
+      allow create, update: if isSignedIn() && (
+        isCompanyAdmin() || 
+        isCompanyUser() || 
+        isSuperAdmin()
+      );
+      allow delete: if isSignedIn() && (isCompanyAdmin() || isSuperAdmin());
+    }
+
+    // Payment Config (Proje Bazlı Ayarlar)
+    match /payment_config/{configId} {
+      allow read: if isSignedIn() && hasCompanyAccess(resource.data.companyId);
+      allow create, update, delete: if isSignedIn() && (
+        isCompanyAdmin() || 
+        isSuperAdmin()
+      );
+    }
+
+    // Payment Approvals (Onay Logları - Audit Trail)
+    match /payment_approvals/{approvalId} {
+      allow read: if isSignedIn() && hasCompanyAccess(resource.data.companyId);
+      allow create: if isSignedIn() && (isCompanyAdmin() || isSuperAdmin());
+      // No updates or deletes - this is an audit trail
+      allow update, delete: if false;
+    }
+
     // ========== DEFAULT: DENY ALL ==========
     match /{document=**} {
       allow read, write: if false;
