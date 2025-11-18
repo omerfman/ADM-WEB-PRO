@@ -1,5 +1,6 @@
 // Dashboard Overview - Main Statistics Page
 import { auth, db } from "./firebase-config.js";
+import { IMGBB_API_KEY, IMGBB_UPLOAD_URL, MAX_FILE_SIZE } from './imgbb-config.js';
 import {
   collection, query, where, getDocs, doc, getDoc, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -756,6 +757,12 @@ function closeCompanyLogoUpload() {
 async function handleCompanyLogoUpload(event, companyId) {
   event.preventDefault();
   
+  // Validate API key
+  if (!IMGBB_API_KEY || IMGBB_API_KEY === 'YOUR_IMGBB_API_KEY') {
+    alert('❌ ImgBB API key ayarlanmamış!\n\n1. https://api.imgbb.com/ adresinden ücretsiz hesap oluşturun\n2. API key\'inizi alın\n3. web/js/imgbb-config.js dosyasında IMGBB_API_KEY değerini güncelleyin');
+    return;
+  }
+  
   const fileInput = document.getElementById('companyLogoFile');
   const file = fileInput.files[0];
   
@@ -764,9 +771,9 @@ async function handleCompanyLogoUpload(event, companyId) {
     return;
   }
   
-  // Validate file size (max 5MB)
-  if (file.size > 5 * 1024 * 1024) {
-    alert('Dosya boyutu 5MB\'dan küçük olmalıdır');
+  // Validate file size (max 5MB for logo)
+  if (file.size > MAX_FILE_SIZE) {
+    alert(`Dosya boyutu ${Math.round(MAX_FILE_SIZE / 1024 / 1024)}MB\'dan küçük olmalıdır`);
     return;
   }
   
@@ -785,7 +792,7 @@ async function handleCompanyLogoUpload(event, companyId) {
     const formData = new FormData();
     formData.append('image', file);
     
-    const imgbbResponse = await fetch(`https://api.imgbb.com/1/upload?key=${window.IMGBB_API_KEY}`, {
+    const imgbbResponse = await fetch(`${IMGBB_UPLOAD_URL}?key=${IMGBB_API_KEY}`, {
       method: 'POST',
       body: formData
     });
@@ -798,8 +805,8 @@ async function handleCompanyLogoUpload(event, companyId) {
     const logoUrl = imgbbData.data.url;
     
     // Update company document with logo URL
-    const { doc, updateDoc } = await import('./firebase-config.js');
-    const companyRef = doc(window.db, 'companies', companyId);
+    const { updateDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const companyRef = doc(db, 'companies', companyId);
     
     await updateDoc(companyRef, {
       logoUrl: logoUrl,
@@ -807,9 +814,9 @@ async function handleCompanyLogoUpload(event, companyId) {
     });
     
     // Log activity
-    const { collection, addDoc } = await import('./firebase-config.js');
-    const user = window.auth.currentUser;
-    await addDoc(collection(window.db, 'audit_logs'), {
+    const { addDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    const user = auth.currentUser;
+    await addDoc(collection(db, 'audit_logs'), {
       userId: user.uid,
       action: 'UPDATE_COMPANY',
       description: 'Şirket logosu güncellendi',
