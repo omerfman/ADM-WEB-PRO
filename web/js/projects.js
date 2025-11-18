@@ -8,6 +8,9 @@ import {
 let currentProjectId = null;
 let projects = [];
 
+// Export currentProjectId globally for budget module
+window.currentProjectId = null;
+
 /**
  * Load projects from Firestore
  */
@@ -104,6 +107,7 @@ async function openProjectDetail(projectId) {
 
     const project = projectSnap.data();
     currentProjectId = projectId;
+    window.currentProjectId = projectId; // Make it globally available
 
     // Update modal
     document.getElementById('projectTitle').textContent = project.name;
@@ -131,6 +135,7 @@ async function openProjectDetail(projectId) {
 function closeProjectModal() {
   document.getElementById('projectDetailModal').classList.remove('show');
   currentProjectId = null;
+  window.currentProjectId = null;
 }
 
 /**

@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - ADM İnşaat Proje Yönetim Sistemi</title>
   <link rel="stylesheet" href="css/style.css">
+  <!-- SheetJS for Excel Import/Export -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
   <div class="dashboard-layout">
@@ -162,6 +164,13 @@
         <p style="margin: 0.5rem 0; color: #666;"><strong>Konum:</strong> <span id="projectDetailLocation"></span></p>
         <p style="margin: 0.5rem 0; color: #666;"><strong>Açıklama:</strong> <span id="projectDetailDesc"></span></p>
         
+        <!-- Quick Actions -->
+        <div style="display: flex; gap: 0.5rem; margin: 1rem 0;">
+          <button class="btn btn-secondary" onclick="openBudgetModal(window.currentProjectId || '')" style="width: auto; padding: 0.5rem 1rem; font-size: 0.9rem;">
+            💰 Bütçe Yönetimi
+          </button>
+        </div>
+        
         <!-- Tabs -->
         <div style="border-bottom: 2px solid var(--border-color); margin: 1.5rem 0 1rem 0;">
           <button class="tab-btn active" data-tab="logs" onclick="switchTab('logs')">📋 Şantiye Günlüğü</button>
@@ -177,13 +186,41 @@
         </div>
 
         <div id="stocks-tab" class="tab-content hidden">
-          <h4 style="margin-top: 0;">Stok Takibi</h4>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h4 style="margin: 0;">Stok Takibi</h4>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-secondary" onclick="downloadStockTemplate()" style="width: auto; padding: 0.5rem 1rem; font-size: 0.85rem; background: #2196F3;">
+                📥 Şablon İndir
+              </button>
+              <button class="btn btn-secondary" onclick="exportStocksToExcel(window.currentProjectId, document.getElementById('projectTitle').textContent)" style="width: auto; padding: 0.5rem 1rem; font-size: 0.85rem; background: #4caf50;">
+                📊 Excel'e Aktar
+              </button>
+              <label class="btn btn-secondary" style="width: auto; padding: 0.5rem 1rem; font-size: 0.85rem; background: #ff9800; cursor: pointer; margin: 0;">
+                📤 Excel'den İçe Aktar
+                <input type="file" accept=".xlsx,.xls" onchange="importStocksFromExcel(event, window.currentProjectId)" style="display: none;">
+              </label>
+            </div>
+          </div>
           <div id="stocksList" style="max-height: 300px; overflow-y: auto; margin-bottom: 1rem;"></div>
           <button class="btn btn-secondary" onclick="openAddStockModal()" style="width: auto; margin-top: 1rem;">+ Ürün Ekle</button>
         </div>
 
         <div id="payments-tab" class="tab-content hidden">
-          <h4 style="margin-top: 0;">Hakediş Listesi</h4>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h4 style="margin: 0;">Hakediş Listesi</h4>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-secondary" onclick="downloadPaymentTemplate()" style="width: auto; padding: 0.5rem 1rem; font-size: 0.85rem; background: #2196F3;">
+                📥 Şablon İndir
+              </button>
+              <button class="btn btn-secondary" onclick="exportPaymentsToExcel(window.currentProjectId, document.getElementById('projectTitle').textContent)" style="width: auto; padding: 0.5rem 1rem; font-size: 0.85rem; background: #4caf50;">
+                📊 Excel'e Aktar
+              </button>
+              <label class="btn btn-secondary" style="width: auto; padding: 0.5rem 1rem; font-size: 0.85rem; background: #ff9800; cursor: pointer; margin: 0;">
+                📤 Excel'den İçe Aktar
+                <input type="file" accept=".xlsx,.xls" onchange="importPaymentsFromExcel(event, window.currentProjectId)" style="display: none;">
+              </label>
+            </div>
+          </div>
           <div id="paymentsList" style="max-height: 300px; overflow-y: auto; margin-bottom: 1rem;"></div>
           <div style="padding: 1rem; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 1rem;">
             <strong>Toplam Hakediş: ₺<span id="totalPayments">0</span></strong>
@@ -307,6 +344,166 @@
           <div class="form-group">
             <label for="paymentQuantity">Miktar *</label>
             <input type="number" id="paymentQuantity" placeholder="1" min="0.01" step="0.01" required value="1">
+          </div>
+          <button type="submit" class="btn btn-primary">Kaydet</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Budget Management Modal -->
+  <div id="budgetModal" class="modal">
+    <div class="modal-content" style="max-width: 1200px;">
+      <div class="modal-header">
+        <h2>💰 Bütçe Yönetimi - <span id="budgetProjectName"></span></h2>
+        <button class="modal-close" onclick="closeBudgetModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Budget Settings -->
+        <div style="background: var(--card-bg); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+          <h3 style="margin-top: 0;">Proje Bütçesi</h3>
+          <form onsubmit="updateProjectBudget(event)" style="display: grid; grid-template-columns: 1fr auto auto; gap: 1rem; align-items: end;">
+            <div class="form-group" style="margin: 0;">
+              <label for="budgetTotalAmount">Toplam Bütçe</label>
+              <input type="number" id="budgetTotalAmount" placeholder="0" min="0" step="0.01" required style="width: 100%;">
+            </div>
+            <div class="form-group" style="margin: 0;">
+              <label for="budgetCurrency">Para Birimi</label>
+              <select id="budgetCurrency" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px;">
+                <option value="TRY">TRY (₺)</option>
+                <option value="USD">USD ($)</option>
+                <option value="EUR">EUR (€)</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary" style="margin: 0;">Güncelle</button>
+          </form>
+        </div>
+
+        <!-- Budget Summary -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 8px;">
+            <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.5rem;">Toplam Bütçe</div>
+            <div style="font-size: 1.5rem; font-weight: bold;">₺<span id="budgetSummaryTotal">0</span></div>
+          </div>
+          <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 1.5rem; border-radius: 8px;">
+            <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.5rem;">Harcama Kayıtları</div>
+            <div style="font-size: 1.5rem; font-weight: bold;">₺<span id="budgetSummaryExpenses">0</span></div>
+          </div>
+          <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 1.5rem; border-radius: 8px;">
+            <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.5rem;">Stok</div>
+            <div style="font-size: 1.5rem; font-weight: bold;">₺<span id="budgetSummaryStocks">0</span></div>
+          </div>
+          <div style="background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); color: white; padding: 1.5rem; border-radius: 8px;">
+            <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.5rem;">Hakediş</div>
+            <div style="font-size: 1.5rem; font-weight: bold;">₺<span id="budgetSummaryPayments">0</span></div>
+          </div>
+          <div style="background: linear-gradient(135deg, #ff9a56 0%, #ff6a88 100%); color: white; padding: 1.5rem; border-radius: 8px;">
+            <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.5rem;">Toplam Harcama</div>
+            <div style="font-size: 1.5rem; font-weight: bold;">₺<span id="budgetSummaryGrandTotal">0</span></div>
+          </div>
+          <div style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333; padding: 1.5rem; border-radius: 8px;">
+            <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.5rem;">Kalan Bütçe</div>
+            <div style="font-size: 1.5rem; font-weight: bold;">₺<span id="budgetSummaryRemaining">0</span></div>
+            <div style="margin-top: 0.5rem;">
+              <div style="background: rgba(0,0,0,0.1); height: 6px; border-radius: 3px; overflow: hidden;">
+                <div id="budgetProgressBar" style="height: 100%; transition: width 0.3s;"></div>
+              </div>
+              <div style="margin-top: 0.25rem; font-size: 0.75rem;">Kullanım: <span id="budgetSummaryPercentage">0%</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Budget Tabs -->
+        <div style="border-bottom: 2px solid var(--border-color); margin-bottom: 1rem;">
+          <button class="tab-btn active" onclick="document.getElementById('budget-categories-tab').classList.remove('hidden'); document.getElementById('budget-expenses-tab').classList.add('hidden');">
+            📁 Bütçe Kategorileri
+          </button>
+          <button class="tab-btn" onclick="document.getElementById('budget-expenses-tab').classList.remove('hidden'); document.getElementById('budget-categories-tab').classList.add('hidden');">
+            💸 Harcama Kayıtları
+          </button>
+        </div>
+
+        <!-- Budget Categories Tab -->
+        <div id="budget-categories-tab">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="margin: 0;">Bütçe Kategorileri</h3>
+            <button class="btn btn-primary" onclick="openAddCategoryModal()">+ Kategori Ekle</button>
+          </div>
+          <div id="budgetCategoriesList" style="max-height: 400px; overflow-y: auto;"></div>
+        </div>
+
+        <!-- Budget Expenses Tab -->
+        <div id="budget-expenses-tab" class="hidden">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="margin: 0;">Harcama Kayıtları</h3>
+            <button class="btn btn-primary" onclick="openAddExpenseModal()">+ Harcama Ekle</button>
+          </div>
+          <div id="budgetExpensesList" style="max-height: 400px; overflow-y: auto;"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeBudgetModal()">Kapat</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Budget Category Modal -->
+  <div id="addCategoryModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Kategori Ekle</h2>
+        <button class="modal-close" onclick="closeAddCategoryModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="addCategoryForm" onsubmit="addBudgetCategory(event)">
+          <div class="form-group">
+            <label for="categoryName">Kategori Adı *</label>
+            <input type="text" id="categoryName" placeholder="Örn: Malzeme, İşçilik, Ekipman" required>
+          </div>
+          <div class="form-group">
+            <label for="categoryAllocated">Planlanan Bütçe (₺) *</label>
+            <input type="number" id="categoryAllocated" placeholder="0" min="0" step="0.01" required>
+          </div>
+          <div class="form-group">
+            <label for="categoryDescription">Açıklama</label>
+            <textarea id="categoryDescription" rows="3" placeholder="Kategori açıklaması (opsiyonel)"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Kaydet</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Budget Expense Modal -->
+  <div id="addExpenseModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Harcama Ekle</h2>
+        <button class="modal-close" onclick="closeAddExpenseModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="addExpenseForm" onsubmit="addBudgetExpense(event)">
+          <div class="form-group">
+            <label for="expenseCategory">Kategori *</label>
+            <select id="expenseCategory" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px;">
+              <option value="">Kategori Seçin</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="expenseDescription">Açıklama *</label>
+            <input type="text" id="expenseDescription" placeholder="Harcama açıklaması" required>
+          </div>
+          <div class="form-group">
+            <label for="expenseAmount">Tutar (₺) *</label>
+            <input type="number" id="expenseAmount" placeholder="0" min="0" step="0.01" required>
+          </div>
+          <div class="form-group">
+            <label for="expenseDate">Tarih *</label>
+            <input type="date" id="expenseDate" required>
+          </div>
+          <div class="form-group">
+            <label for="expenseNotes">Notlar</label>
+            <textarea id="expenseNotes" rows="3" placeholder="Ek notlar (opsiyonel)"></textarea>
           </div>
           <button type="submit" class="btn btn-primary">Kaydet</button>
         </form>
@@ -482,6 +679,8 @@
   
   <!-- Additional Modules -->
   <script type="module" src="js/upload.js"></script>
+  <script type="module" src="js/budget.js"></script>
+  <script type="module" src="js/excel.js"></script>
   <script type="module" src="js/audit.js"></script>
   <script type="module" src="js/security.js"></script>
   <script type="module" src="js/security-monitoring.js"></script>
