@@ -668,8 +668,7 @@ async function deletePayment(projectId, paymentId) {
 function initializeProjectFilters() {
   const searchInput = document.getElementById('projectSearchInput');
   const statusFilter = document.getElementById('projectStatusFilter');
-  const startDateFilter = document.getElementById('projectStartDateFilter');
-  const endDateFilter = document.getElementById('projectEndDateFilter');
+  const companyFilter = document.getElementById('projectCompanyFilter');
 
   if (searchInput) {
     searchInput.addEventListener('input', applyProjectFilters);
@@ -677,15 +676,42 @@ function initializeProjectFilters() {
   if (statusFilter) {
     statusFilter.addEventListener('change', applyProjectFilters);
   }
-  if (startDateFilter) {
-    startDateFilter.addEventListener('change', applyProjectFilters);
-  }
-  if (endDateFilter) {
-    endDateFilter.addEventListener('change', applyProjectFilters);
+  if (companyFilter) {
+    companyFilter.addEventListener('change', applyProjectFilters);
+    // Load companies for super admin
+    if (window.userRole === 'super_admin') {
+      loadCompaniesForFilter();
+      companyFilter.classList.remove('hidden');
+    }
   }
 
   // Initial filter results
   updateFilterResults(projects.length);
+}
+
+/**
+ * Load companies for super admin filter
+ */
+async function loadCompaniesForFilter() {
+  try {
+    const companiesSnap = await getDocs(collection(db, 'companies'));
+    const companyFilter = document.getElementById('projectCompanyFilter');
+    
+    if (companyFilter) {
+      // Clear existing options except first
+      companyFilter.innerHTML = '<option value="">Tüm Şirketler</option>';
+      
+      companiesSnap.forEach(doc => {
+        const company = doc.data();
+        const option = document.createElement('option');
+        option.value = doc.id;
+        option.textContent = company.name || doc.id;
+        companyFilter.appendChild(option);
+      });
+    }
+  } catch (error) {
+    console.error('❌ Şirketler yüklenemedi:', error);
+  }
 }
 
 /**
@@ -694,13 +720,11 @@ function initializeProjectFilters() {
 function isFilterActive() {
   const searchInput = document.getElementById('projectSearchInput');
   const statusFilter = document.getElementById('projectStatusFilter');
-  const startDateFilter = document.getElementById('projectStartDateFilter');
-  const endDateFilter = document.getElementById('projectEndDateFilter');
+  const companyFilter = document.getElementById('projectCompanyFilter');
 
   return (searchInput && searchInput.value.trim()) ||
          (statusFilter && statusFilter.value) ||
-         (startDateFilter && startDateFilter.value) ||
-         (endDateFilter && endDateFilter.value);
+         (companyFilter && companyFilter.value);
 }
 
 /**
@@ -709,8 +733,7 @@ function isFilterActive() {
 function applyProjectFilters() {
   const searchTerm = document.getElementById('projectSearchInput')?.value.toLowerCase().trim() || '';
   const statusFilter = document.getElementById('projectStatusFilter')?.value || '';
-  const startDate = document.getElementById('projectStartDateFilter')?.value || '';
-  const endDate = document.getElementById('projectEndDateFilter')?.value || '';
+  const companyFilter = document.getElementById('projectCompanyFilter')?.value || '';
 
   filteredProjects = projects.filter(project => {
     // Search filter (project name)
@@ -721,21 +744,10 @@ function applyProjectFilters() {
     // Status filter
     const matchesStatus = !statusFilter || project.status === statusFilter;
 
-    // Date range filter
-    let matchesDateRange = true;
-    if (startDate || endDate) {
-      const projectDate = project.createdAt?.toDate?.() || new Date(0);
-      const projectDateStr = projectDate.toISOString().split('T')[0];
+    // Company filter (super admin only)
+    const matchesCompany = !companyFilter || project.companyId === companyFilter;
 
-      if (startDate && projectDateStr < startDate) {
-        matchesDateRange = false;
-      }
-      if (endDate && projectDateStr > endDate) {
-        matchesDateRange = false;
-      }
-    }
-
-    return matchesSearch && matchesStatus && matchesDateRange;
+    return matchesSearch && matchesStatus && matchesCompany;
   });
 
   renderProjectsList();
@@ -747,13 +759,11 @@ function applyProjectFilters() {
 function clearProjectFilters() {
   const searchInput = document.getElementById('projectSearchInput');
   const statusFilter = document.getElementById('projectStatusFilter');
-  const startDateFilter = document.getElementById('projectStartDateFilter');
-  const endDateFilter = document.getElementById('projectEndDateFilter');
+  const companyFilter = document.getElementById('projectCompanyFilter');
 
   if (searchInput) searchInput.value = '';
   if (statusFilter) statusFilter.value = '';
-  if (startDateFilter) startDateFilter.value = '';
-  if (endDateFilter) endDateFilter.value = '';
+  if (companyFilter) companyFilter.value = '';
 
   filteredProjects = [];
   renderProjectsList();

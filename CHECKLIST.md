@@ -691,6 +691,94 @@ Projelerin listelendiği sayfada proje düzenleme butonu ekle. Buradan oluşturd
 6. ✅ Dashboard Özet Ana Sayfası - Rol bazlı istatistikler
 7. ✅ Proje Düzenleme - Her proje kartında düzenleme butonu
 
+---
+
+## 🐛 Bug Fixes (18 Kasım 2025 - Gece Son)
+
+### [x] 1. Dashboard Firestore Permissions Hatası
+**Durum:** ✅ TAMAMLANDI
+**Öncelik:** YÜKSEK
+
+**Hata:**
+```
+FirebaseError: Missing or insufficient permissions
+```
+
+**Sebep:** activity_logs collection'ı için Firestore rules eksik veya yanlış
+
+**Çözüm:**
+- firestore.rules dosyasına activity_logs collection kuralları ekle
+- Company admin için companyId bazlı erişim izni
+
+---
+
+### [x] 2. Theme Toggle Butonu Çalışmıyor
+**Durum:** ✅ TAMAMLANDI
+**Öncelik:** YÜKSEK
+
+**Problem:** Light ve Dark aynı butonda görünüyor, toggle çalışmıyor
+
+**Çözüm:**
+- Toggle butonu JavaScript fonksiyonunu düzelt
+- Active state değişimini düzgün yap
+
+---
+
+### [x] 3. Logo Arka Plan Boyutu Küçük
+**Durum:** ✅ TAMAMLANDI
+**Öncelik:** ORTA
+
+**Problem:** Logonun arkasındaki renkli alan küçük kalıyor
+
+**Çözüm:**
+- Logo padding'i artır
+- Uygun boyutlandırma yap
+
+---
+
+### [x] 4. Proje Filtreleme Tarih Kaldır + Super Admin Şirket Filtresi
+**Durum:** ✅ TAMAMLANDI
+**Öncelik:** ORTA
+
+**Yapılacaklar:**
+- Tarih filtrelerini kaldır
+- Super admin için şirket dropdown filtresi ekle
+
+---
+
+### [x] 5. Proje Düzenleme Modal Taşma Sorunu
+**Durum:** ✅ TAMAMLANDI
+**Öncelik:** YÜKSEK
+
+**Problem:** Modal ekran dışına taşıyor, kullanılamıyor
+
+**Çözüm:**
+- Modal max-height ekle
+- Scroll ekle
+- Responsive düzenleme
+
+---
+
+**Toplam Yeni Bug:** 5
+**Tamamlanan:** 5
+**Bekleyen:** 0
+
+**✅ TÜM BUGLAR DÜZELTİLDİ!**
+
+**Yapılan Düzeltmeler:**
+1. ✅ firestore.rules - activity_logs için permissions eklendi
+2. ✅ Theme toggle - Varsayılan dark mode, doğru çalışıyor
+3. ✅ Logo padding - 1.25rem (sidebar), 1.5rem (login)
+4. ✅ Proje filtreleme - Tarih kaldırıldı, super admin şirket filtresi eklendi
+5. ✅ Modal taşma - max-height: 90vh, overflow-y: auto
+
+**Öncelik Sırası:**
+1. 🔥 Dashboard Permissions (1. bug)
+2. 🔥 Theme Toggle (2. bug)
+3. 🔥 Modal Taşma (5. bug)
+4. ⚡ Logo Boyut (3. bug)
+5. ⚡ Filtre Düzenleme (4. bug)
+
 **Öncelik Sıralaması:**
 1. 🔥 Logo PNG Arka Plan - Sidebar Sol Üst (1. görev)
 2. 🔥 Çıkış Yap Butonu Düzenleme (2. görev)

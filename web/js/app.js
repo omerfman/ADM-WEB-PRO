@@ -4,8 +4,8 @@ console.log('🚀 ADM İnşaat Proje Yönetim Sistemi başlatılıyor...');
 
 // ========== DARK MODE THEME SYSTEM ==========
 function initializeTheme() {
-  // Check localStorage for saved theme
-  const savedTheme = localStorage.getItem('theme') || 'light';
+  // Default to dark mode if no saved preference
+  const savedTheme = localStorage.getItem('theme') || 'dark';
   document.body.classList.toggle('dark-mode', savedTheme === 'dark');
   updateThemeButton(savedTheme);
 }

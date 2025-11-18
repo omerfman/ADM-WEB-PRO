@@ -55,11 +55,11 @@
         <div class="sidebar-actions">
           <button id="sidebarThemeToggle" class="theme-toggle-btn" onclick="toggleTheme()">
             <span class="theme-option light-option">
-              <span class="theme-circle light-circle">⚪</span>
+              <span class="theme-circle">⚪</span>
               <span class="theme-label">Light</span>
             </span>
             <span class="theme-option dark-option active">
-              <span class="theme-circle dark-circle">⚫</span>
+              <span class="theme-circle">⚫</span>
               <span class="theme-label">Dark</span>
             </span>
           </button>
@@ -104,12 +104,10 @@
             <option value="Beklemede">Beklemede</option>
           </select>
           
-          <div style="display: flex; gap: 0.5rem; align-items: center;">
-            <label style="color: var(--text-secondary); font-size: 0.9rem;">Tarih:</label>
-            <input type="date" id="projectStartDateFilter" style="padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
-            <span style="color: var(--text-secondary);">-</span>
-            <input type="date" id="projectEndDateFilter" style="padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
-          </div>
+          <select id="projectCompanyFilter" class="hidden" style="padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+            <option value="">Tüm Şirketler</option>
+            <!-- Companies will be loaded here for super admin -->
+          </select>
           
           <button class="btn btn-secondary" onclick="clearProjectFilters()" style="padding: 0.75rem 1.25rem;">🔄 Temizle</button>
           

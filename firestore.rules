@@ -113,6 +113,20 @@ service cloud.firestore {
       allow write: if isSignedIn();
     }
 
+    // ========== ACTIVITY LOGS ==========
+    match /activity_logs/{activityId} {
+      // Read: Super admin sees all, company admin sees company logs, user sees own logs
+      allow read: if isSignedIn() && (
+        isSuperAdmin() || 
+        resource.data.companyId == getUserCompanyId() ||
+        resource.data.userId == request.auth.uid
+      );
+      // Write: All authenticated users can create activity logs
+      allow create: if isSignedIn() && request.resource.data.userId != null;
+      // Update/Delete: Only super admin
+      allow update, delete: if isSuperAdmin();
+    }
+
     // ========== DEFAULT: DENY ALL ==========
     match /{document=**} {
       allow read, write: if false;
