@@ -35,14 +35,13 @@ async function loadProjects() {
     
     // Super admin can see all projects
     if (userRole === 'super_admin') {
-      q = query(projectsRef, orderBy('createdAt', 'desc'));
+      q = query(projectsRef);
       console.log('🔑 Super admin: Tüm projeler yükleniyor');
     } else {
       // Regular users only see their company's projects
       q = query(
         projectsRef,
-        where('companyId', '==', companyId),
-        orderBy('createdAt', 'desc')
+        where('companyId', '==', companyId)
       );
     }
 
@@ -50,6 +49,13 @@ async function loadProjects() {
     projects = [];
     snapshot.forEach(docSnap => {
       projects.push({ id: docSnap.id, ...docSnap.data() });
+    });
+
+    // Sort projects by createdAt (newest first) - client-side sorting
+    projects.sort((a, b) => {
+      const dateA = a.createdAt?.toDate?.() || new Date(0);
+      const dateB = b.createdAt?.toDate?.() || new Date(0);
+      return dateB - dateA;
     });
 
     renderProjectsList();
