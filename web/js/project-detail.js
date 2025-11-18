@@ -348,6 +348,8 @@ async function loadBudgetTabSummary() {
     const spentEl = document.getElementById('budgetTabSpent');
     const remainingEl = document.getElementById('budgetTabRemaining');
     const percentageEl = document.getElementById('budgetTabPercentage');
+    const progressBarEl = document.getElementById('budgetTabProgressBar');
+    const progressLabelEl = document.getElementById('budgetTabProgressLabel');
 
     if (totalEl) totalEl.textContent = formatCurrency(budget);
     if (spentEl) spentEl.textContent = formatCurrency(totalSpent);
@@ -358,6 +360,16 @@ async function loadBudgetTabSummary() {
     if (percentageEl) {
       percentageEl.textContent = percentage + '%';
       percentageEl.style.color = percentage > 100 ? '#ff6b6b' : percentage > 80 ? '#ffd93d' : 'white';
+    }
+    
+    // Update progress bar
+    if (progressBarEl) {
+      const barColor = percentage > 100 ? '#f44336' : percentage > 80 ? '#ff9800' : '#4caf50';
+      progressBarEl.style.background = barColor;
+      progressBarEl.style.width = Math.min(percentage, 100) + '%';
+    }
+    if (progressLabelEl) {
+      progressLabelEl.textContent = percentage + '%';
     }
 
   } catch (error) {
@@ -434,11 +446,19 @@ function closeAddPaymentModal() {
   document.getElementById('paymentTotalPrice').textContent = '₺0.00';
 }
 
-function openBudgetModal() {
-  if (window.openBudgetModal && typeof window.openBudgetModal === 'function') {
-    window.openBudgetModal(currentProjectId);
+function openBudgetModalFromProject() {
+  // Check if budget.js is loaded
+  const budgetModal = document.getElementById('budgetModal');
+  if (!budgetModal) {
+    showAlert('Bütçe modülü yüklenemedi', 'danger');
+    return;
+  }
+
+  // Call the budget.js openBudgetModal function
+  if (typeof openBudgetModal === 'function') {
+    openBudgetModal(currentProjectId);
   } else {
-    showAlert('Bütçe modülü yüklenmedi', 'danger');
+    showAlert('Bütçe fonksiyonu bulunamadı', 'danger');
   }
 }
 
@@ -637,7 +657,7 @@ window.openAddStockModal = openAddStockModal;
 window.closeAddStockModal = closeAddStockModal;
 window.openAddPaymentModal = openAddPaymentModal;
 window.closeAddPaymentModal = closeAddPaymentModal;
-window.openBudgetModal = openBudgetModal;
+window.openBudgetModalFromProject = openBudgetModalFromProject;
 window.closeBudgetModal = closeBudgetModal;
 window.loadBudgetTabSummary = loadBudgetTabSummary;
 window.openEditProjectModal = openEditProjectModal;
