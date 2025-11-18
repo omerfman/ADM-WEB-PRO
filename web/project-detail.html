@@ -182,7 +182,27 @@
       </div>
       <div class="modal-body">
         <form id="addLogForm" onsubmit="handleAddLog(event)">
-          <!-- Form content will be added by JS -->
+          <div class="form-group">
+            <label for="logDate">Tarih *</label>
+            <input type="date" id="logDate" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+          </div>
+          <div class="form-group">
+            <label for="logPerformedBy">Yapan Kişi *</label>
+            <input type="text" id="logPerformedBy" placeholder="İşçi/Ekip adı" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+          </div>
+          <div class="form-group">
+            <label for="logDescription">Yapılan İş / Açıklama *</label>
+            <textarea id="logDescription" placeholder="Örn: Temel kazısı tamamlandı, beton dökümü yapıldı..." required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary); min-height: 120px; resize: vertical;"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="logPhoto">Fotoğraf (Opsiyonel)</label>
+            <input type="file" id="logPhoto" accept="image/*" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+            <small style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem; display: block;">Max 32MB - ImgBB üzerinden yüklenecek</small>
+          </div>
+          <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">💾 Kaydet</button>
+            <button type="button" class="btn btn-secondary" onclick="closeAddLogModal()" style="flex: 1;">❌ İptal</button>
+          </div>
         </form>
       </div>
     </div>
@@ -197,7 +217,43 @@
       </div>
       <div class="modal-body">
         <form id="addStockForm" onsubmit="handleAddStock(event)">
-          <!-- Form content will be added by JS -->
+          <div class="form-group">
+            <label for="stockName">Ürün Adı *</label>
+            <input type="text" id="stockName" placeholder="Örn: Çimento, Demir, Kum..." required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+          </div>
+          <div class="form-group">
+            <label for="stockUnit">Birim *</label>
+            <select id="stockUnit" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+              <option value="">Seçiniz</option>
+              <option value="Adet">Adet</option>
+              <option value="Kg">Kilogram (Kg)</option>
+              <option value="Ton">Ton</option>
+              <option value="M">Metre (M)</option>
+              <option value="M2">Metrekare (M²)</option>
+              <option value="M3">Metreküp (M³)</option>
+              <option value="Lt">Litre (Lt)</option>
+              <option value="Paket">Paket</option>
+              <option value="Koli">Koli</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="stockQuantity">Miktar *</label>
+            <input type="number" id="stockQuantity" placeholder="0" min="0" step="0.01" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+          </div>
+          <div class="form-group">
+            <label for="stockUnitPrice">Birim Fiyat (₺) *</label>
+            <input type="number" id="stockUnitPrice" placeholder="0.00" min="0" step="0.01" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+          </div>
+          <div style="background: var(--bg-tertiary); padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: var(--text-secondary);">Toplam Tutar:</span>
+              <strong id="stockTotalPrice" style="color: var(--brand-red); font-size: 1.25rem;">₺0.00</strong>
+            </div>
+          </div>
+          <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">💾 Kaydet</button>
+            <button type="button" class="btn btn-secondary" onclick="closeAddStockModal()" style="flex: 1;">❌ İptal</button>
+          </div>
         </form>
       </div>
     </div>
@@ -212,7 +268,46 @@
       </div>
       <div class="modal-body">
         <form id="addPaymentForm" onsubmit="handleAddPayment(event)">
-          <!-- Form content will be added by JS -->
+          <div class="form-group">
+            <label for="paymentDescription">İş Açıklaması *</label>
+            <input type="text" id="paymentDescription" placeholder="Örn: Beton dökümü, Çelik montajı..." required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+          </div>
+          <div class="form-group">
+            <label for="paymentPerformedBy">Yapan Firma/Kişi *</label>
+            <input type="text" id="paymentPerformedBy" placeholder="İşi yapan firma veya kişi" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+          </div>
+          <div class="form-group">
+            <label for="paymentUnit">Birim *</label>
+            <select id="paymentUnit" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+              <option value="">Seçiniz</option>
+              <option value="M2">Metrekare (M²)</option>
+              <option value="M3">Metreküp (M³)</option>
+              <option value="M">Metre (M)</option>
+              <option value="Adet">Adet</option>
+              <option value="Ton">Ton</option>
+              <option value="Kg">Kilogram (Kg)</option>
+              <option value="Görev">Görev</option>
+              <option value="Gün">Gün</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="paymentQuantity">Miktar *</label>
+            <input type="number" id="paymentQuantity" placeholder="0" min="0" step="0.01" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+          </div>
+          <div class="form-group">
+            <label for="paymentUnitPrice">Birim Fiyat (₺) *</label>
+            <input type="number" id="paymentUnitPrice" placeholder="0.00" min="0" step="0.01" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+          </div>
+          <div style="background: var(--bg-tertiary); padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: var(--text-secondary);">Toplam Hakediş:</span>
+              <strong id="paymentTotalPrice" style="color: var(--brand-red); font-size: 1.25rem;">₺0.00</strong>
+            </div>
+          </div>
+          <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">💾 Kaydet</button>
+            <button type="button" class="btn btn-secondary" onclick="closeAddPaymentModal()" style="flex: 1;">❌ İptal</button>
+          </div>
         </form>
       </div>
     </div>
@@ -293,6 +388,48 @@
       document.querySelectorAll('.sidebar-nav .nav-item[data-tab]').forEach(item => item.classList.remove('active'));
       document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
     }
+    
+    // Auto-calculate totals for stock form
+    document.addEventListener('DOMContentLoaded', function() {
+      const stockQuantity = document.getElementById('stockQuantity');
+      const stockUnitPrice = document.getElementById('stockUnitPrice');
+      const stockTotalPrice = document.getElementById('stockTotalPrice');
+      
+      function updateStockTotal() {
+        const quantity = parseFloat(stockQuantity?.value) || 0;
+        const unitPrice = parseFloat(stockUnitPrice?.value) || 0;
+        const total = quantity * unitPrice;
+        if (stockTotalPrice) {
+          stockTotalPrice.textContent = '₺' + total.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+      }
+      
+      if (stockQuantity) stockQuantity.addEventListener('input', updateStockTotal);
+      if (stockUnitPrice) stockUnitPrice.addEventListener('input', updateStockTotal);
+      
+      // Auto-calculate totals for payment form
+      const paymentQuantity = document.getElementById('paymentQuantity');
+      const paymentUnitPrice = document.getElementById('paymentUnitPrice');
+      const paymentTotalPrice = document.getElementById('paymentTotalPrice');
+      
+      function updatePaymentTotal() {
+        const quantity = parseFloat(paymentQuantity?.value) || 0;
+        const unitPrice = parseFloat(paymentUnitPrice?.value) || 0;
+        const total = quantity * unitPrice;
+        if (paymentTotalPrice) {
+          paymentTotalPrice.textContent = '₺' + total.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+      }
+      
+      if (paymentQuantity) paymentQuantity.addEventListener('input', updatePaymentTotal);
+      if (paymentUnitPrice) paymentUnitPrice.addEventListener('input', updatePaymentTotal);
+      
+      // Set default date for log form
+      const logDate = document.getElementById('logDate');
+      if (logDate) {
+        logDate.valueAsDate = new Date();
+      }
+    });
     
     // Export to window
     window.switchProjectTab = switchProjectTab;

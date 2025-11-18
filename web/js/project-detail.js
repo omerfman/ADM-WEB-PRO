@@ -223,9 +223,198 @@ function showAlert(message, type = 'success') {
   }, 3000);
 }
 
+/**
+ * Modal Functions
+ */
+function openAddLogModal() {
+  document.getElementById('addLogModal').classList.add('show');
+  // Set default date
+  const logDate = document.getElementById('logDate');
+  if (logDate && !logDate.value) {
+    logDate.valueAsDate = new Date();
+  }
+}
+
+function closeAddLogModal() {
+  document.getElementById('addLogModal').classList.remove('show');
+  document.getElementById('addLogForm').reset();
+}
+
+function openAddStockModal() {
+  document.getElementById('addStockModal').classList.add('show');
+}
+
+function closeAddStockModal() {
+  document.getElementById('addStockModal').classList.remove('show');
+  document.getElementById('addStockForm').reset();
+  document.getElementById('stockTotalPrice').textContent = '₺0.00';
+}
+
+function openAddPaymentModal() {
+  document.getElementById('addPaymentModal').classList.add('show');
+}
+
+function closeAddPaymentModal() {
+  document.getElementById('addPaymentModal').classList.remove('show');
+  document.getElementById('addPaymentForm').reset();
+  document.getElementById('paymentTotalPrice').textContent = '₺0.00';
+}
+
+function openBudgetModal() {
+  if (window.openBudgetManagement) {
+    window.openBudgetManagement(currentProjectId);
+  } else {
+    showAlert('Bütçe modülü yüklenmedi', 'danger');
+  }
+}
+
+function closeBudgetModal() {
+  document.getElementById('budgetModal').classList.remove('show');
+}
+
+function openEditProjectModal() {
+  if (window.openEditProjectModal) {
+    window.openEditProjectModal(currentProjectId);
+  } else {
+    showAlert('Proje düzenleme modülü yüklenmedi', 'danger');
+  }
+}
+
+function closeEditProjectModal() {
+  document.getElementById('editProjectModal').classList.remove('show');
+}
+
+/**
+ * Form Handlers
+ */
+async function handleAddLog(event) {
+  event.preventDefault();
+  
+  try {
+    const date = document.getElementById('logDate').value;
+    const performedBy = document.getElementById('logPerformedBy').value;
+    const description = document.getElementById('logDescription').value;
+    const photoFile = document.getElementById('logPhoto').files[0];
+    
+    let photoUrl = null;
+    
+    // Upload photo if selected
+    if (photoFile) {
+      showAlert('Fotoğraf yükleniyor...', 'info');
+      
+      if (window.uploadPhotoToImgBB) {
+        photoUrl = await window.uploadPhotoToImgBB(photoFile);
+      } else {
+        throw new Error('Fotoğraf yükleme modülü yüklenmedi');
+      }
+    }
+    
+    // Add log to Firestore
+    const { addDoc, collection, serverTimestamp } = window.firestore;
+    const logsRef = collection(db, 'projects', currentProjectId, 'logs');
+    
+    await addDoc(logsRef, {
+      date: new Date(date),
+      performedBy,
+      description,
+      photoUrl,
+      createdAt: serverTimestamp(),
+      createdBy: auth.currentUser.email
+    });
+    
+    showAlert('Günlük kaydı eklendi', 'success');
+    closeAddLogModal();
+    await loadProjectLogs();
+    await loadProjectStats();
+    
+  } catch (error) {
+    console.error('❌ Günlük eklenirken hata:', error);
+    showAlert('Hata: ' + error.message, 'danger');
+  }
+}
+
+async function handleAddStock(event) {
+  event.preventDefault();
+  
+  try {
+    const name = document.getElementById('stockName').value;
+    const unit = document.getElementById('stockUnit').value;
+    const quantity = parseFloat(document.getElementById('stockQuantity').value);
+    const unitPrice = parseFloat(document.getElementById('stockUnitPrice').value);
+    
+    const { addDoc, collection, serverTimestamp } = window.firestore;
+    const stocksRef = collection(db, 'projects', currentProjectId, 'stocks');
+    
+    await addDoc(stocksRef, {
+      name,
+      unit,
+      quantity,
+      unitPrice,
+      totalPrice: quantity * unitPrice,
+      createdAt: serverTimestamp(),
+      createdBy: auth.currentUser.email
+    });
+    
+    showAlert('Stok eklendi', 'success');
+    closeAddStockModal();
+    await loadProjectStats();
+    
+  } catch (error) {
+    console.error('❌ Stok eklenirken hata:', error);
+    showAlert('Hata: ' + error.message, 'danger');
+  }
+}
+
+async function handleAddPayment(event) {
+  event.preventDefault();
+  
+  try {
+    const description = document.getElementById('paymentDescription').value;
+    const performedBy = document.getElementById('paymentPerformedBy').value;
+    const unit = document.getElementById('paymentUnit').value;
+    const quantity = parseFloat(document.getElementById('paymentQuantity').value);
+    const unitPrice = parseFloat(document.getElementById('paymentUnitPrice').value);
+    
+    const { addDoc, collection, serverTimestamp } = window.firestore;
+    const paymentsRef = collection(db, 'projects', currentProjectId, 'payments');
+    
+    await addDoc(paymentsRef, {
+      description,
+      performedBy,
+      unit,
+      quantity,
+      unitPrice,
+      totalPrice: quantity * unitPrice,
+      createdAt: serverTimestamp(),
+      createdBy: auth.currentUser.email
+    });
+    
+    showAlert('Hakediş eklendi', 'success');
+    closeAddPaymentModal();
+    await loadProjectStats();
+    
+  } catch (error) {
+    console.error('❌ Hakediş eklenirken hata:', error);
+    showAlert('Hata: ' + error.message, 'danger');
+  }
+}
+
 // Export functions globally
 window.currentProjectId = currentProjectId;
 window.loadProjectLogs = loadProjectLogs;
+window.openAddLogModal = openAddLogModal;
+window.closeAddLogModal = closeAddLogModal;
+window.openAddStockModal = openAddStockModal;
+window.closeAddStockModal = closeAddStockModal;
+window.openAddPaymentModal = openAddPaymentModal;
+window.closeAddPaymentModal = closeAddPaymentModal;
+window.openBudgetModal = openBudgetModal;
+window.closeBudgetModal = closeBudgetModal;
+window.openEditProjectModal = openEditProjectModal;
+window.closeEditProjectModal = closeEditProjectModal;
+window.handleAddLog = handleAddLog;
+window.handleAddStock = handleAddStock;
+window.handleAddPayment = handleAddPayment;
 
 // Initialize on page load
 auth.onAuthStateChanged((user) => {
@@ -237,3 +426,4 @@ auth.onAuthStateChanged((user) => {
 });
 
 console.log('✅ Project Detail module loaded');
+
