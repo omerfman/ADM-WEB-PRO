@@ -627,6 +627,108 @@ function closeBudgetReportsModal() {
   document.getElementById('budgetReportsModal').classList.remove('show');
 }
 
+/**
+ * Open unified budget modal - All sections in one view
+ */
+async function openUnifiedBudgetModal() {
+  try {
+    const modal = document.getElementById('unifiedBudgetModal');
+    if (!modal) {
+      showAlert('Unified budget modal bulunamadı', 'danger');
+      return;
+    }
+
+    // Set currentProjectBudget
+    if (typeof window.setBudgetProject === 'function') {
+      await window.setBudgetProject(currentProjectId);
+    }
+
+    // Load all data with unified element IDs
+    if (typeof loadBudgetCategories === 'function') {
+      // Temporarily replace the container ID
+      const originalContainer = document.getElementById('budgetCategoriesList');
+      const unifiedContainer = document.getElementById('unifiedBudgetCategoriesList');
+      if (originalContainer && unifiedContainer) {
+        originalContainer.id = 'tempCategoriesList';
+        unifiedContainer.id = 'budgetCategoriesList';
+        
+        await loadBudgetCategories(currentProjectId);
+        
+        // Restore IDs
+        unifiedContainer.id = 'unifiedBudgetCategoriesList';
+        originalContainer.id = 'budgetCategoriesList';
+      }
+    }
+
+    if (typeof loadBudgetExpenses === 'function') {
+      const originalContainer = document.getElementById('budgetExpensesList');
+      const unifiedContainer = document.getElementById('unifiedBudgetExpensesList');
+      if (originalContainer && unifiedContainer) {
+        originalContainer.id = 'tempExpensesList';
+        unifiedContainer.id = 'budgetExpensesList';
+        
+        await loadBudgetExpenses(currentProjectId);
+        
+        unifiedContainer.id = 'unifiedBudgetExpensesList';
+        originalContainer.id = 'budgetExpensesList';
+      }
+    }
+
+    if (typeof calculateBudgetSummary === 'function') {
+      // Temporarily swap summary element IDs
+      const summaryElements = [
+        'budgetSummaryTotal', 'budgetSummaryExpenses', 'budgetSummaryStocks',
+        'budgetSummaryPayments', 'budgetSummaryGrandTotal', 'budgetSummaryRemaining',
+        'budgetSummaryPercentage', 'budgetProgressBar'
+      ];
+      
+      summaryElements.forEach(id => {
+        const original = document.getElementById(id);
+        const unified = document.getElementById('unified' + id.charAt(0).toUpperCase() + id.slice(1));
+        if (original && unified) {
+          original.id = 'temp' + id;
+          unified.id = id;
+        }
+      });
+
+      await calculateBudgetSummary(currentProjectId);
+
+      // Restore IDs
+      summaryElements.forEach(id => {
+        const temp = document.getElementById('temp' + id);
+        const unified = document.getElementById(id);
+        if (temp && unified) {
+          unified.id = 'unified' + id.charAt(0).toUpperCase() + id.slice(1);
+          temp.id = id;
+        }
+      });
+    }
+
+    if (typeof loadCategoryBreakdown === 'function') {
+      const originalContainer = document.getElementById('categoryBreakdown');
+      const unifiedContainer = document.getElementById('unifiedCategoryBreakdown');
+      if (originalContainer && unifiedContainer) {
+        originalContainer.id = 'tempCategoryBreakdown';
+        unifiedContainer.id = 'categoryBreakdown';
+        
+        await loadCategoryBreakdown(currentProjectId);
+        
+        unifiedContainer.id = 'unifiedCategoryBreakdown';
+        originalContainer.id = 'categoryBreakdown';
+      }
+    }
+
+    modal.classList.add('show');
+  } catch (error) {
+    console.error('❌ Unified budget modal açılırken hata:', error);
+    showAlert('Hata: ' + error.message, 'danger');
+  }
+}
+
+function closeUnifiedBudgetModal() {
+  document.getElementById('unifiedBudgetModal').classList.remove('show');
+}
+
 function openBudgetModalFromProject() {
   // Legacy function - redirect to categories modal
   openBudgetCategoriesModal();
@@ -901,6 +1003,8 @@ window.openBudgetExpensesModal = openBudgetExpensesModal;
 window.closeBudgetExpensesModal = closeBudgetExpensesModal;
 window.openBudgetReportsModal = openBudgetReportsModal;
 window.closeBudgetReportsModal = closeBudgetReportsModal;
+window.openUnifiedBudgetModal = openUnifiedBudgetModal;
+window.closeUnifiedBudgetModal = closeUnifiedBudgetModal;
 window.openBudgetModalFromProject = openBudgetModalFromProject;
 window.closeBudgetModal = closeBudgetModal;
 window.loadBudgetTabSummary = loadBudgetTabSummary;

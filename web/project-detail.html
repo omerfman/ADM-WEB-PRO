@@ -240,7 +240,7 @@
         <div id="budget-tab" class="tab-content hidden">
           <div class="section-header">
             <h3>💼 Bütçe Yönetimi</h3>
-            <button class="btn btn-primary" onclick="openBudgetModalFromProject()">⚙️ Detaylı Bütçe Yönetimi</button>
+            <button class="btn btn-primary" onclick="openUnifiedBudgetModal()">⚙️ Detaylı Bütçe Yönetimi</button>
           </div>
           <div id="budgetContent" style="margin-top: 1.5rem;">
             <!-- Budget Summary Cards -->
@@ -594,6 +594,93 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeBudgetReportsModal()">Kapat</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Unified Budget Management Modal -->
+  <div id="unifiedBudgetModal" class="modal">
+    <div class="modal-content" style="max-width: 1400px; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header">
+        <h2>💰 Detaylı Bütçe Yönetimi</h2>
+        <button class="modal-close" onclick="closeUnifiedBudgetModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Budget Summary -->
+        <div class="card" style="margin-bottom: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+          <h3 style="margin-bottom: 1rem; color: white;">📊 Genel Bütçe Özeti</h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+              <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.5rem;">Toplam Bütçe</div>
+              <div style="font-size: 1.5rem; font-weight: bold;">₺<span id="unifiedBudgetSummaryTotal">0</span></div>
+            </div>
+            <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+              <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.5rem;">Bütçe Harcamaları</div>
+              <div style="font-size: 1.5rem; font-weight: bold;">₺<span id="unifiedBudgetSummaryExpenses">0</span></div>
+            </div>
+            <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+              <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.5rem;">Stok Maliyeti</div>
+              <div style="font-size: 1.5rem; font-weight: bold;">₺<span id="unifiedBudgetSummaryStocks">0</span></div>
+            </div>
+            <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+              <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.5rem;">Hakediş Ödemeleri</div>
+              <div style="font-size: 1.5rem; font-weight: bold;">₺<span id="unifiedBudgetSummaryPayments">0</span></div>
+            </div>
+            <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+              <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.5rem;">Toplam Harcama</div>
+              <div style="font-size: 1.5rem; font-weight: bold;">₺<span id="unifiedBudgetSummaryGrandTotal">0</span></div>
+            </div>
+            <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+              <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.5rem;">Kalan Bütçe</div>
+              <div style="font-size: 1.5rem; font-weight: bold;" id="unifiedBudgetSummaryRemaining">₺0</div>
+            </div>
+          </div>
+          <div style="margin-top: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+              <span style="font-weight: 600;">Bütçe Kullanım Oranı</span>
+              <span style="font-weight: bold; font-size: 1.2rem;" id="unifiedBudgetSummaryPercentage">0%</span>
+            </div>
+            <div style="background: rgba(255,255,255,0.2); height: 20px; border-radius: 10px; overflow: hidden;">
+              <div id="unifiedBudgetProgressBar" style="background: #4caf50; height: 100%; width: 0%; transition: width 0.5s, background 0.3s;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Categories and Expenses in 2 columns -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+          <!-- Budget Categories -->
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <h3 style="margin: 0; color: var(--brand-red);">📁 Bütçe Kategorileri</h3>
+              <button class="btn btn-primary" onclick="openAddCategoryModal()">➕ Kategori Ekle</button>
+            </div>
+            <div id="unifiedBudgetCategoriesList" style="max-height: 500px; overflow-y: auto;">
+              <!-- Categories will be loaded here -->
+            </div>
+          </div>
+
+          <!-- Budget Expenses -->
+          <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <h3 style="margin: 0; color: var(--brand-red);">💸 Harcama Kayıtları</h3>
+              <button class="btn btn-primary" onclick="openAddExpenseModal()">➕ Harcama Ekle</button>
+            </div>
+            <div id="unifiedBudgetExpensesList" style="max-height: 500px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px;">
+              <!-- Expenses will be loaded here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Category Breakdown -->
+        <div class="card">
+          <h3 style="margin-bottom: 1rem; color: var(--brand-red);">📈 Kategoriye Göre Harcama Detayı</h3>
+          <div id="unifiedCategoryBreakdown" style="max-height: 400px; overflow-y: auto;">
+            <!-- Category breakdown will be loaded here -->
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeUnifiedBudgetModal()">Kapat</button>
       </div>
     </div>
   </div>
