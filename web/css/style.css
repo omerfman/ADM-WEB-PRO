@@ -771,6 +771,17 @@ header nav button:hover {
   margin-top: 0.25rem;
 }
 
+/* Stats Badge */
+.stats-badge {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
 /* Activity Timeline */
 .activity-timeline {
   display: flex;

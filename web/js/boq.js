@@ -1,6 +1,5 @@
 // BOQ (Bill of Quantities) Management Module
 import { auth, db } from './firebase-config.js';
-import { IMGBB_API_KEY, IMGBB_UPLOAD_URL } from './imgbb-config.js';
 import {
   collection,
   query,
@@ -480,6 +479,368 @@ function formatNumber(num) {
   }).format(num || 0);
 }
 
+/**
+ * Download BOQ Template
+ */
+function downloadBoqTemplate() {
+  const templateData = [
+    {
+      'Poz No': '01.01.001',
+      'Kategori': 'İnşaat İşleri',
+      'Alt Kategori': 'Kazı ve Temel',
+      'İş Tanımı': 'Kazı işleri - Temel kazısı',
+      'Birim': 'm³',
+      'Miktar': 1500,
+      'Birim Fiyat': 125.50,
+      'Toplam Tutar': 188250
+    },
+    {
+      'Poz No': '01.01.002',
+      'Kategori': 'İnşaat İşleri',
+      'Alt Kategori': 'Kazı ve Temel',
+      'İş Tanımı': 'Dolgu işleri - Kontrollü dolgu',
+      'Birim': 'm³',
+      'Miktar': 800,
+      'Birim Fiyat': 95.00,
+      'Toplam Tutar': 76000
+    },
+    {
+      'Poz No': '01.02.001',
+      'Kategori': 'İnşaat İşleri',
+      'Alt Kategori': 'Beton İşleri',
+      'İş Tanımı': 'C25/30 beton - Temel betonu',
+      'Birim': 'm³',
+      'Miktar': 350,
+      'Birim Fiyat': 850.00,
+      'Toplam Tutar': 297500
+    }
+  ];
+
+  const worksheet = XLSX.utils.json_to_sheet(templateData);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Metraj Listesi');
+
+  // Column widths
+  worksheet['!cols'] = [
+    { width: 12 },  // Poz No
+    { width: 20 },  // Kategori
+    { width: 20 },  // Alt Kategori
+    { width: 50 },  // İş Tanımı
+    { width: 10 },  // Birim
+    { width: 12 },  // Miktar
+    { width: 15 },  // Birim Fiyat
+    { width: 15 }   // Toplam Tutar
+  ];
+
+  XLSX.writeFile(workbook, `BOQ_Sablon_${new Date().getTime()}.xlsx`);
+  console.log('✅ Template downloaded');
+}
+
+/**
+ * Export BOQ to Excel
+ */
+function exportBoqToExcel() {
+  if (boqItems.length === 0) {
+    alert('📋 İçe aktarılacak metraj kalemi yok');
+    return;
+  }
+
+  const exportData = boqItems.map(item => ({
+    'Poz No': item.pozNo,
+    'Kategori': item.category,
+    'Alt Kategori': item.subCategory || '',
+    'İş Tanımı': item.description,
+    'Birim': item.unit,
+    'Miktar': item.quantity,
+    'Birim Fiyat': item.unitPrice,
+    'Toplam Tutar': item.totalPrice
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(exportData);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Metraj Listesi');
+
+  // Column widths
+  worksheet['!cols'] = [
+    { width: 12 },
+    { width: 20 },
+    { width: 20 },
+    { width: 50 },
+    { width: 10 },
+    { width: 12 },
+    { width: 15 },
+    { width: 15 }
+  ];
+
+  const fileName = `BOQ_${currentProject?.name || 'Proje'}_${new Date().getTime()}.xlsx`;
+  XLSX.writeFile(workbook, fileName);
+  console.log('✅ BOQ exported to Excel:', fileName);
+}
+
+/**
+ * Open BOQ Import Modal
+ */
+function openBoqImportModal() {
+  const modal = document.getElementById('boqImportModal');
+  if (modal) {
+    modal.style.display = 'flex';
+    document.getElementById('boqExcelFile').value = '';
+    document.getElementById('boqImportPreview').innerHTML = '';
+    document.getElementById('boqImportBtn').disabled = true;
+  }
+}
+
+/**
+ * Close BOQ Import Modal
+ */
+function closeBoqImportModal() {
+  const modal = document.getElementById('boqImportModal');
+  if (modal) {
+    modal.style.display = 'none';
+    document.getElementById('boqExcelFile').value = '';
+    document.getElementById('boqImportPreview').innerHTML = '';
+    document.getElementById('boqImportBtn').disabled = true;
+  }
+}
+
+/**
+ * Preview BOQ Excel
+ */
+let importPreviewData = [];
+
+function previewBoqExcel(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+
+      if (jsonData.length === 0) {
+        alert('❌ Excel dosyası boş');
+        return;
+      }
+
+      // Validate and prepare data
+      const validUnits = ['m', 'm²', 'm³', 'Ad', 'Kg', 'Ton', 'Lt', 'Takım', 'Gt'];
+      importPreviewData = [];
+      const errors = [];
+
+      jsonData.forEach((row, index) => {
+        const rowNum = index + 2; // Excel row (header is 1)
+        const rowErrors = [];
+
+        // Validate required fields
+        if (!row['Poz No'] || String(row['Poz No']).trim() === '') {
+          rowErrors.push('Poz No boş');
+        }
+        if (!row['Kategori'] || String(row['Kategori']).trim().length < 2) {
+          rowErrors.push('Kategori geçersiz');
+        }
+        if (!row['İş Tanımı'] || String(row['İş Tanımı']).trim().length < 5) {
+          rowErrors.push('İş Tanımı çok kısa');
+        }
+        if (!row['Birim'] || !validUnits.includes(String(row['Birim']).trim())) {
+          rowErrors.push('Birim geçersiz');
+        }
+        if (!row['Miktar'] || parseFloat(row['Miktar']) <= 0) {
+          rowErrors.push('Miktar geçersiz');
+        }
+        if (!row['Birim Fiyat'] || parseFloat(row['Birim Fiyat']) <= 0) {
+          rowErrors.push('Birim Fiyat geçersiz');
+        }
+
+        const quantity = parseFloat(row['Miktar']) || 0;
+        const unitPrice = parseFloat(row['Birim Fiyat']) || 0;
+
+        importPreviewData.push({
+          pozNo: String(row['Poz No']).trim(),
+          category: String(row['Kategori']).trim(),
+          subCategory: row['Alt Kategori'] ? String(row['Alt Kategori']).trim() : '',
+          description: String(row['İş Tanımı']).trim(),
+          unit: String(row['Birim']).trim(),
+          quantity: quantity,
+          unitPrice: unitPrice,
+          totalPrice: quantity * unitPrice,
+          rowNum: rowNum,
+          errors: rowErrors,
+          isValid: rowErrors.length === 0
+        });
+
+        if (rowErrors.length > 0) {
+          errors.push(`Satır ${rowNum}: ${rowErrors.join(', ')}`);
+        }
+      });
+
+      // Display preview
+      const validCount = importPreviewData.filter(d => d.isValid).length;
+      const invalidCount = importPreviewData.length - validCount;
+
+      let previewHTML = `
+        <div style="margin-bottom: 1rem;">
+          <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+            <div class="stats-badge" style="background: #10b981;">
+              ✅ Geçerli: ${validCount}
+            </div>
+            <div class="stats-badge" style="background: #ef4444;">
+              ❌ Hatalı: ${invalidCount}
+            </div>
+          </div>
+        </div>
+        
+        <div style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px;">
+          <table class="data-table">
+            <thead style="position: sticky; top: 0; background: var(--bg-secondary); z-index: 1;">
+              <tr>
+                <th style="width: 50px;">Durum</th>
+                <th style="width: 100px;">Poz No</th>
+                <th style="width: 150px;">Kategori</th>
+                <th style="min-width: 250px;">İş Tanımı</th>
+                <th style="width: 80px;">Birim</th>
+                <th style="width: 100px;">Miktar</th>
+                <th style="width: 120px;">Birim Fiyat</th>
+                <th style="width: 150px;">Toplam</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${importPreviewData.map(item => `
+                <tr style="${!item.isValid ? 'background: rgba(239, 68, 68, 0.1);' : ''}">
+                  <td style="text-align: center;">
+                    ${item.isValid 
+                      ? '<span style="color: #10b981; font-size: 1.2rem;">✅</span>' 
+                      : '<span style="color: #ef4444; font-size: 1.2rem;" title="' + item.errors.join(', ') + '">❌</span>'
+                    }
+                  </td>
+                  <td>${item.pozNo}</td>
+                  <td>${item.category}</td>
+                  <td>${item.description}</td>
+                  <td>${item.unit}</td>
+                  <td style="text-align: right;">${formatNumber(item.quantity)}</td>
+                  <td style="text-align: right;">${formatCurrency(item.unitPrice)}</td>
+                  <td style="text-align: right;"><strong>${formatCurrency(item.totalPrice)}</strong></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      if (errors.length > 0) {
+        previewHTML += `
+          <div style="margin-top: 1rem; padding: 1rem; background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; border-radius: 4px;">
+            <strong style="color: #ef4444;">⚠️ Hatalar:</strong>
+            <ul style="margin: 0.5rem 0 0 0; padding-left: 1.5rem; color: #ef4444;">
+              ${errors.slice(0, 10).map(err => `<li>${err}</li>`).join('')}
+              ${errors.length > 10 ? `<li>... ve ${errors.length - 10} hata daha</li>` : ''}
+            </ul>
+          </div>
+        `;
+      }
+
+      document.getElementById('boqImportPreview').innerHTML = previewHTML;
+      document.getElementById('boqImportBtn').disabled = validCount === 0;
+
+    } catch (error) {
+      console.error('❌ Excel parse error:', error);
+      alert('Excel dosyası okunamadı: ' + error.message);
+    }
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+
+/**
+ * Import BOQ from Excel
+ */
+async function importBoqFromExcel() {
+  const validItems = importPreviewData.filter(item => item.isValid);
+  
+  if (validItems.length === 0) {
+    alert('❌ İçe aktarılacak geçerli kayıt yok');
+    return;
+  }
+
+  if (!confirm(`${validItems.length} adet metraj kalemi içe aktarılacak. Onaylıyor musunuz?`)) {
+    return;
+  }
+
+  try {
+    const importBtn = document.getElementById('boqImportBtn');
+    importBtn.disabled = true;
+    importBtn.textContent = '📥 İçe aktarılıyor...';
+
+    const user = auth.currentUser;
+    const batch = writeBatch(db);
+    let batchCount = 0;
+    let totalImported = 0;
+
+    for (const item of validItems) {
+      const boqRef = doc(collection(db, 'boq_items'));
+      batch.set(boqRef, {
+        projectId: currentProjectId,
+        companyId: currentProject.companyId,
+        pozNo: item.pozNo,
+        category: item.category,
+        subCategory: item.subCategory || null,
+        description: item.description,
+        unit: item.unit,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        totalPrice: item.totalPrice,
+        createdAt: Timestamp.now(),
+        createdBy: user.uid,
+        updatedAt: Timestamp.now(),
+        updatedBy: user.uid,
+        isDeleted: false
+      });
+
+      batchCount++;
+      totalImported++;
+
+      // Firestore batch limit is 500
+      if (batchCount === 500) {
+        await batch.commit();
+        batchCount = 0;
+      }
+    }
+
+    // Commit remaining
+    if (batchCount > 0) {
+      await batch.commit();
+    }
+
+    // Log activity
+    await addDoc(collection(db, 'audit_logs'), {
+      userId: user.uid,
+      action: 'IMPORT_BOQ',
+      description: `${totalImported} metraj kalemi Excel'den içe aktarıldı`,
+      timestamp: Timestamp.now(),
+      metadata: {
+        projectId: currentProjectId,
+        itemCount: totalImported
+      }
+    });
+
+    console.log(`✅ ${totalImported} BOQ items imported`);
+    alert(`✅ ${totalImported} metraj kalemi başarıyla içe aktarıldı!`);
+    
+    closeBoqImportModal();
+    await loadBoq(currentProjectId);
+
+  } catch (error) {
+    console.error('❌ Import error:', error);
+    alert('İçe aktarma hatası: ' + error.message);
+    
+    const importBtn = document.getElementById('boqImportBtn');
+    importBtn.disabled = false;
+    importBtn.textContent = '📥 İçe Aktar';
+  }
+}
+
 // Export functions
 window.loadBoq = loadBoq;
 window.openBoqItemModal = openBoqItemModal;
@@ -488,13 +849,11 @@ window.saveBoqItem = saveBoqItem;
 window.editBoqItem = editBoqItem;
 window.deleteBoqItem = deleteBoqItem;
 window.calculateBoqTotal = calculateBoqTotal;
-
-// Stub functions (will implement next)
-window.downloadBoqTemplate = () => alert('Şablon indirme özelliği yakında eklenecek');
-window.exportBoqToExcel = () => alert('Excel export özelliği yakında eklenecek');
-window.openBoqImportModal = () => alert('Excel import özelliği yakında eklenecek');
-window.closeBoqImportModal = () => {};
-window.previewBoqExcel = () => {};
-window.importBoqFromExcel = () => {};
+window.downloadBoqTemplate = downloadBoqTemplate;
+window.exportBoqToExcel = exportBoqToExcel;
+window.openBoqImportModal = openBoqImportModal;
+window.closeBoqImportModal = closeBoqImportModal;
+window.previewBoqExcel = previewBoqExcel;
+window.importBoqFromExcel = importBoqFromExcel;
 
 console.log('✅ BOQ module loaded');
