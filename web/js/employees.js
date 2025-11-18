@@ -248,6 +248,11 @@ function renderEmployeesList(employees) {
               font-size: 0.85rem;
               width: auto;
             ">${emp.status === 'active' ? '🚫 Pasifleştir' : '✅ Aktifleştir'}</button>
+            <button onclick="deleteEmployee('${emp.id}', '${emp.fullName || emp.email}')" class="btn btn-danger" style="
+              padding: 0.5rem 1rem;
+              font-size: 0.85rem;
+              width: auto;
+            ">🗑️ Sil</button>
           </div>
         </div>
       </div>
@@ -377,6 +382,42 @@ async function toggleEmployeeStatus(employeeId, currentStatus) {
     loadEmployees();
   } catch (error) {
     console.error('❌ Error updating employee status:', error);
+    alert('Hata: ' + error.message);
+  }
+}
+
+// Delete employee
+async function deleteEmployee(employeeId, employeeName) {
+  const confirmMsg = `"${employeeName}" adlı çalışanı kalıcı olarak silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!`;
+  
+  if (!confirm(confirmMsg)) return;
+
+  // Double confirmation for critical action
+  const doubleConfirm = confirm('⚠️ SON UYARI: Bu kullanıcı Firebase Authentication ve Firestore\'dan tamamen silinecektir. Devam edilsin mi?');
+  if (!doubleConfirm) return;
+
+  try {
+    const idToken = await auth.currentUser.getIdToken();
+    const apiBaseUrl = window.API_BASE_URL || '';
+
+    console.log('🗑️ Deleting employee:', employeeId);
+
+    const response = await fetch(`${apiBaseUrl}/api/users/${employeeId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': 'Bearer ' + idToken
+      }
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || 'Silme işlemi başarısız');
+    }
+
+    alert('✅ Çalışan başarıyla silindi');
+    loadEmployees();
+  } catch (error) {
+    console.error('❌ Error deleting employee:', error);
     alert('Hata: ' + error.message);
   }
 }
