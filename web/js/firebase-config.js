@@ -2,7 +2,7 @@
 // Firebase Web SDK v10+ with modular imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, enableIndexedDbPersistence, collection, query, where, getDocs, addDoc, deleteDoc, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, enableIndexedDbPersistence, collection, query, where, getDocs, addDoc, deleteDoc, doc, getDoc, updateDoc, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // ✅ Firebase Config (adm-web-pro)
 const firebaseConfig = {
