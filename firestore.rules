@@ -93,6 +93,18 @@ service cloud.firestore {
       match /uploads/{uploadId} {
         allow read, create, delete: if isSignedIn();
       }
+
+      match /photos/{photoId} {
+        allow read, create, delete: if isSignedIn();
+      }
+
+      match /budget_categories/{categoryId} {
+        allow read, create, update, delete: if isSignedIn();
+      }
+
+      match /budget_expenses/{expenseId} {
+        allow read, create, update, delete: if isSignedIn();
+      }
     }
 
     // ========== AUDIT LOGS ==========

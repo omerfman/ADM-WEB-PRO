@@ -330,21 +330,6 @@ async function uploadPhotoToFirebase(file, projectId) {
 }
 
 /**
- * Save photo metadata to Firestore
- */
-async function savePhotoMetadata(projectId, metadata) {
-  try {
-    const photosRef = collection(db, 'projects', projectId, 'photos');
-    const docRef = await addDoc(photosRef, metadata);
-    console.log('✅ Photo metadata saved:', docRef.id);
-    return docRef.id;
-  } catch (error) {
-    console.error('❌ Error saving photo metadata:', error);
-    throw error;
-  }
-}
-
-/**
  * Load and display project photos
  */
 async function loadProjectPhotos(projectId) {

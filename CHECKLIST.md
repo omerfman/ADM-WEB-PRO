@@ -239,3 +239,105 @@ projects/{projectId}/budget_expenses/{expenseId}
 - ✅ Daily logs with photos
 
 ---
+
+## 🐛 Bug Fixes ve İyileştirmeler (18 Kasım 2025 - Akşam)
+
+### ✅ 1. upload.js Duplicate Declaration Hatası
+**Durum:** ✅ ÇÖZÜLDİ
+
+**Hata:**
+```
+Uncaught SyntaxError: Identifier 'savePhotoMetadata' has already been declared
+```
+
+**Sebep:** savePhotoMetadata fonksiyonu iki kez tanımlanmış
+
+**Çözüm:**
+- ✅ upload.js dosyasında duplicate function declaration kaldırıldı (satır 335)
+
+---
+
+### ✅ 2. activity.js orderBy Import Hatası
+**Durum:** ✅ ÇÖZÜLDİ
+
+**Hata:**
+```
+TypeError: orderBy is not a function
+```
+
+**Sebep:** activity.js'de orderBy import edilmemiş
+
+**Çözüm:**
+- ✅ firebase-config.js'e orderBy, limit, serverTimestamp export'ları eklendi
+- ✅ window.firestore object'ine eklendi
+
+---
+
+### ✅ 3. Firestore Permissions Hatası (Budget)
+**Durum:** ✅ ÇÖZÜLDİ
+
+**Hata:**
+```
+FirebaseError: Missing or insufficient permissions
+```
+
+**Sebep:** Budget categories/expenses için Firestore rules eksik
+
+**Çözüm:**
+- ✅ firestore.rules'a budget_categories collection eklendi
+- ✅ firestore.rules'a budget_expenses collection eklendi
+- ✅ firestore.rules'a photos collection eklendi
+
+---
+
+### ✅ 4. API User Creation 405 Hatası
+**Durum:** ✅ ÇÖZÜLDİ
+
+**Hata:**
+```
+Failed to load resource: the server responded with a status of 405
+SyntaxError: Unexpected end of JSON input
+```
+
+**Sebep:** API endpoint'e direkt path kullanılıyor, API_BASE_URL kullanılmıyor
+
+**Çözüm:**
+- ✅ companies.js'de API_BASE_URL kullanılacak şekilde güncellendi
+- ✅ users.js pattern'i uygulandı
+
+---
+
+### ⏳ 5. Proje Detay Sayfası (Modal Yerine)
+**Durum:** ⏳ BEKLEMEDE
+
+**İstek:** Modal yerine tam sayfa proje detayı
+
+**Yapılacaklar:**
+- [ ] Yeni project-detail.html sayfası oluştur
+- [ ] Proje sidebar'ı (günlük, stok, hakediş, bütçe)
+- [ ] Modal kodunu yeni sayfaya taşı
+- [ ] Responsive tasarım
+
+---
+
+### ✅ 6. Dark Mode Otomatik Başlat
+**Durum:** ✅ ÇÖZÜLDİ
+
+**İstek:** Site varsayılan olarak dark mode açılsın
+
+**Yapılacaklar:**
+- ✅ dashboard.html - localStorage default 'dark' olarak değiştirildi
+- ✅ login.html - localStorage default 'dark' olarak değiştirildi
+
+---
+
+### ⏳ 7. Genel Entegrasyon İyileştirmeleri
+**Durum:** ⏳ BEKLEMEDE
+
+**İyileştirmeler:**
+- [ ] Proje kartlarına hızlı bilgiler (bütçe kullanımı, son aktivite)
+- [ ] Dashboard'a özet widgets (toplam proje, toplam bütçe, aktif şantiyeler)
+- [ ] Bildirim sistemi (bütçe aşımı, kritik stok)
+- [ ] Gelişmiş arama ve filtreleme
+
+---

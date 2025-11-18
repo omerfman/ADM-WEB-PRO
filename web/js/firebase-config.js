@@ -88,9 +88,28 @@ window.firestore = {
   deleteDoc,
   doc,
   getDoc,
-  updateDoc
+  updateDoc,
+  orderBy,
+  limit,
+  serverTimestamp
 };
 
 // ES Module exports (for import statements)
-export { auth, db, verifyFirebaseConnection, collection, query, where, getDocs, addDoc, deleteDoc, doc, getDoc, updateDoc };
+export { 
+  auth, 
+  db, 
+  verifyFirebaseConnection, 
+  collection, 
+  query, 
+  where, 
+  getDocs, 
+  addDoc, 
+  deleteDoc, 
+  doc, 
+  getDoc, 
+  updateDoc,
+  orderBy,
+  limit,
+  serverTimestamp
+};
 

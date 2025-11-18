@@ -515,7 +515,11 @@ async function handleAddCompanyUser(event, companyId) {
     console.log('📤 Creating user via backend API for company:', companyId);
     
     const idToken = await auth.currentUser.getIdToken();
-    const response = await fetch('/api/users', {
+    
+    // Get API base URL from config or use default
+    const apiBaseUrl = window.API_BASE_URL || '';
+    
+    const response = await fetch(`${apiBaseUrl}/api/users`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

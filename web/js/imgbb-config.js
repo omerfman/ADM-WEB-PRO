@@ -19,7 +19,7 @@
  */
 
 // ImgBB API Key - Replace with your own key
-export const IMGBB_API_KEY = 'YOUR_IMGBB_API_KEY';
+export const IMGBB_API_KEY = '6e51b7a5868a7b85bfbc8de002869d1d';
 
 // ImgBB API Endpoint
 export const IMGBB_UPLOAD_URL = 'https://api.imgbb.com/1/upload';

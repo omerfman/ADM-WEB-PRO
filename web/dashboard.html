@@ -728,9 +728,9 @@
       document.querySelector('.sidebar').classList.toggle('sidebar-open');
     });
 
-    // Theme toggle
+    // Theme toggle - Default to dark mode
     const themeToggle = document.getElementById('sidebarThemeToggle');
-    const currentTheme = localStorage.getItem('theme') || 'light';
+    const currentTheme = localStorage.getItem('theme') || 'dark'; // Changed default to dark
     
     if (currentTheme === 'dark') {
       document.body.classList.add('dark-mode');
