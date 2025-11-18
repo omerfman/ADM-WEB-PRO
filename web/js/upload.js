@@ -438,7 +438,8 @@ async function deleteProjectPhoto(projectId, photoId, storagePath) {
   }
 }
 
-// Export functions to global scope
+// Export functions to global scope for non-module scripts
 window.uploadPhotoToFirebase = uploadPhotoToFirebase;
-window.loadProjectPhotos = loadProjectPhotos;
-window.deleteProjectPhoto = deleteProjectPhoto;
+
+// ES Module exports
+export { uploadPhotoToImgBB, loadProjectPhotos, deleteProjectPhoto, uploadPhotoToFirebase };
