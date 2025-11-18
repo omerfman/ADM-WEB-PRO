@@ -534,7 +534,21 @@ async function handleAddCompanyUser(event, companyId) {
       })
     });
     
-    const data = await response.json();
+    console.log('📥 Response status:', response.status, response.statusText);
+    
+    // Get response text first to handle non-JSON errors
+    const responseText = await response.text();
+    console.log('📥 Response text:', responseText);
+    
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      console.error('❌ Failed to parse JSON response:', responseText);
+      alert('Sunucu hatası: ' + responseText.substring(0, 200));
+      return;
+    }
+    
     console.log('📥 API Response:', data);
     
     if (!response.ok) {
