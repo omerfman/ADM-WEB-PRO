@@ -95,9 +95,11 @@ async function loadUserData() {
       if (companiesNavBtn) companiesNavBtn.classList.remove('hidden');
     }
     
-    // Store role and company for later use
-    window.userRole = role;
-    window.userCompanyId = companyId;
+    // Store role and company for later use (ensure string values)
+    window.userRole = String(role || '');
+    window.userCompanyId = companyId ? String(companyId) : null;
+    
+    console.log('🔑 Stored - Role:', window.userRole, '| Company:', window.userCompanyId);
   }
 }
 
