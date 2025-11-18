@@ -812,6 +812,14 @@
       document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
       document.querySelector(`[data-section="${section}"]`).classList.add('active');
       
+      // Close sidebar on mobile after navigation
+      if (window.innerWidth <= 768) {
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) {
+          sidebar.classList.remove('sidebar-open');
+        }
+      }
+      
       // Load data for the section
       if (section === 'overview') {
         if (window.loadDashboardOverview) {
