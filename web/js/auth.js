@@ -107,6 +107,7 @@ async function loadUserData() {
 onAuthStateChanged(auth, async (user) => {
   const isLoginPage = window.location.pathname.includes('login.html');
   const isDashboardPage = window.location.pathname.includes('dashboard.html');
+  const isProjectDetailPage = window.location.pathname.includes('project-detail.html');
   
   if (user) {
     console.log('👤 Kullanıcı oturum açık:', user.email);
@@ -117,10 +118,13 @@ onAuthStateChanged(auth, async (user) => {
       return;
     }
     
-    // Load user data if on dashboard
-    if (isDashboardPage) {
+    // Load user data if on dashboard or project detail page
+    if (isDashboardPage || isProjectDetailPage) {
       await loadUserData();
-      // Load dashboard overview as the default page
+    }
+
+    // Load dashboard overview as the default page
+    if (isDashboardPage) {
       if (typeof loadDashboardOverview === 'function') {
         loadDashboardOverview();
       }
@@ -129,7 +133,7 @@ onAuthStateChanged(auth, async (user) => {
     console.log('👤 Kullanıcı oturum kapalı');
     
     // If on dashboard and not logged in, redirect to login
-    if (isDashboardPage) {
+    if (isDashboardPage || isProjectDetailPage) {
       window.location.href = 'login.html';
     }
   }
