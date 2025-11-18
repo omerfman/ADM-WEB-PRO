@@ -33,7 +33,8 @@ async function initProjectDetail() {
     // Load project stats
     await loadProjectStats();
     
-    // Load all tabs data
+    // Load all tab data
+    await loadProjectOverview();
     await loadProjectLogs();
     await loadProjectStocks();
     await loadProjectPayments();
@@ -303,6 +304,81 @@ async function loadProjectPayments() {
   } catch (error) {
     console.error('❌ Hakediş yüklenemedi:', error);
     showAlert('Hakediş yüklenemedi: ' + error.message, 'danger');
+  }
+}
+
+/**
+ * Load Project Overview
+ */
+async function loadProjectOverview() {
+  try {
+    // Update project info
+    document.getElementById('overviewProjectName').textContent = currentProject.name || '-';
+    document.getElementById('overviewCompany').textContent = currentProject.company || '-';
+    
+    // Status with color
+    const statusEl = document.getElementById('overviewStatus');
+    const statusText = currentProject.status || 'Devam Ediyor';
+    const statusColors = {
+      'Devam Ediyor': '#2196F3',
+      'Tamamlandı': '#4caf50',
+      'Beklemede': '#ff9800',
+      'İptal': '#f44336'
+    };
+    statusEl.textContent = statusText;
+    statusEl.style.color = statusColors[statusText] || '#2196F3';
+    
+    // Dates
+    const startDate = currentProject.startDate?.toDate ? currentProject.startDate.toDate().toLocaleDateString('tr-TR') : '-';
+    const endDate = currentProject.endDate?.toDate ? currentProject.endDate.toDate().toLocaleDateString('tr-TR') : '-';
+    document.getElementById('overviewStartDate').textContent = startDate;
+    document.getElementById('overviewEndDate').textContent = endDate;
+    
+    // Location and description
+    document.getElementById('overviewLocation').textContent = currentProject.location || '-';
+    document.getElementById('overviewDescription').textContent = currentProject.description || 'Açıklama eklenmemiş';
+
+    // Load counts
+    const logsRef = collection(db, 'projects', currentProjectId, 'logs');
+    const logsSnap = await getDocs(logsRef);
+    document.getElementById('overviewLogsCount').textContent = logsSnap.size;
+
+    const stocksRef = collection(db, 'projects', currentProjectId, 'stocks');
+    const stocksSnap = await getDocs(stocksRef);
+    document.getElementById('overviewStocksCount').textContent = stocksSnap.size;
+
+    const paymentsRef = collection(db, 'projects', currentProjectId, 'payments');
+    const paymentsSnap = await getDocs(paymentsRef);
+    document.getElementById('overviewPaymentsCount').textContent = paymentsSnap.size;
+
+    // Budget usage
+    const budget = parseFloat(currentProject.budget || 0);
+    let totalSpent = 0;
+
+    // Calculate from budget expenses
+    const expensesRef = collection(db, 'projects', currentProjectId, 'budget_expenses');
+    const expensesSnap = await getDocs(expensesRef);
+    expensesSnap.forEach(doc => {
+      totalSpent += doc.data().amount || 0;
+    });
+
+    // Add stocks total
+    stocksSnap.forEach(doc => {
+      const stock = doc.data();
+      totalSpent += (stock.quantity || 0) * (stock.unitPrice || 0);
+    });
+
+    // Add payments total
+    paymentsSnap.forEach(doc => {
+      const payment = doc.data();
+      totalSpent += payment.amount || (payment.unitPrice || 0) * (payment.quantity || 1);
+    });
+
+    const budgetUsage = budget > 0 ? ((totalSpent / budget) * 100).toFixed(1) : 0;
+    document.getElementById('overviewBudgetUsage').textContent = budgetUsage + '%';
+
+  } catch (error) {
+    console.error('❌ Proje özeti yüklenemedi:', error);
   }
 }
 
@@ -645,6 +721,7 @@ async function handleAddPayment(event) {
 
 // Export functions globally
 window.currentProjectId = currentProjectId;
+window.loadProjectOverview = loadProjectOverview;
 window.loadProjectLogs = loadProjectLogs;
 window.loadProjectStocks = loadProjectStocks;
 window.loadProjectPayments = loadProjectPayments;

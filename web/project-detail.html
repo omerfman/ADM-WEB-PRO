@@ -31,7 +31,11 @@
         <div style="margin-top: 1.5rem; padding: 0 1rem; color: var(--text-secondary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
           Proje Menüsü
         </div>
-        <a href="#" class="nav-item active" data-tab="logs" onclick="switchProjectTab('logs')">
+        <a href="#" class="nav-item active" data-tab="overview" onclick="switchProjectTab('overview')">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Proje Özeti</span>
+        </a>
+        <a href="#" class="nav-item" data-tab="logs" onclick="switchProjectTab('logs')">
           <span class="nav-icon">📝</span>
           <span class="nav-text">Şantiye Günlüğü</span>
         </a>
@@ -96,31 +100,111 @@
 
       <!-- Project Header -->
       <section class="content-section">
-        <div style="background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-red-dark) 100%); color: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem;">
-          <div style="display: flex; justify-content: space-between; align-items: start; gap: 2rem; flex-wrap: wrap;">
+        <div style="background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-red-dark) 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
             <div style="flex: 1;">
-              <h2 id="projectName" style="margin: 0 0 0.5rem 0; font-size: 2rem;">Yükleniyor...</h2>
-              <p id="projectLocation" style="margin: 0 0 0.5rem 0; opacity: 0.9; font-size: 1.1rem;">📍 Konum yükleniyor...</p>
-              <p id="projectDescription" style="margin: 0; opacity: 0.8;">Açıklama yükleniyor...</p>
+              <h2 id="projectName" style="margin: 0; font-size: 1.5rem;">Yükleniyor...</h2>
             </div>
-            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-              <button class="btn" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white;" onclick="window.location.href='dashboard.html#projects'">
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white; padding: 0.5rem 1rem; font-size: 0.9rem;" onclick="window.location.href='dashboard.html#projects'">
                 ← Projelere Dön
               </button>
-              <button id="editProjectBtn" class="btn" style="background: white; color: var(--brand-red);" onclick="openEditProjectModal()">
+              <button id="editProjectBtn" class="btn" style="background: white; color: var(--brand-red); padding: 0.5rem 1rem; font-size: 0.9rem;" onclick="openEditProjectModal()">
                 ✏️ Düzenle
               </button>
             </div>
           </div>
         </div>
 
-        <!-- Project Stats Cards -->
-        <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 2rem;" id="projectStatsCards">
-          <!-- Stats will be loaded dynamically -->
+        <!-- Tab Content -->
+        <!-- Overview Tab -->
+        <div id="overview-tab" class="tab-content">
+          <div class="section-header">
+            <h3>📊 Proje Özeti</h3>
+          </div>
+          
+          <!-- Project Stats Cards -->
+          <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 1.5rem;" id="projectStatsCards">
+            <!-- Stats will be loaded dynamically -->
+          </div>
+          
+          <!-- Project Info Card -->
+          <div class="card" style="margin-bottom: 1.5rem;">
+            <h3 style="margin-bottom: 1rem; color: var(--brand-red);">ℹ️ Proje Bilgileri</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+              <div>
+                <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Proje Adı</label>
+                <div id="overviewProjectName" style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary);">-</div>
+              </div>
+              <div>
+                <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Müşteri/Firma</label>
+                <div id="overviewCompany" style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary);">-</div>
+              </div>
+              <div>
+                <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Durum</label>
+                <div id="overviewStatus" style="font-size: 1.1rem; font-weight: 600;">-</div>
+              </div>
+              <div>
+                <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Başlangıç Tarihi</label>
+                <div id="overviewStartDate" style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary);">-</div>
+              </div>
+              <div>
+                <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Bitiş Tarihi</label>
+                <div id="overviewEndDate" style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary);">-</div>
+              </div>
+              <div>
+                <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Konum</label>
+                <div id="overviewLocation" style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary);">-</div>
+              </div>
+            </div>
+            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+              <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Açıklama</label>
+              <div id="overviewDescription" style="line-height: 1.6; color: var(--text-primary);">-</div>
+            </div>
+          </div>
+
+          <!-- Quick Stats -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+            <div class="card" style="text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+              <div style="font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.9;">Toplam Günlük Kayıt</div>
+              <div id="overviewLogsCount" style="font-size: 2rem; font-weight: bold;">0</div>
+            </div>
+            <div class="card" style="text-align: center; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+              <div style="font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.9;">Toplam Stok Kalemi</div>
+              <div id="overviewStocksCount" style="font-size: 2rem; font-weight: bold;">0</div>
+            </div>
+            <div class="card" style="text-align: center; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+              <div style="font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.9;">Toplam Hakediş</div>
+              <div id="overviewPaymentsCount" style="font-size: 2rem; font-weight: bold;">0</div>
+            </div>
+            <div class="card" style="text-align: center; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white;">
+              <div style="font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.9;">Bütçe Kullanımı</div>
+              <div id="overviewBudgetUsage" style="font-size: 2rem; font-weight: bold;">0%</div>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="card">
+            <h3 style="margin-bottom: 1rem; color: var(--brand-red);">⚡ Hızlı İşlemler</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+              <button class="btn btn-primary" onclick="openAddLogModal()" style="padding: 1rem;">
+                📝 Günlük Ekle
+              </button>
+              <button class="btn btn-primary" onclick="openAddStockModal()" style="padding: 1rem;">
+                📦 Stok Ekle
+              </button>
+              <button class="btn btn-primary" onclick="openAddPaymentModal()" style="padding: 1rem;">
+                💰 Hakediş Ekle
+              </button>
+              <button class="btn btn-primary" onclick="openBudgetModalFromProject()" style="padding: 1rem;">
+                💼 Bütçe Yönetimi
+              </button>
+            </div>
+          </div>
         </div>
 
-        <!-- Tab Content -->
-        <div id="logs-tab" class="tab-content">
+        <!-- Logs Tab -->
+        <div id="logs-tab" class="tab-content hidden">
           <div class="section-header">
             <h3>📝 Şantiye Günlüğü</h3>
             <button class="btn btn-primary" onclick="openAddLogModal()">+ Günlük Ekle</button>
@@ -130,34 +214,29 @@
           </div>
         </div>
 
+        <!-- Stocks Tab -->
         <div id="stocks-tab" class="tab-content hidden">
           <div class="section-header">
             <h3>📦 Stok Yönetimi</h3>
-            <div style="display: flex; gap: 0.5rem;">
-              <button class="btn btn-secondary" onclick="exportStocksToExcel()">📊 Excel'e Aktar</button>
-              <button class="btn btn-secondary" onclick="importStocksFromExcel()">📤 Excel'den İçe Aktar</button>
-              <button class="btn btn-primary" onclick="openAddStockModal()">+ Stok Ekle</button>
-            </div>
+            <button class="btn btn-primary" onclick="openAddStockModal()">+ Stok Ekle</button>
           </div>
           <div id="stocksList" style="margin-top: 1rem;">
             <!-- Stocks will be loaded here -->
           </div>
         </div>
 
+        <!-- Payments Tab -->
         <div id="payments-tab" class="tab-content hidden">
           <div class="section-header">
             <h3>💰 Hakediş Takibi</h3>
-            <div style="display: flex; gap: 0.5rem;">
-              <button class="btn btn-secondary" onclick="exportPaymentsToExcel()">📊 Excel'e Aktar</button>
-              <button class="btn btn-secondary" onclick="importPaymentsFromExcel()">📤 Excel'den İçe Aktar</button>
-              <button class="btn btn-primary" onclick="openAddPaymentModal()">+ Hakediş Ekle</button>
-            </div>
+            <button class="btn btn-primary" onclick="openAddPaymentModal()">+ Hakediş Ekle</button>
           </div>
           <div id="paymentsList" style="margin-top: 1rem;">
             <!-- Payments will be loaded here -->
           </div>
         </div>
 
+        <!-- Budget Tab -->
         <div id="budget-tab" class="tab-content hidden">
           <div class="section-header">
             <h3>💼 Bütçe Yönetimi</h3>
@@ -198,17 +277,17 @@
 
             <!-- Quick Actions -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-              <div class="card" style="text-align: center; cursor: pointer; transition: transform 0.2s;" onclick="openBudgetModalFromProject()">
+              <div class="card" style="text-align: center; cursor: pointer; transition: transform 0.2s;" onclick="openCategoriesView()">
                 <div style="font-size: 3rem; margin-bottom: 0.5rem;">📁</div>
                 <h4 style="margin-bottom: 0.5rem; color: var(--brand-red);">Kategoriler</h4>
                 <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">Bütçe kategorilerini yönet</p>
               </div>
-              <div class="card" style="text-align: center; cursor: pointer; transition: transform 0.2s;" onclick="openBudgetModalFromProject()">
+              <div class="card" style="text-align: center; cursor: pointer; transition: transform 0.2s;" onclick="openExpensesView()">
                 <div style="font-size: 3rem; margin-bottom: 0.5rem;">💸</div>
                 <h4 style="margin-bottom: 0.5rem; color: var(--brand-red);">Harcamalar</h4>
                 <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">Harcama kayıtlarını görüntüle</p>
               </div>
-              <div class="card" style="text-align: center; cursor: pointer; transition: transform 0.2s;" onclick="openBudgetModalFromProject()">
+              <div class="card" style="text-align: center; cursor: pointer; transition: transform 0.2s;" onclick="openReportsView()">
                 <div style="font-size: 3rem; margin-bottom: 0.5rem;">📊</div>
                 <h4 style="margin-bottom: 0.5rem; color: var(--brand-red);">Raporlar</h4>
                 <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">Detaylı bütçe analizi</p>
@@ -644,7 +723,9 @@
       document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
       
       // Load data for the selected tab
-      if (tab === 'logs' && window.loadProjectLogs) {
+      if (tab === 'overview' && window.loadProjectOverview) {
+        window.loadProjectOverview();
+      } else if (tab === 'logs' && window.loadProjectLogs) {
         window.loadProjectLogs();
       } else if (tab === 'stocks' && window.loadProjectStocks) {
         window.loadProjectStocks();
@@ -654,6 +735,50 @@
         window.loadBudgetTabSummary();
       }
     }
+    
+    // Quick budget view functions
+    function openCategoriesView() {
+      if (window.openBudgetModal) {
+        window.openBudgetModal(window.currentProjectId);
+        // Focus on categories section after modal opens
+        setTimeout(() => {
+          const categoriesSection = document.getElementById('budgetCategoriesList');
+          if (categoriesSection) {
+            categoriesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 300);
+      }
+    }
+
+    function openExpensesView() {
+      if (window.openBudgetModal) {
+        window.openBudgetModal(window.currentProjectId);
+        // Focus on expenses section after modal opens
+        setTimeout(() => {
+          const expensesSection = document.getElementById('budgetExpensesList');
+          if (expensesSection) {
+            expensesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 300);
+      }
+    }
+
+    function openReportsView() {
+      if (window.openBudgetModal) {
+        window.openBudgetModal(window.currentProjectId);
+        // Focus on summary section after modal opens
+        setTimeout(() => {
+          const summarySection = document.querySelector('.modal-body');
+          if (summarySection) {
+            summarySection.scrollTop = 0;
+          }
+        }, 300);
+      }
+    }
+
+    window.openCategoriesView = openCategoriesView;
+    window.openExpensesView = openExpensesView;
+    window.openReportsView = openReportsView;
     
     // Auto-calculate totals for stock form
     document.addEventListener('DOMContentLoaded', function() {
