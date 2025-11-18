@@ -13,9 +13,9 @@ dotenv.config();
 // ====== EXPRESS SETUP ======
 const app = express();
 
-// CORS Configuration
+// CORS Configuration - Allow all origins for Vercel deployment
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:5000',
+  origin: true,
   credentials: true,
   optionsSuccessStatus: 200
 };
@@ -26,19 +26,41 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // ====== FIREBASE SETUP ======
 if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      project_id: process.env.FIREBASE_PROJECT_ID,
-      private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
-      private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      client_email: process.env.FIREBASE_CLIENT_EMAIL,
-      client_id: process.env.FIREBASE_CLIENT_ID,
-      auth_uri: process.env.FIREBASE_AUTH_URI,
-      token_uri: process.env.FIREBASE_TOKEN_URI,
-      auth_provider_x509_cert_url: process.env.FIREBASE_AUTH_PROVIDER_CERT_URL,
-      client_x509_cert_url: process.env.FIREBASE_CLIENT_CERT_URL
-    })
-  });
+  try {
+    // Try to use environment variable first (for Vercel)
+    if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+      });
+      console.log('✅ Firebase initialized with environment variable');
+    } else if (process.env.FIREBASE_PROJECT_ID) {
+      // Use individual environment variables
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          project_id: process.env.FIREBASE_PROJECT_ID,
+          private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+          private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+          client_email: process.env.FIREBASE_CLIENT_EMAIL,
+          client_id: process.env.FIREBASE_CLIENT_ID,
+          auth_uri: process.env.FIREBASE_AUTH_URI,
+          token_uri: process.env.FIREBASE_TOKEN_URI,
+          auth_provider_x509_cert_url: process.env.FIREBASE_AUTH_PROVIDER_CERT_URL,
+          client_x509_cert_url: process.env.FIREBASE_CLIENT_CERT_URL
+        })
+      });
+      console.log('✅ Firebase initialized with individual env vars');
+    } else {
+      // Fallback to service account file (for local development)
+      const serviceAccount = require('../serviceAccountKey.json');
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+      });
+      console.log('✅ Firebase initialized with serviceAccountKey.json');
+    }
+  } catch (error) {
+    console.error('❌ Firebase initialization error:', error);
+  }
 }
 
 const db = admin.firestore();
