@@ -120,9 +120,9 @@ onAuthStateChanged(auth, async (user) => {
     // Load user data if on dashboard
     if (isDashboardPage) {
       await loadUserData();
-      // Load projects after user data is ready
-      if (typeof loadProjects === 'function') {
-        loadProjects();
+      // Load dashboard overview as the default page
+      if (typeof loadDashboardOverview === 'function') {
+        loadDashboardOverview();
       }
     }
   } else {

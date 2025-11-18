@@ -18,8 +18,12 @@
       </div>
       
       <nav class="sidebar-nav">
-        <a href="#" class="nav-item active" data-section="projects" onclick="switchSection('projects')">
+        <a href="#" class="nav-item active" data-section="overview" onclick="switchSection('overview')">
           <span class="nav-icon">📊</span>
+          <span class="nav-text">Ana Sayfa</span>
+        </a>
+        <a href="#" class="nav-item" data-section="projects" onclick="switchSection('projects')">
+          <span class="nav-icon">🏗️</span>
           <span class="nav-text">Projeler</span>
         </a>
         <a href="#" class="nav-item hidden" id="employeesNavBtn" data-section="employees" onclick="switchSection('employees')">
@@ -77,8 +81,13 @@
 
       <div id="alertContainer"></div>
 
+      <!-- Overview Section (Dashboard Home) -->
+      <section id="overviewSection" class="content-section">
+        <!-- Dashboard overview will be loaded here -->
+      </section>
+
       <!-- Projects Section -->
-      <section id="projectsSection" class="content-section">
+      <section id="projectsSection" class="content-section hidden">
         <div class="section-header">
           <h3>Tüm Projeler</h3>
           <button class="btn btn-primary" onclick="openCreateProjectModal()">+ Yeni Proje</button>
@@ -576,6 +585,70 @@
     </div>
   </div>
 
+  <!-- Edit Project Modal -->
+  <div id="editProjectModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Proje Düzenle</h2>
+        <button class="modal-close" onclick="closeEditProjectModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="editProjectForm" onsubmit="handleUpdateProject(event)">
+          <input type="hidden" id="editProjectId">
+          
+          <div class="form-group">
+            <label for="editProjectName">Proje Adı *</label>
+            <input type="text" id="editProjectName" placeholder="Proje adını girin" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="editProjectDesc">Açıklama</label>
+            <textarea id="editProjectDesc" placeholder="Proje açıklaması" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; resize: vertical; height: 100px; background-color: var(--input-bg); color: var(--text-primary);"></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label for="editProjectLocation">Konum *</label>
+            <input type="text" id="editProjectLocation" placeholder="Proje konumu" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="editProjectBudget">Bütçe (TRY)</label>
+            <input type="number" id="editProjectBudget" placeholder="Toplam bütçe" min="0">
+          </div>
+          
+          <div class="form-group">
+            <label for="editProjectStartDate">Başlangıç Tarihi</label>
+            <input type="date" id="editProjectStartDate">
+          </div>
+          
+          <div class="form-group">
+            <label for="editProjectEndDate">Tahmini Bitiş Tarihi</label>
+            <input type="date" id="editProjectEndDate">
+          </div>
+          
+          <div class="form-group">
+            <label for="editProjectStatus">Durum *</label>
+            <select id="editProjectStatus" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);" required>
+              <option value="Devam Ediyor">Devam Ediyor</option>
+              <option value="Tamamlandı">Tamamlandı</option>
+              <option value="Beklemede">Beklemede</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="editProjectClient">Müşteri Bilgileri</label>
+            <input type="text" id="editProjectClient" placeholder="Müşteri adı/bilgileri">
+          </div>
+          
+          <button type="submit" class="btn btn-primary">💾 Değişiklikleri Kaydet</button>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeEditProjectModal()">İptal</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Create User Modal (Company Admin) -->
   <div id="createUserModal" class="modal">
     <div class="modal-content">
@@ -697,6 +770,9 @@
   <!-- Auth Module -->
   <script type="module" src="js/auth.js"></script>
   
+  <!-- Dashboard Overview Module -->
+  <script type="module" src="js/dashboard-overview.js"></script>
+  
   <!-- Projects Module -->
   <script type="module" src="js/projects.js"></script>
   
@@ -738,11 +814,41 @@
       document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
       document.querySelector(`[data-section="${section}"]`).classList.add('active');
       
+      // Load data for the section
+      if (section === 'overview') {
+        if (window.loadDashboardOverview) {
+          window.loadDashboardOverview();
+        }
+      } else if (section === 'projects') {
+        if (window.loadProjects) {
+          window.loadProjects();
+        }
+      } else if (section === 'employees') {
+        if (window.loadEmployees) {
+          window.loadEmployees();
+        }
+      } else if (section === 'activity') {
+        if (window.loadActivityLogs) {
+          window.loadActivityLogs();
+        }
+      } else if (section === 'companies') {
+        if (window.loadCompanies) {
+          window.loadCompanies();
+        }
+      } else if (section === 'users') {
+        if (window.loadUsers) {
+          window.loadUsers();
+        }
+      }
+      
       // Update page title
       const titles = {
+        'overview': 'Ana Sayfa',
         'projects': 'Projeler',
         'companies': 'Şirketler',
-        'users': 'Kullanıcılar'
+        'users': 'Kullanıcılar',
+        'employees': 'Çalışanlar',
+        'activity': 'Faaliyet Kayıtları'
       };
       document.getElementById('pageTitle').textContent = titles[section] || section;
     }

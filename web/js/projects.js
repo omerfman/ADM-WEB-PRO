@@ -2,7 +2,7 @@
 import { auth, db } from "./firebase-config.js";
 import {
   collection, query, where, orderBy, limit, getDocs,
-  doc, getDoc, addDoc, deleteDoc, serverTimestamp
+  doc, getDoc, addDoc, deleteDoc, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { uploadPhotoToImgBB } from "./upload.js";
 
@@ -92,29 +92,36 @@ function renderProjectsList() {
   projectsToRender.forEach(project => {
     const projectCard = document.createElement('div');
     projectCard.className = 'project-card';
-    projectCard.style.cssText = 'padding: 1.5rem; border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg); cursor: pointer; transition: box-shadow 0.3s;';
+    projectCard.style.cssText = 'padding: 1.5rem; border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg); transition: box-shadow 0.3s; position: relative;';
     projectCard.onmouseover = () => projectCard.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
     projectCard.onmouseout = () => projectCard.style.boxShadow = 'none';
-    projectCard.onclick = () => openProjectDetail(project.id);
 
-    const status = project.status || 'planning';
+    const status = project.status || 'Devam Ediyor';
     const statusColors = {
-      'planning': '#FFA500',
-      'active': '#4CAF50',
-      'paused': '#FF9800',
-      'completed': '#2196F3'
+      'Devam Ediyor': '#4CAF50',
+      'Tamamlandı': '#2196F3',
+      'Beklemede': '#FFA500'
     };
 
     projectCard.innerHTML = `
-      <h4 style="margin: 0 0 0.5rem 0; color: var(--primary-color);">${project.name || 'Unnamed'}</h4>
-      <p style="margin: 0.5rem 0; color: #666; font-size: 0.9rem;">${project.location || 'No location'}</p>
-      <p style="margin: 0.5rem 0; color: #666; font-size: 0.9rem;">${project.description || ''}</p>
-      <div style="display: flex; justify-content: space-between; margin-top: 1rem; align-items: center;">
-        <span style="background: ${statusColors[status]}; color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">
-          ${status.toUpperCase()}
-        </span>
-        <small style="color: #999;">${new Date(project.createdAt?.toDate?.() || new Date()).toLocaleDateString('tr-TR')}</small>
+      <div onclick="openProjectDetail('${project.id}')" style="cursor: pointer;">
+        <h4 style="margin: 0 0 0.5rem 0; color: var(--brand-red);">${project.name || 'Unnamed'}</h4>
+        <p style="margin: 0.5rem 0; color: var(--text-secondary); font-size: 0.9rem;">${project.location || 'Lokasyon belirtilmemiş'}</p>
+        <p style="margin: 0.5rem 0; color: var(--text-secondary); font-size: 0.9rem;">${project.description || ''}</p>
+        <div style="display: flex; justify-content: space-between; margin-top: 1rem; align-items: center;">
+          <span style="background: ${statusColors[status] || '#999'}; color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">
+            ${status}
+          </span>
+          <small style="color: var(--text-secondary);">${new Date(project.createdAt?.toDate?.() || new Date()).toLocaleDateString('tr-TR')}</small>
+        </div>
       </div>
+      <button 
+        onclick="event.stopPropagation(); openEditProjectModal('${project.id}')" 
+        class="btn btn-secondary" 
+        style="margin-top: 1rem; width: 100%; padding: 0.5rem; font-size: 0.9rem;"
+      >
+        ✏️ Düzenle
+      </button>
     `;
     projectsList.appendChild(projectCard);
   });
@@ -769,6 +776,131 @@ function updateFilterResults(count) {
   }
 }
 
+// ========== PROJECT EDIT FUNCTIONS ==========
+
+/**
+ * Open edit project modal
+ */
+async function openEditProjectModal(projectId) {
+  try {
+    const projectRef = doc(db, 'projects', projectId);
+    const projectSnap = await getDoc(projectRef);
+    
+    if (!projectSnap.exists()) {
+      showAlert('Proje bulunamadı', 'danger');
+      return;
+    }
+
+    const project = projectSnap.data();
+    
+    // Fill form with project data
+    document.getElementById('editProjectId').value = projectId;
+    document.getElementById('editProjectName').value = project.name || '';
+    document.getElementById('editProjectDesc').value = project.description || '';
+    document.getElementById('editProjectLocation').value = project.location || '';
+    document.getElementById('editProjectBudget').value = project.budget || '';
+    document.getElementById('editProjectStatus').value = project.status || 'Devam Ediyor';
+    document.getElementById('editProjectClient').value = project.client || '';
+    
+    // Handle dates
+    if (project.startDate) {
+      const startDate = project.startDate.toDate ? project.startDate.toDate() : new Date(project.startDate);
+      document.getElementById('editProjectStartDate').value = startDate.toISOString().split('T')[0];
+    }
+    if (project.endDate) {
+      const endDate = project.endDate.toDate ? project.endDate.toDate() : new Date(project.endDate);
+      document.getElementById('editProjectEndDate').value = endDate.toISOString().split('T')[0];
+    }
+
+    // Show modal
+    document.getElementById('editProjectModal').classList.add('show');
+    
+  } catch (error) {
+    console.error('❌ Proje düzenleme modal açılamadı:', error);
+    showAlert('Proje yüklenemedi: ' + error.message, 'danger');
+  }
+}
+
+/**
+ * Close edit project modal
+ */
+function closeEditProjectModal() {
+  document.getElementById('editProjectModal').classList.remove('show');
+  document.getElementById('editProjectForm').reset();
+}
+
+/**
+ * Handle update project
+ */
+async function handleUpdateProject(event) {
+  event.preventDefault();
+
+  try {
+    const projectId = document.getElementById('editProjectId').value;
+    const name = document.getElementById('editProjectName').value.trim();
+    const description = document.getElementById('editProjectDesc').value.trim();
+    const location = document.getElementById('editProjectLocation').value.trim();
+    const budget = parseFloat(document.getElementById('editProjectBudget').value) || 0;
+    const status = document.getElementById('editProjectStatus').value;
+    const client = document.getElementById('editProjectClient').value.trim();
+    const startDate = document.getElementById('editProjectStartDate').value;
+    const endDate = document.getElementById('editProjectEndDate').value;
+
+    if (!name || !location) {
+      showAlert('Proje adı ve konum zorunludur', 'warning');
+      return;
+    }
+
+    // Prepare update data
+    const updateData = {
+      name,
+      description,
+      location,
+      budget,
+      status,
+      client,
+      updatedAt: serverTimestamp()
+    };
+
+    // Add dates if provided
+    if (startDate) {
+      updateData.startDate = new Date(startDate);
+    }
+    if (endDate) {
+      updateData.endDate = new Date(endDate);
+    }
+
+    // Update project
+    const projectRef = doc(db, 'projects', projectId);
+    await updateDoc(projectRef, updateData);
+
+    // Log activity
+    const user = auth.currentUser;
+    if (user) {
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+      const userData = userDocSnap.data();
+      
+      await addDoc(collection(db, 'activity_logs'), {
+        userId: user.uid,
+        userName: userData?.displayName || user.email,
+        companyId: userData?.companyId || 'default-company',
+        action: 'update',
+        description: `"${name}" projesi güncellendi`,
+        timestamp: serverTimestamp()
+      });
+    }
+
+    showAlert('Proje başarıyla güncellendi!', 'success');
+    closeEditProjectModal();
+    await loadProjects(); // Refresh project list
+
+  } catch (error) {
+    console.error('❌ Proje güncellenemedi:', error);
+    showAlert('Proje güncellenirken hata: ' + error.message, 'danger');
+  }
+}
+
 // Export functions for global use
 window.loadProjects = loadProjects;
 window.openProjectDetail = openProjectDetail;
@@ -794,3 +926,6 @@ window.handleAddPayment = handleAddPayment;
 window.deletePayment = deletePayment;
 window.clearProjectFilters = clearProjectFilters;
 window.applyProjectFilters = applyProjectFilters;
+window.openEditProjectModal = openEditProjectModal;
+window.closeEditProjectModal = closeEditProjectModal;
+window.handleUpdateProject = handleUpdateProject;
