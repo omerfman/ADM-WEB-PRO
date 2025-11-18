@@ -150,28 +150,58 @@ async function loadCompanyAdminDashboard(companyId) {
       totalUsedBudget += parseFloat(data.usedBudget || 0);
     });
 
+    // Get company info
+    const companyDoc = await getDoc(doc(db, 'companies', companyId));
+    const companyData = companyDoc.exists() ? companyDoc.data() : null;
+    const companyName = companyData?.name || 'Şirket';
+    const companyLogo = companyData?.logoUrl || null;
+
     // Get company employees
     const usersRef = collection(db, 'users');
     const usersQuery = query(usersRef, where('companyId', '==', companyId));
     const usersSnap = await getDocs(usersQuery);
     const totalEmployees = usersSnap.size;
 
-    // Get recent activities for this company
-    const activitiesRef = collection(db, 'activity_logs');
+    // Get recent activities for this company - Use audit_logs
+    const activitiesRef = collection(db, 'audit_logs');
     const activitiesQuery = query(
-      activitiesRef, 
-      where('companyId', '==', companyId),
+      activitiesRef,
       orderBy('timestamp', 'desc'),
-      limit(5)
+      limit(20)
     );
     const activitiesSnap = await getDocs(activitiesQuery);
     const recentActivities = [];
-    activitiesSnap.forEach(doc => {
-      recentActivities.push({ id: doc.id, ...doc.data() });
-    });
+    
+    // Filter activities for this company
+    for (const activityDoc of activitiesSnap.docs) {
+      const activityData = activityDoc.data();
+      
+      // Check if activity belongs to this company
+      let belongsToCompany = false;
+      
+      if (activityData.userId) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', activityData.userId));
+          if (userDoc.exists() && userDoc.data().companyId === companyId) {
+            belongsToCompany = true;
+            activityData.userName = userDoc.data().fullName || userDoc.data().displayName || userDoc.data().email;
+          }
+        } catch (err) {
+          console.warn('User fetch error:', err);
+        }
+      }
+      
+      if (belongsToCompany) {
+        recentActivities.push({ id: activityDoc.id, ...activityData });
+        if (recentActivities.length >= 5) break;
+      }
+    }
 
     // Render dashboard
     renderCompanyAdminDashboard({
+      companyName,
+      companyLogo,
+      companyId,
       totalProjects,
       activeProjects,
       totalEmployees,
@@ -192,6 +222,12 @@ async function loadUserDashboard(userId, companyId) {
   console.log(`👤 User Dashboard yükleniyor - ${userId}`);
 
   try {
+    // Get company info
+    const companyDoc = await getDoc(doc(db, 'companies', companyId));
+    const companyData = companyDoc.exists() ? companyDoc.data() : null;
+    const companyName = companyData?.name || 'Şirket';
+    const companyLogo = companyData?.logoUrl || null;
+
     // Get user's projects (where they are involved)
     const projectsRef = collection(db, 'projects');
     const projectsQuery = query(projectsRef, where('companyId', '==', companyId));
@@ -199,7 +235,7 @@ async function loadUserDashboard(userId, companyId) {
     const userProjects = projectsSnap.size;
 
     // Get user's activities
-    const activitiesRef = collection(db, 'activity_logs');
+    const activitiesRef = collection(db, 'audit_logs');
     const activitiesQuery = query(
       activitiesRef,
       where('userId', '==', userId),
@@ -214,6 +250,8 @@ async function loadUserDashboard(userId, companyId) {
 
     // Render dashboard
     renderUserDashboard({
+      companyName,
+      companyLogo,
       userProjects,
       recentActivities
     });
@@ -321,10 +359,61 @@ function renderCompanyAdminDashboard(data) {
   const budgetColor = budgetPercentage < 70 ? '#10b981' : budgetPercentage < 90 ? '#f59e0b' : '#ef4444';
 
   container.innerHTML = `
-    <div class="section-header">
-      <h3>📊 Şirket Özeti</h3>
-      <div style="color: var(--text-secondary); font-size: 0.9rem;">
-        ${new Date().toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+    <!-- Company Header with Logo -->
+    <div class="company-header" style="
+      background: linear-gradient(135deg, var(--brand-red) 0%, #c62828 100%);
+      color: white;
+      padding: 2rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    ">
+      <div class="company-logo-container" style="
+        flex-shrink: 0;
+        width: 120px;
+        height: 120px;
+        background: white;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        position: relative;
+      ">
+        ${data.companyLogo 
+          ? `<img src="${data.companyLogo}" alt="${data.companyName}" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.src=''; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+             <div style="display: none; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 3rem; color: var(--brand-red);">🏢</div>`
+          : `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: var(--brand-red);">🏢</div>`
+        }
+        <button 
+          onclick="openCompanyLogoUpload()" 
+          class="btn btn-primary" 
+          style="
+            position: absolute;
+            bottom: -10px;
+            right: -10px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+          "
+          title="Logo Yükle"
+        >📷</button>
+      </div>
+      <div style="flex: 1;">
+        <h1 style="margin: 0 0 0.5rem 0; font-size: 2.5rem; font-weight: 700;">${data.companyName}</h1>
+        <p style="margin: 0; font-size: 1.1rem; opacity: 0.9;">
+          📅 ${new Date().toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+        </p>
       </div>
     </div>
 
@@ -409,7 +498,52 @@ function renderCompanyAdminDashboard(data) {
         </button>
       </div>
     </div>
+    
+    <!-- Company Logo Upload Modal -->
+    <div id="companyLogoModal" class="modal" style="display: none;">
+      <div class="modal-content" style="max-width: 500px;">
+        <h3 style="margin-bottom: 1.5rem;">🏢 Şirket Logosu Yükle</h3>
+        <form id="companyLogoForm" onsubmit="handleCompanyLogoUpload(event, '${data.companyId}')">
+          <div class="form-group">
+            <label>Logo Seç</label>
+            <input type="file" id="companyLogoFile" accept="image/*" required style="
+              width: 100%;
+              padding: 0.75rem;
+              border: 2px dashed var(--border-color);
+              border-radius: 8px;
+              background: var(--input-bg);
+              cursor: pointer;
+            ">
+            <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">
+              PNG, JPG veya WebP formatında, maksimum 5MB
+            </small>
+          </div>
+          <div id="logoPreview" style="margin: 1rem 0; text-align: center;"></div>
+          <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">✅ Yükle</button>
+            <button type="button" class="btn btn-secondary" onclick="closeCompanyLogoUpload()" style="flex: 1;">❌ İptal</button>
+          </div>
+        </form>
+      </div>
+    </div>
   `;
+  
+  // Add logo preview listener
+  const logoFileInput = document.getElementById('companyLogoFile');
+  if (logoFileInput) {
+    logoFileInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          document.getElementById('logoPreview').innerHTML = `
+            <img src="${event.target.result}" style="max-width: 200px; max-height: 200px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          `;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
 }
 
 /**
@@ -420,10 +554,41 @@ function renderUserDashboard(data) {
   if (!container) return;
 
   container.innerHTML = `
-    <div class="section-header">
-      <h3>📊 Kişisel Özet</h3>
-      <div style="color: var(--text-secondary); font-size: 0.9rem;">
-        ${new Date().toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+    <!-- Company Header (Read-only for users) -->
+    <div class="company-header" style="
+      background: linear-gradient(135deg, var(--brand-red) 0%, #c62828 100%);
+      color: white;
+      padding: 2rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    ">
+      <div class="company-logo-container" style="
+        flex-shrink: 0;
+        width: 120px;
+        height: 120px;
+        background: white;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      ">
+        ${data.companyLogo 
+          ? `<img src="${data.companyLogo}" alt="${data.companyName}" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.src=''; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+             <div style="display: none; width: 100%; height: 100%; align-items: center; justify-content: center; font-size: 3rem; color: var(--brand-red);">🏢</div>`
+          : `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: var(--brand-red);">🏢</div>`
+        }
+      </div>
+      <div style="flex: 1;">
+        <h1 style="margin: 0 0 0.5rem 0; font-size: 2.5rem; font-weight: 700;">${data.companyName}</h1>
+        <p style="margin: 0; font-size: 1.1rem; opacity: 0.9;">
+          📅 ${new Date().toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+        </p>
       </div>
     </div>
 
@@ -568,5 +733,112 @@ function getActivityDescription(activityData, userName, projectName) {
 
 // Export for global use
 window.loadDashboardOverview = loadDashboardOverview;
+
+/**
+ * Company Logo Upload Functions
+ */
+function openCompanyLogoUpload() {
+  const modal = document.getElementById('companyLogoModal');
+  if (modal) {
+    modal.style.display = 'flex';
+  }
+}
+
+function closeCompanyLogoUpload() {
+  const modal = document.getElementById('companyLogoModal');
+  if (modal) {
+    modal.style.display = 'none';
+    document.getElementById('companyLogoForm').reset();
+    document.getElementById('logoPreview').innerHTML = '';
+  }
+}
+
+async function handleCompanyLogoUpload(event, companyId) {
+  event.preventDefault();
+  
+  const fileInput = document.getElementById('companyLogoFile');
+  const file = fileInput.files[0];
+  
+  if (!file) {
+    alert('Lütfen bir dosya seçin');
+    return;
+  }
+  
+  // Validate file size (max 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    alert('Dosya boyutu 5MB\'dan küçük olmalıdır');
+    return;
+  }
+  
+  // Validate file type
+  if (!file.type.startsWith('image/')) {
+    alert('Lütfen bir görsel dosyası seçin');
+    return;
+  }
+  
+  try {
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = '📤 Yükleniyor...';
+    
+    // Upload to ImgBB
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    const imgbbResponse = await fetch(`https://api.imgbb.com/1/upload?key=${window.IMGBB_API_KEY}`, {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (!imgbbResponse.ok) {
+      throw new Error('ImgBB yükleme hatası');
+    }
+    
+    const imgbbData = await imgbbResponse.json();
+    const logoUrl = imgbbData.data.url;
+    
+    // Update company document with logo URL
+    const { doc, updateDoc } = await import('./firebase-config.js');
+    const companyRef = doc(window.db, 'companies', companyId);
+    
+    await updateDoc(companyRef, {
+      logoUrl: logoUrl,
+      updatedAt: new Date()
+    });
+    
+    // Log activity
+    const { collection, addDoc } = await import('./firebase-config.js');
+    const user = window.auth.currentUser;
+    await addDoc(collection(window.db, 'audit_logs'), {
+      userId: user.uid,
+      action: 'UPDATE_COMPANY',
+      description: 'Şirket logosu güncellendi',
+      timestamp: new Date(),
+      metadata: {
+        companyId: companyId,
+        logoUrl: logoUrl
+      }
+    });
+    
+    alert('✅ Logo başarıyla yüklendi!');
+    closeCompanyLogoUpload();
+    
+    // Reload dashboard to show new logo
+    window.location.reload();
+    
+  } catch (error) {
+    console.error('❌ Logo yükleme hatası:', error);
+    alert('Logo yüklenirken bir hata oluştu: ' + error.message);
+    
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = false;
+    submitBtn.textContent = '✅ Yükle';
+  }
+}
+
+// Export logo functions
+window.openCompanyLogoUpload = openCompanyLogoUpload;
+window.closeCompanyLogoUpload = closeCompanyLogoUpload;
+window.handleCompanyLogoUpload = handleCompanyLogoUpload;
 
 console.log('✅ Dashboard Overview module loaded');
