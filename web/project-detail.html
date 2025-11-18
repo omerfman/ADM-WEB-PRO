@@ -340,8 +340,8 @@
                 </div>
               </div>
 
-              <button class="btn btn-primary" onclick="openBudgetModalFromProject()" style="width: 100%; padding: 1.2rem; font-size: 1.1rem; font-weight: 600;">
-                ⚙️ Detaylı Bütçe Yönetimine Git
+              <button class="btn btn-primary" onclick="openCategoriesView()" style="width: 100%; padding: 1.2rem; font-size: 1.1rem; font-weight: 600;">
+                📁 Bütçe Kategorilerini Yönet
               </button>
             </div>
           </div>
@@ -492,37 +492,61 @@
     </div>
   </div>
 
-  <!-- Budget Management Modal -->
-  <div id="budgetModal" class="modal">
-    <div class="modal-content" style="max-width: 1400px; max-height: 90vh; overflow-y: auto;">
+  <!-- Budget Categories Modal -->
+  <div id="budgetCategoriesModal" class="modal">
+    <div class="modal-content" style="max-width: 900px;">
       <div class="modal-header">
-        <h2>💰 Bütçe Yönetimi - <span id="budgetProjectName"></span></h2>
-        <button class="modal-close" onclick="closeBudgetModal()">&times;</button>
+        <h2>📁 Bütçe Kategorileri</h2>
+        <button class="modal-close" onclick="closeBudgetCategoriesModal()">&times;</button>
       </div>
       <div class="modal-body">
-        <!-- Budget Settings Section -->
-        <div class="card" style="margin-bottom: 1.5rem;">
-          <h3 style="margin-bottom: 1rem; color: var(--brand-red);">⚙️ Genel Bütçe Ayarları</h3>
-          <form onsubmit="updateProjectBudget(event)" style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; align-items: end;">
-            <div>
-              <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Toplam Proje Bütçesi</label>
-              <input type="number" id="budgetTotalAmount" step="0.01" required class="form-control" placeholder="0.00">
-            </div>
-            <div>
-              <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Para Birimi</label>
-              <select id="budgetCurrency" class="form-control">
-                <option value="TRY">🇹🇷 Türk Lirası (₺)</option>
-                <option value="USD">🇺🇸 Dolar ($)</option>
-                <option value="EUR">🇪🇺 Euro (€)</option>
-              </select>
-            </div>
-            <button type="submit" class="btn btn-primary">💾 Kaydet</button>
-          </form>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <p style="margin: 0; color: var(--text-secondary);">Proje için tanımlanmış bütçe kategorilerini yönetin</p>
+          <button class="btn btn-primary" onclick="openAddCategoryModal()">➕ Kategori Ekle</button>
         </div>
+        <div id="budgetCategoriesList" style="max-height: 600px; overflow-y: auto;">
+          <!-- Categories will be loaded here -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeBudgetCategoriesModal()">Kapat</button>
+      </div>
+    </div>
+  </div>
 
+  <!-- Budget Expenses Modal -->
+  <div id="budgetExpensesModal" class="modal">
+    <div class="modal-content" style="max-width: 1000px;">
+      <div class="modal-header">
+        <h2>💸 Harcama Kayıtları</h2>
+        <button class="modal-close" onclick="closeBudgetExpensesModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <p style="margin: 0; color: var(--text-secondary);">Proje harcamalarını kategorilere göre takip edin</p>
+          <button class="btn btn-primary" onclick="openAddExpenseModal()">➕ Harcama Ekle</button>
+        </div>
+        <div id="budgetExpensesList" style="max-height: 600px; overflow-y: auto;">
+          <!-- Expenses will be loaded here -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeBudgetExpensesModal()">Kapat</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Budget Reports Modal -->
+  <div id="budgetReportsModal" class="modal">
+    <div class="modal-content" style="max-width: 1200px;">
+      <div class="modal-header">
+        <h2>📊 Bütçe Raporları</h2>
+        <button class="modal-close" onclick="closeBudgetReportsModal()">&times;</button>
+      </div>
+      <div class="modal-body">
         <!-- Budget Summary -->
         <div class="card" style="margin-bottom: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-          <h3 style="margin-bottom: 1rem; color: white;">📊 Bütçe Özeti</h3>
+          <h3 style="margin-bottom: 1rem; color: white;">📊 Genel Bütçe Özeti</h3>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
             <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
               <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.5rem;">Toplam Bütçe</div>
@@ -560,33 +584,16 @@
           </div>
         </div>
 
-        <!-- Budget Categories and Expenses in 2 columns -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-          <!-- Budget Categories -->
-          <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-              <h3 style="margin: 0; color: var(--brand-red);">📁 Bütçe Kategorileri</h3>
-              <button class="btn btn-primary" onclick="openAddCategoryModal()">➕ Kategori Ekle</button>
-            </div>
-            <div id="budgetCategoriesList" style="max-height: 500px; overflow-y: auto;">
-              <!-- Categories will be loaded here -->
-            </div>
-          </div>
-
-          <!-- Budget Expenses -->
-          <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-              <h3 style="margin: 0; color: var(--brand-red);">💸 Harcama Kayıtları</h3>
-              <button class="btn btn-primary" onclick="openAddExpenseModal()">➕ Harcama Ekle</button>
-            </div>
-            <div id="budgetExpensesList" style="max-height: 500px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px;">
-              <!-- Expenses will be loaded here -->
-            </div>
+        <!-- Category-wise breakdown -->
+        <div class="card">
+          <h3 style="margin-bottom: 1rem; color: var(--brand-red);">📈 Kategoriye Göre Harcamalar</h3>
+          <div id="categoryBreakdown" style="max-height: 400px; overflow-y: auto;">
+            <!-- Category breakdown will be loaded here -->
           </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeBudgetModal()">Kapat</button>
+        <button class="btn btn-secondary" onclick="closeBudgetReportsModal()">Kapat</button>
       </div>
     </div>
   </div>
@@ -672,7 +679,27 @@
       </div>
       <div class="modal-body">
         <form id="editProjectForm" onsubmit="handleUpdateProject(event)">
-          <!-- Form will be populated by JS -->
+          <div class="form-group">
+            <label for="editProjectName">Proje Adı *</label>
+            <input type="text" id="editProjectName" placeholder="Proje adını girin" required>
+          </div>
+          <div class="form-group">
+            <label for="editProjectDesc">Açıklama</label>
+            <textarea id="editProjectDesc" placeholder="Proje açıklaması" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; resize: vertical; height: 100px;"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="editProjectLocation">Konum *</label>
+            <input type="text" id="editProjectLocation" placeholder="Proje konumu" required>
+          </div>
+          <div class="form-group">
+            <label for="editProjectStatus">Durum *</label>
+            <select id="editProjectStatus" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px;">
+              <option value="active">Aktif</option>
+              <option value="completed">Tamamlandı</option>
+              <option value="on-hold">Beklemede</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Güncelle</button>
         </form>
       </div>
       <div class="modal-footer">
@@ -738,41 +765,20 @@
     
     // Quick budget view functions
     function openCategoriesView() {
-      if (window.openBudgetModal) {
-        window.openBudgetModal(window.currentProjectId);
-        // Focus on categories section after modal opens
-        setTimeout(() => {
-          const categoriesSection = document.getElementById('budgetCategoriesList');
-          if (categoriesSection) {
-            categoriesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        }, 300);
+      if (window.openBudgetCategoriesModal) {
+        window.openBudgetCategoriesModal();
       }
     }
 
     function openExpensesView() {
-      if (window.openBudgetModal) {
-        window.openBudgetModal(window.currentProjectId);
-        // Focus on expenses section after modal opens
-        setTimeout(() => {
-          const expensesSection = document.getElementById('budgetExpensesList');
-          if (expensesSection) {
-            expensesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        }, 300);
+      if (window.openBudgetExpensesModal) {
+        window.openBudgetExpensesModal();
       }
     }
 
     function openReportsView() {
-      if (window.openBudgetModal) {
-        window.openBudgetModal(window.currentProjectId);
-        // Focus on summary section after modal opens
-        setTimeout(() => {
-          const summarySection = document.querySelector('.modal-body');
-          if (summarySection) {
-            summarySection.scrollTop = 0;
-          }
-        }, 300);
+      if (window.openBudgetReportsModal) {
+        window.openBudgetReportsModal();
       }
     }
 

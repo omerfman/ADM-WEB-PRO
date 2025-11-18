@@ -64,10 +64,10 @@ async function loadProjectData() {
 
   // Update page title and header
   document.title = `${currentProject.name} - ADM İnşaat`;
-  document.getElementById('projectName').textContent = currentProject.name;
-  document.getElementById('projectNameBreadcrumb').textContent = currentProject.name;
-  document.getElementById('projectLocation').textContent = `📍 ${currentProject.location || 'Konum belirtilmemiş'}`;
-  document.getElementById('projectDescription').textContent = currentProject.description || 'Açıklama yok';
+  const projectNameEl = document.getElementById('projectName');
+  if (projectNameEl) {
+    projectNameEl.textContent = currentProject.name;
+  }
 
   console.log('✅ Proje bilgileri yüklendi:', currentProject);
 }
@@ -165,7 +165,7 @@ async function loadProjectLogs() {
 
     logsList.innerHTML = logs.map(log => `
       <div class="card" style="margin-bottom: 1rem;">
-        <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 0.75rem;">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
           <div style="flex: 1;">
             <div style="font-weight: 600; color: var(--brand-red); margin-bottom: 0.25rem;">
               ${formatDate(log.date)}
@@ -178,12 +178,22 @@ async function loadProjectLogs() {
             🗑️ Sil
           </button>
         </div>
-        <div style="color: var(--text-primary); line-height: 1.6;">
+        <div style="color: var(--text-primary); line-height: 1.6; margin-bottom: ${log.photoUrl ? '1rem' : '0'};">
           ${log.description || 'Açıklama yok'}
         </div>
         ${log.photoUrl ? `
-          <div style="margin-top: 1rem;">
-            <img src="${log.photoUrl}" alt="Şantiye Fotoğrafı" style="max-width: 100%; height: auto; border-radius: 8px; cursor: pointer;" onclick="window.open('${log.photoUrl}', '_blank')">
+          <div style="margin-top: 1rem; position: relative;">
+            <img src="${log.photoUrl}" alt="Şantiye Fotoğrafı" 
+                 style="width: 100%; max-width: 600px; height: 300px; object-fit: cover; border-radius: 8px; cursor: pointer; display: block;" 
+                 onclick="window.open('${log.photoUrl}', '_blank')">
+            <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
+              <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem;" onclick="window.open('${log.photoUrl}', '_blank')">
+                🔍 Büyüt
+              </button>
+              <a href="${log.photoUrl}" download="santiye-fotograf-${log.id}.jpg" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem; text-decoration: none;">
+                📥 İndir
+              </a>
+            </div>
           </div>
         ` : ''}
       </div>
@@ -522,36 +532,187 @@ function closeAddPaymentModal() {
   document.getElementById('paymentTotalPrice').textContent = '₺0.00';
 }
 
-function openBudgetModalFromProject() {
-  // Check if budget.js is loaded
-  const budgetModal = document.getElementById('budgetModal');
-  if (!budgetModal) {
-    showAlert('Bütçe modülü yüklenemedi', 'danger');
-    return;
-  }
+/**
+ * Budget Modal Functions - Separate modals for better UX
+ */
+async function openBudgetCategoriesModal() {
+  try {
+    const modal = document.getElementById('budgetCategoriesModal');
+    if (!modal) {
+      showAlert('Kategori modalı bulunamadı', 'danger');
+      return;
+    }
 
-  // Call the budget.js openBudgetModal function
-  if (typeof openBudgetModal === 'function') {
-    openBudgetModal(currentProjectId);
-  } else {
-    showAlert('Bütçe fonksiyonu bulunamadı', 'danger');
+    // Set currentProjectBudget for budget.js functions
+    if (typeof window.setBudgetProject === 'function') {
+      window.setBudgetProject(currentProjectId);
+    }
+
+    // Load categories using budget.js function
+    if (typeof loadBudgetCategories === 'function') {
+      await loadBudgetCategories(currentProjectId);
+    }
+
+    modal.classList.add('show');
+  } catch (error) {
+    console.error('❌ Kategori modalı açılırken hata:', error);
+    showAlert('Hata: ' + error.message, 'danger');
   }
+}
+
+function closeBudgetCategoriesModal() {
+  document.getElementById('budgetCategoriesModal').classList.remove('show');
+}
+
+async function openBudgetExpensesModal() {
+  try {
+    const modal = document.getElementById('budgetExpensesModal');
+    if (!modal) {
+      showAlert('Harcama modalı bulunamadı', 'danger');
+      return;
+    }
+
+    // Set currentProjectBudget for budget.js functions
+    if (typeof window.setBudgetProject === 'function') {
+      window.setBudgetProject(currentProjectId);
+    }
+
+    // Load expenses using budget.js function
+    if (typeof loadBudgetExpenses === 'function') {
+      await loadBudgetExpenses(currentProjectId);
+    }
+
+    modal.classList.add('show');
+  } catch (error) {
+    console.error('❌ Harcama modalı açılırken hata:', error);
+    showAlert('Hata: ' + error.message, 'danger');
+  }
+}
+
+function closeBudgetExpensesModal() {
+  document.getElementById('budgetExpensesModal').classList.remove('show');
+}
+
+async function openBudgetReportsModal() {
+  try {
+    const modal = document.getElementById('budgetReportsModal');
+    if (!modal) {
+      showAlert('Rapor modalı bulunamadı', 'danger');
+      return;
+    }
+
+    // Set currentProjectBudget for budget.js functions
+    if (typeof window.setBudgetProject === 'function') {
+      window.setBudgetProject(currentProjectId);
+    }
+
+    // Load summary using budget.js function
+    if (typeof calculateBudgetSummary === 'function') {
+      await calculateBudgetSummary(currentProjectId);
+    }
+
+    // Load category breakdown
+    if (typeof loadCategoryBreakdown === 'function') {
+      await loadCategoryBreakdown(currentProjectId);
+    }
+
+    modal.classList.add('show');
+  } catch (error) {
+    console.error('❌ Rapor modalı açılırken hata:', error);
+    showAlert('Hata: ' + error.message, 'danger');
+  }
+}
+
+function closeBudgetReportsModal() {
+  document.getElementById('budgetReportsModal').classList.remove('show');
+}
+
+function openBudgetModalFromProject() {
+  // Legacy function - redirect to categories modal
+  openBudgetCategoriesModal();
 }
 
 function closeBudgetModal() {
-  document.getElementById('budgetModal').classList.remove('show');
+  // Legacy function - close all budget modals
+  closeBudgetCategoriesModal();
+  closeBudgetExpensesModal();
+  closeBudgetReportsModal();
 }
 
+/**
+ * Open edit project modal
+ */
 function openEditProjectModal() {
-  if (window.openEditProjectModal) {
-    window.openEditProjectModal(currentProjectId);
-  } else {
-    showAlert('Proje düzenleme modülü yüklenmedi', 'danger');
+  if (!currentProject) {
+    showAlert('Proje verisi bulunamadı', 'danger');
+    return;
   }
+
+  // Populate form with current project data
+  document.getElementById('editProjectName').value = currentProject.name || '';
+  document.getElementById('editProjectDesc').value = currentProject.description || '';
+  document.getElementById('editProjectLocation').value = currentProject.location || '';
+  document.getElementById('editProjectStatus').value = currentProject.status || 'active';
+
+  // Show modal
+  document.getElementById('editProjectModal').classList.add('show');
 }
 
+/**
+ * Close edit project modal
+ */
 function closeEditProjectModal() {
   document.getElementById('editProjectModal').classList.remove('show');
+  document.getElementById('editProjectForm').reset();
+}
+
+/**
+ * Handle project update
+ */
+async function handleUpdateProject(event) {
+  event.preventDefault();
+
+  if (!currentProjectId) {
+    showAlert('Proje ID bulunamadı', 'danger');
+    return;
+  }
+
+  try {
+    const name = document.getElementById('editProjectName').value.trim();
+    const description = document.getElementById('editProjectDesc').value.trim();
+    const location = document.getElementById('editProjectLocation').value.trim();
+    const status = document.getElementById('editProjectStatus').value;
+
+    if (!name || !location) {
+      showAlert('Proje adı ve konum gereklidir', 'danger');
+      return;
+    }
+
+    // Import updateDoc
+    const { updateDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+
+    // Update project in Firestore
+    const projectRef = doc(db, 'projects', currentProjectId);
+    await updateDoc(projectRef, {
+      name,
+      description,
+      location,
+      status,
+      updatedAt: serverTimestamp(),
+      updatedBy: auth.currentUser.email
+    });
+
+    showAlert('Proje güncellendi', 'success');
+    closeEditProjectModal();
+
+    // Reload project data
+    await loadProjectData();
+    await loadProjectOverview();
+
+  } catch (error) {
+    console.error('❌ Proje güncellenirken hata:', error);
+    showAlert('Hata: ' + error.message, 'danger');
+  }
 }
 
 /**
@@ -720,7 +881,7 @@ async function handleAddPayment(event) {
 }
 
 // Export functions globally
-window.currentProjectId = currentProjectId;
+window.getCurrentProjectId = () => currentProjectId;
 window.loadProjectOverview = loadProjectOverview;
 window.loadProjectLogs = loadProjectLogs;
 window.loadProjectStocks = loadProjectStocks;
@@ -734,11 +895,18 @@ window.openAddStockModal = openAddStockModal;
 window.closeAddStockModal = closeAddStockModal;
 window.openAddPaymentModal = openAddPaymentModal;
 window.closeAddPaymentModal = closeAddPaymentModal;
+window.openBudgetCategoriesModal = openBudgetCategoriesModal;
+window.closeBudgetCategoriesModal = closeBudgetCategoriesModal;
+window.openBudgetExpensesModal = openBudgetExpensesModal;
+window.closeBudgetExpensesModal = closeBudgetExpensesModal;
+window.openBudgetReportsModal = openBudgetReportsModal;
+window.closeBudgetReportsModal = closeBudgetReportsModal;
 window.openBudgetModalFromProject = openBudgetModalFromProject;
 window.closeBudgetModal = closeBudgetModal;
 window.loadBudgetTabSummary = loadBudgetTabSummary;
 window.openEditProjectModal = openEditProjectModal;
 window.closeEditProjectModal = closeEditProjectModal;
+window.handleUpdateProject = handleUpdateProject;
 window.handleAddLog = handleAddLog;
 window.handleAddStock = handleAddStock;
 window.handleAddPayment = handleAddPayment;

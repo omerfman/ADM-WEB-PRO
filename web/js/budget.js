@@ -12,16 +12,15 @@ import {
 let currentProjectBudget = null;
 
 /**
- * Open budget management modal for a project
+ * Set current project for budget operations
  */
-async function openBudgetModal(projectId) {
+async function setBudgetProject(projectId) {
   try {
     const projectRef = doc(db, 'projects', projectId);
     const projectSnap = await getDoc(projectRef);
 
     if (!projectSnap.exists()) {
-      showAlert('Proje bulunamadı', 'danger');
-      return;
+      throw new Error('Proje bulunamadı');
     }
 
     const project = projectSnap.data();
@@ -32,30 +31,33 @@ async function openBudgetModal(projectId) {
       currency: project.currency || 'TRY'
     };
 
-    // Update modal
-    document.getElementById('budgetProjectName').textContent = project.name;
-    document.getElementById('budgetTotalAmount').value = project.budget || 0;
-    document.getElementById('budgetCurrency').value = project.currency || 'TRY';
-
-    // Load budget data
-    await loadBudgetCategories(projectId);
-    await loadBudgetExpenses(projectId);
-    await calculateBudgetSummary(projectId);
-
-    // Show modal
-    document.getElementById('budgetModal').classList.add('show');
-    console.log(`✅ Budget modal opened for project: ${projectId}`);
+    return currentProjectBudget;
   } catch (error) {
-    console.error('❌ Error opening budget modal:', error);
-    showAlert('Bütçe yüklenirken hata: ' + error.message, 'danger');
+    console.error('❌ Error setting budget project:', error);
+    throw error;
   }
 }
 
 /**
- * Close budget modal
+ * Legacy function - kept for backward compatibility
+ * Use openBudgetCategoriesModal, openBudgetExpensesModal, or openBudgetReportsModal instead
+ */
+async function openBudgetModal(projectId) {
+  console.warn('⚠️ openBudgetModal is deprecated. Use specific modal functions instead.');
+  // Redirect to categories modal as default
+  if (window.openBudgetCategoriesModal) {
+    window.openBudgetCategoriesModal();
+  }
+}
+
+/**
+ * Legacy function - kept for backward compatibility
  */
 function closeBudgetModal() {
-  document.getElementById('budgetModal').classList.remove('show');
+  // Close all budget modals
+  if (window.closeBudgetCategoriesModal) window.closeBudgetCategoriesModal();
+  if (window.closeBudgetExpensesModal) window.closeBudgetExpensesModal();
+  if (window.closeBudgetReportsModal) window.closeBudgetReportsModal();
   currentProjectBudget = null;
 }
 
@@ -330,6 +332,83 @@ async function calculateBudgetSummary(projectId) {
 }
 
 /**
+ * Load category breakdown for reports
+ */
+async function loadCategoryBreakdown(projectId) {
+  try {
+    const container = document.getElementById('categoryBreakdown');
+    if (!container) return;
+
+    // Get categories
+    const categoriesRef = collection(db, 'projects', projectId, 'budget_categories');
+    const categoriesSnap = await getDocs(query(categoriesRef, orderBy('name')));
+
+    // Get all expenses
+    const expensesRef = collection(db, 'projects', projectId, 'budget_expenses');
+    const expensesSnap = await getDocs(expensesRef);
+
+    // Group expenses by category
+    const categoryExpenses = {};
+    expensesSnap.forEach(doc => {
+      const expense = doc.data();
+      const categoryId = expense.categoryId || 'uncategorized';
+      if (!categoryExpenses[categoryId]) {
+        categoryExpenses[categoryId] = [];
+      }
+      categoryExpenses[categoryId].push(expense);
+    });
+
+    if (categoriesSnap.empty) {
+      container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 2rem;">Henüz kategori eklenmemiş</p>';
+      return;
+    }
+
+    let html = '';
+    categoriesSnap.forEach(doc => {
+      const category = doc.data();
+      const categoryId = doc.id;
+      const expenses = categoryExpenses[categoryId] || [];
+      const spent = expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
+      const allocated = category.allocated || 0;
+      const remaining = allocated - spent;
+      const percentage = allocated > 0 ? (spent / allocated * 100) : 0;
+
+      const barColor = percentage > 100 ? '#f44336' : percentage > 80 ? '#ff9800' : '#4caf50';
+
+      html += `
+        <div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--bg-secondary); border-radius: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h4 style="margin: 0; color: var(--text-primary);">${category.name}</h4>
+            <span style="font-weight: bold; color: ${percentage > 100 ? '#f44336' : 'var(--text-primary)'};">${percentage.toFixed(1)}%</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 0.75rem; font-size: 0.9rem;">
+            <div>
+              <div style="color: var(--text-secondary); font-size: 0.85rem;">Planlanan</div>
+              <div style="font-weight: 600;">₺${allocated.toLocaleString('tr-TR')}</div>
+            </div>
+            <div>
+              <div style="color: var(--text-secondary); font-size: 0.85rem;">Harcanan</div>
+              <div style="font-weight: 600; color: ${spent > 0 ? '#ff9800' : 'inherit'}">₺${spent.toLocaleString('tr-TR')}</div>
+            </div>
+            <div>
+              <div style="color: var(--text-secondary); font-size: 0.85rem;">Kalan</div>
+              <div style="font-weight: 600; color: ${remaining >= 0 ? '#4caf50' : '#f44336'}">₺${remaining.toLocaleString('tr-TR')}</div>
+            </div>
+          </div>
+          <div style="background: var(--bg-tertiary); height: 8px; border-radius: 4px; overflow: hidden;">
+            <div style="background: ${barColor}; height: 100%; width: ${Math.min(percentage, 100)}%; transition: width 0.3s;"></div>
+          </div>
+        </div>
+      `;
+    });
+
+    container.innerHTML = html;
+  } catch (error) {
+    console.error('❌ Error loading category breakdown:', error);
+  }
+}
+
+/**
  * Add budget category
  */
 async function addBudgetCategory(event) {
@@ -577,9 +656,14 @@ function showAlert(message, type = 'info') {
 }
 
 // Export functions to global scope
+window.setBudgetProject = setBudgetProject;
 window.openBudgetModal = openBudgetModal;
 window.closeBudgetModal = closeBudgetModal;
 window.updateProjectBudget = updateProjectBudget;
+window.loadBudgetCategories = loadBudgetCategories;
+window.loadBudgetExpenses = loadBudgetExpenses;
+window.calculateBudgetSummary = calculateBudgetSummary;
+window.loadCategoryBreakdown = loadCategoryBreakdown;
 window.openAddCategoryModal = openAddCategoryModal;
 window.closeAddCategoryModal = closeAddCategoryModal;
 window.addBudgetCategory = addBudgetCategory;
