@@ -4,7 +4,7 @@
 
 const db = window.db;
 const auth = window.auth;
-const { collection, query, where, getDocs, addDoc, deleteDoc, doc } = window.firestore;
+const { collection, query, where, getDocs, addDoc, deleteDoc, doc, getDoc, updateDoc } = window.firestore;
 
 // Open create company modal
 function openCreateCompanyModal() {
@@ -82,9 +82,13 @@ async function loadCompanies() {
     
     if (window.userRole !== 'super_admin') {
       console.log('❌ Only super_admin can view all companies');
-      const companiesList = document.querySelector('.companies-list');
-      if (companiesList) {
-        companiesList.innerHTML = '<p style="text-align: center; color: #f44336;">❌ Yalnızca super admin şirketleri görüntüleyebilir</p>';
+      const companiesSection = document.getElementById('companiesSection');
+      if (companiesSection) {
+        const companiesList = companiesSection.querySelector('#companiesList') || 
+                             companiesSection.querySelector('.companies-list');
+        if (companiesList) {
+          companiesList.innerHTML = '<p style="text-align: center; color: #f44336;">❌ Yalnızca super admin şirketleri görüntüleyebilir</p>';
+        }
       }
       return;
     }
@@ -107,9 +111,13 @@ async function loadCompanies() {
     renderCompaniesList(companies);
   } catch (error) {
     console.error('❌ Error loading companies:', error);
-    const companiesList = document.querySelector('.companies-list');
-    if (companiesList) {
-      companiesList.innerHTML = '<p style="text-align: center; color: #f44336;">Şirketler yüklenirken hata: ' + error.message + '</p>';
+    const companiesSection = document.getElementById('companiesSection');
+    if (companiesSection) {
+      const companiesList = companiesSection.querySelector('#companiesList') || 
+                           companiesSection.querySelector('.companies-list');
+      if (companiesList) {
+        companiesList.innerHTML = '<p style="text-align: center; color: #f44336;">Şirketler yüklenirken hata: ' + error.message + '</p>';
+      }
     }
   }
 }
@@ -119,9 +127,16 @@ function renderCompaniesList(companies) {
   const companiesSection = document.getElementById('companiesSection');
   if (!companiesSection) return;
 
-  const companiesList = companiesSection.querySelector('.companies-list');
+  // companiesList is inside companiesSection in new dashboard.html
+  let companiesList = companiesSection.querySelector('#companiesList');
+  
+  // Fallback to .companies-list class if #companiesList not found
   if (!companiesList) {
-    console.warn('⚠️ companies-list element not found');
+    companiesList = companiesSection.querySelector('.companies-list');
+  }
+  
+  if (!companiesList) {
+    console.warn('⚠️ companies list container not found');
     return;
   }
 
@@ -497,24 +512,35 @@ async function handleAddCompanyUser(event, companyId) {
   }
   
   try {
-    console.log('📤 Creating user via Firestore for company:', companyId);
+    console.log('📤 Creating user via backend API for company:', companyId);
     
-    // Create user document in Firestore
-    const userRef = await addDoc(collection(db, 'users'), {
-      email: email,
-      fullName: fullName,
-      role: role,
-      companyId: companyId,
-      createdAt: new Date(),
-      createdBy: auth.currentUser.uid,
-      status: 'active'
+    const idToken = await auth.currentUser.getIdToken();
+    const response = await fetch('/api/users', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + idToken
+      },
+      body: JSON.stringify({
+        email: email,
+        password: password,
+        fullName: fullName,
+        role: role,
+        companyId: companyId
+      })
     });
     
-    console.log('✅ User created in Firestore:', userRef.id);
+    const data = await response.json();
+    console.log('📥 API Response:', data);
     
-    // Note: In production, you should also create user in Firebase Auth via backend API
-    // For now, we're just creating in Firestore
+    if (!response.ok) {
+      const errorMsg = data.error || data.message || 'Bilinmeyen hata';
+      console.error('❌ Error response:', errorMsg);
+      alert('Hata: ' + errorMsg);
+      return;
+    }
     
+    console.log('✅ User created via API:', data.id);
     alert('✅ Kullanıcı başarıyla oluşturuldu');
     
     // Close modal

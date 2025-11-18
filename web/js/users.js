@@ -62,7 +62,10 @@ async function handleCreateUser(event) {
     console.log('   Role:', role);
     console.log('   Company:', window.userCompanyId);
 
-    const response = await fetch('/api/users', {
+    // Get API base URL from config or use default
+    const apiBaseUrl = window.API_BASE_URL || '';
+    
+    const response = await fetch(`${apiBaseUrl}/api/users`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -92,7 +95,9 @@ async function handleCreateUser(event) {
     loadUsers(); // Refresh users list
   } catch (error) {
     console.error('❌ Error creating user:', error);
-    alert('Hata: ' + error.message);
+    
+    // Fallback: If API is not available, show helpful message
+    alert('Backend API bağlantı hatası: ' + error.message + '\n\nNot: Kullanıcı oluşturma işlemi için backend API\'nin çalışıyor olması gerekir.');
   }
 }
 
@@ -106,9 +111,13 @@ async function loadUsers() {
 
     if (!companyId) {
       console.log('❌ No company ID for user');
-      const usersList = document.querySelector('.users-list');
-      if (usersList) {
-        usersList.innerHTML = '<p style="text-align: center; color: #999;">Şirket bilgisi bulunamadı</p>';
+      const usersSection = document.getElementById('usersSection');
+      if (usersSection) {
+        const usersList = usersSection.querySelector('#usersList') || 
+                         usersSection.querySelector('.users-list');
+        if (usersList) {
+          usersList.innerHTML = '<p style="text-align: center; color: #999;">Şirket bilgisi bulunamadı</p>';
+        }
       }
       return;
     }
@@ -134,9 +143,13 @@ async function loadUsers() {
     renderUsersList(users);
   } catch (error) {
     console.error('❌ Error loading users:', error);
-    const usersList = document.querySelector('.users-list');
-    if (usersList) {
-      usersList.innerHTML = '<p style="text-align: center; color: #f44336;">Kullanıcılar yüklenirken hata: ' + error.message + '</p>';
+    const usersSection = document.getElementById('usersSection');
+    if (usersSection) {
+      const usersList = usersSection.querySelector('#usersList') || 
+                       usersSection.querySelector('.users-list');
+      if (usersList) {
+        usersList.innerHTML = '<p style="text-align: center; color: #f44336;">Kullanıcılar yüklenirken hata: ' + error.message + '</p>';
+      }
     }
   }
 }
@@ -146,9 +159,16 @@ function renderUsersList(users) {
   const usersSection = document.getElementById('usersSection');
   if (!usersSection) return;
 
-  const usersList = usersSection.querySelector('.users-list');
+  // usersList is inside usersSection in new dashboard.html
+  let usersList = usersSection.querySelector('#usersList');
+  
+  // Fallback to .users-list class if #usersList not found
   if (!usersList) {
-    console.warn('⚠️ users-list element not found');
+    usersList = usersSection.querySelector('.users-list');
+  }
+  
+  if (!usersList) {
+    console.warn('⚠️ users list container not found');
     return;
   }
 

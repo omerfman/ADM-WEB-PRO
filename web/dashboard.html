@@ -3,124 +3,152 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ADM İnşaat Proje Yönetim Sistemi - Yönlendiriliyor...</title>
-  <style>
-    body {
-      font-family: 'Inter', 'Segoe UI', sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      margin: 0;
-      background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
-    }
-    .redirect-container {
-      text-align: center;
-      padding: 2rem;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-    }
-    .redirect-container h1 {
-      color: #d32f2f;
-      margin-bottom: 1rem;
-    }
-    .redirect-container p {
-      color: #666;
-      margin-bottom: 1.5rem;
-    }
-    .spinner {
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #d32f2f;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      margin: 0 auto;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-  </style>
-  <script>
-    // Redirect to login page
-    setTimeout(() => {
-      window.location.href = 'login.html';
-    }, 500);
-  </script>
+  <title>Dashboard - ADM İnşaat Proje Yönetim Sistemi</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div class="redirect-container">
-    <h1>🏗️ ADM İnşaat</h1>
-    <p>Giriş sayfasına yönlendiriliyorsunuz...</p>
-    <div class="spinner"></div>
-  </div>
-</body>
-</html>
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="assets/adm_logo.png" alt="ADM Studio" class="sidebar-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+        <h1 style="display: none;">🏗️ ADM İnşaat</h1>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-section="projects" onclick="switchSection('projects')">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Projeler</span>
+        </a>
+        <a href="#" class="nav-item hidden" id="employeesNavBtn" data-section="employees" onclick="switchSection('employees')">
+          <span class="nav-icon">👷</span>
+          <span class="nav-text">Çalışanlar</span>
+        </a>
+        <a href="#" class="nav-item hidden" id="activityNavBtn" data-section="activity" onclick="switchSection('activity')">
+          <span class="nav-icon">📋</span>
+          <span class="nav-text">Faaliyet Kayıtları</span>
+        </a>
+        <a href="#" class="nav-item hidden" id="companiesNavBtn" data-section="companies" onclick="switchSection('companies')">
+          <span class="nav-icon">🏢</span>
+          <span class="nav-text">Şirketler</span>
+        </a>
+        <a href="#" class="nav-item hidden" id="usersNavBtn" data-section="users" onclick="switchSection('users')">
+          <span class="nav-icon">👥</span>
+          <span class="nav-text">Kullanıcılar</span>
+        </a>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">👤</div>
+          <div class="user-details">
+            <div class="user-name" id="sidebarUserName">Kullanıcı</div>
+            <div class="user-role" id="sidebarUserRole">Rol</div>
+          </div>
+        </div>
+        <div class="sidebar-actions">
+          <button id="sidebarThemeToggle" class="icon-btn" title="Dark/Light Mode">🌙</button>
+          <button id="logoutBtn" class="icon-btn" title="Çıkış Yap" onclick="handleLogout()">🚪</button>
+        </div>
+      </div>
+    </aside>
 
-  <div id="alertContainer"></div>
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <div class="topbar">
+        <button class="menu-toggle" id="menuToggle">☰</button>
+        <h2 id="pageTitle">Projeler</h2>
+        <div class="topbar-actions">
+          <span id="userNameDisplay" class="topbar-user"></span>
+        </div>
+      </div>
 
-  <!-- Login Form -->
-  <div id="loginContainer" class="login-container">
-    <h2>Giriş Yap</h2>
-    <form id="loginForm" onsubmit="handleLogin(event)">
-      <div class="form-group">
-        <label for="email">E-posta</label>
-        <input type="email" id="email" placeholder="örn: admin@adm.com" required>
-      </div>
-      <div class="form-group">
-        <label for="password">Şifre</label>
-        <input type="password" id="password" placeholder="Şifrenizi girin" required>
-      </div>
-      <button type="submit" class="btn btn-primary">Giriş Yap</button>
-    </form>
-  </div>
+      <div id="alertContainer"></div>
 
-  <!-- Dashboard (Hidden by default) -->
-  <div id="dashboard" class="container hidden">
-    <h2>Hoşgeldiniz, <span id="userNameDisplay"></span>!</h2>
-    <p id="userRoleDisplay" style="color: var(--text-secondary); margin-bottom: 1.5rem;"></p>
-    
-    <!-- Navigation Tabs for Different Roles -->
-    <div style="border-bottom: 2px solid var(--border-color); margin-bottom: 2rem; display: flex; gap: 0;">
-      <button class="dashboard-tab active" data-tab="projects" onclick="switchDashboardTab('projects')">📊 Projeler</button>
-      <button class="dashboard-tab hidden" id="usersTabBtn" data-tab="users" onclick="switchDashboardTab('users')">👥 Kullanıcılar</button>
-      <button class="dashboard-tab hidden" id="companiesTabBtn" data-tab="companies" onclick="switchDashboardTab('companies')">🏢 Şirketler</button>
-    </div>
+      <!-- Projects Section -->
+      <section id="projectsSection" class="content-section">
+        <div class="section-header">
+          <h3>Tüm Projeler</h3>
+          <button class="btn btn-primary" onclick="openCreateProjectModal()">+ Yeni Proje</button>
+        </div>
+        <div id="projectsList" class="dashboard-grid">
+          <!-- Projects will be loaded here -->
+        </div>
+      </section>
 
-    <!-- Projects Section -->
-    <section id="projectsSection" class="dashboard-tab-content" style="margin-top: 2rem;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-        <h3>Projeler</h3>
-        <button class="btn btn-primary" onclick="openCreateProjectModal()" style="width: auto;">+ Yeni Proje</button>
-      </div>
-      <div id="projectsList" class="dashboard-grid">
-        <!-- Projects will be loaded here -->
-      </div>
-    </section>
+      <!-- Companies Section (Super Admin Only) -->
+      <section id="companiesSection" class="content-section hidden">
+        <div class="section-header">
+          <h3>Şirketler</h3>
+          <button class="btn btn-primary" onclick="openCreateCompanyModal()">+ Yeni Şirket</button>
+        </div>
+        <div id="companiesList" class="dashboard-grid">
+          <!-- Companies will be loaded here -->
+        </div>
+      </section>
 
-    <!-- Users Management Section (Company Admin) -->
-    <section id="usersSection" class="dashboard-tab-content hidden" style="margin-top: 2rem;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-        <h3>Kullanıcılar</h3>
-        <button class="btn btn-primary" onclick="openCreateUserModal()" style="width: auto;">+ Yeni Kullanıcı</button>
-      </div>
-      <div class="users-list" style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
-        <!-- Users will be loaded here -->
-      </div>
-    </section>
+      <!-- Users Section (Company Admin) -->
+      <section id="usersSection" class="content-section hidden">
+        <div class="section-header">
+          <h3>Kullanıcılar</h3>
+          <button class="btn btn-primary" onclick="openCreateUserModal()">+ Yeni Kullanıcı</button>
+        </div>
+        <div id="usersList" class="dashboard-grid">
+          <!-- Users will be loaded here -->
+        </div>
+      </section>
 
-    <!-- Companies Management Section (Super Admin) -->
-    <section id="companiesSection" class="dashboard-tab-content hidden" style="margin-top: 2rem;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-        <h3>Şirketler</h3>
-        <button class="btn btn-primary" onclick="openCreateCompanyModal()" style="width: auto;">+ Yeni Şirket</button>
-      </div>
-      <div class="companies-list" style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
-        <!-- Companies will be loaded here -->
-      </div>
-    </section>
+      <!-- Employees Section (Company Admin - Employee Management) -->
+      <section id="employeesSection" class="content-section hidden">
+        <div class="section-header">
+          <h3>Çalışanlar</h3>
+          <button class="btn btn-primary" onclick="openCreateEmployeeModal()">+ Yeni Çalışan</button>
+        </div>
+        <div class="filter-bar" style="margin-bottom: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+          <input type="text" id="employeeSearchInput" placeholder="İsim, email ara..." style="flex: 1; min-width: 200px; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px;">
+          <select id="employeeRoleFilter" style="padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px;">
+            <option value="">Tüm Roller</option>
+            <option value="user">Kullanıcı</option>
+            <option value="company_admin">Şirket Admin</option>
+          </select>
+          <select id="employeeStatusFilter" style="padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px;">
+            <option value="">Tüm Durumlar</option>
+            <option value="active">Aktif</option>
+            <option value="inactive">Pasif</option>
+          </select>
+        </div>
+        <div id="employeesList" class="dashboard-grid">
+          <!-- Employees will be loaded here -->
+        </div>
+      </section>
+
+      <!-- Activity Logs Section -->
+      <section id="activitySection" class="content-section hidden">
+        <div class="section-header">
+          <h3>Faaliyet Kayıtları</h3>
+        </div>
+        <div class="filter-bar" style="margin-bottom: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+          <input type="date" id="activityDateFrom" style="padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px;">
+          <input type="date" id="activityDateTo" style="padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px;">
+          <select id="activityTypeFilter" style="padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px;">
+            <option value="">Tüm İşlemler</option>
+            <option value="CREATE_PROJECT">Proje Oluşturma</option>
+            <option value="UPDATE_PROJECT">Proje Güncelleme</option>
+            <option value="DELETE_PROJECT">Proje Silme</option>
+            <option value="CREATE_USER">Kullanıcı Oluşturma</option>
+            <option value="UPDATE_USER">Kullanıcı Güncelleme</option>
+            <option value="DELETE_USER">Kullanıcı Silme</option>
+            <option value="UPLOAD_PHOTO">Fotoğraf Yükleme</option>
+          </select>
+          <button class="btn btn-secondary" onclick="filterActivityLogs()" style="width: auto;">Filtrele</button>
+          <button class="btn btn-secondary" onclick="clearActivityFilters()" style="width: auto;">Temizle</button>
+        </div>
+        <div id="activityLogsList" style="max-height: 600px; overflow-y: auto;">
+          <!-- Activity logs will be loaded here -->
+        </div>
+      </section>
+    </main>
   </div>
 
   <!-- Project Detail Modal -->
@@ -136,9 +164,9 @@
         
         <!-- Tabs -->
         <div style="border-bottom: 2px solid var(--border-color); margin: 1.5rem 0 1rem 0;">
-          <button class="tab-btn" data-tab="logs" style="background: none; border: none; padding: 0.75rem 1rem; cursor: pointer; font-weight: 500; color: var(--primary-color);" onclick="switchTab('logs')">📋 Şantiye Günlüğü</button>
-          <button class="tab-btn" data-tab="stocks" style="background: none; border: none; padding: 0.75rem 1rem; cursor: pointer; font-weight: 500;" onclick="switchTab('stocks')">📦 Stok</button>
-          <button class="tab-btn" data-tab="payments" style="background: none; border: none; padding: 0.75rem 1rem; cursor: pointer; font-weight: 500;" onclick="switchTab('payments')">💰 Hakediş</button>
+          <button class="tab-btn active" data-tab="logs" onclick="switchTab('logs')">📋 Şantiye Günlüğü</button>
+          <button class="tab-btn" data-tab="stocks" onclick="switchTab('stocks')">📦 Stok</button>
+          <button class="tab-btn" data-tab="payments" onclick="switchTab('payments')">💰 Hakediş</button>
         </div>
 
         <!-- Tab Contents -->
@@ -351,6 +379,49 @@
     </div>
   </div>
 
+  <!-- Create Employee Modal (same as user but with additional fields) -->
+  <div id="createEmployeeModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Yeni Çalışan Ekle</h2>
+        <button class="modal-close" onclick="closeCreateEmployeeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="createEmployeeForm" onsubmit="handleCreateEmployee(event)">
+          <div class="form-group">
+            <label for="empEmail">E-posta *</label>
+            <input type="email" id="empEmail" placeholder="calisan@example.com" required>
+          </div>
+          <div class="form-group">
+            <label for="empPassword">Şifre *</label>
+            <input type="password" id="empPassword" placeholder="En az 6 karakter" required minlength="6">
+          </div>
+          <div class="form-group">
+            <label for="empFullName">Ad Soyad *</label>
+            <input type="text" id="empFullName" placeholder="Tam adı girin" required>
+          </div>
+          <div class="form-group">
+            <label for="empRole">Yetki Seviyesi *</label>
+            <select id="empRole" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px;">
+              <option value="">Seçiniz</option>
+              <option value="user">Standart Kullanıcı</option>
+              <option value="company_admin">Şirket Yöneticisi</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="empPhone">Telefon</label>
+            <input type="tel" id="empPhone" placeholder="+90 XXX XXX XXXX">
+          </div>
+          <div class="form-group">
+            <label for="empPosition">Pozisyon</label>
+            <input type="text" id="empPosition" placeholder="Örn: Şantiye Şefi, Mühendis">
+          </div>
+          <button type="submit" class="btn btn-primary">Çalışan Ekle</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <!-- Create Company Modal (Super Admin) -->
   <div id="createCompanyModal" class="modal">
     <div class="modal-content">
@@ -382,19 +453,19 @@
     </div>
   </div>
 
-  <!-- Firebase SDK (modular v10.7.1) -->
-  <!-- No longer needed - using ES modules in firebase-config.js -->
-
-  <!-- Firebase Config (loads first - global exports) -->
+  <!-- Firebase Config -->
   <script type="module" src="js/firebase-config.js"></script>
   
-  <!-- Debug Console (for testing - remove in production) -->
+  <!-- API Config -->
+  <script src="js/api-config.js"></script>
+  
+  <!-- Debug Console -->
   <script type="module" src="js/debug.js"></script>
   
-  <!-- Auth Module (exports to window) -->
+  <!-- Auth Module -->
   <script type="module" src="js/auth.js"></script>
   
-  <!-- Projects Module (exports to window) -->
+  <!-- Projects Module -->
   <script type="module" src="js/projects.js"></script>
   
   <!-- Users Management Module -->
@@ -403,6 +474,12 @@
   <!-- Companies Management Module -->
   <script type="module" src="js/companies.js"></script>
   
+  <!-- Employees Management Module -->
+  <script type="module" src="js/employees.js"></script>
+  
+  <!-- Activity Logs Module -->
+  <script type="module" src="js/activity.js"></script>
+  
   <!-- Additional Modules -->
   <script type="module" src="js/upload.js"></script>
   <script type="module" src="js/audit.js"></script>
@@ -410,7 +487,76 @@
   <script type="module" src="js/security-monitoring.js"></script>
   <script type="module" src="js/config-vercel.js"></script>
   
-  <!-- App Initialization (last, uses window exports) -->
+  <!-- Dashboard App Initialization -->
   <script type="module" src="js/app.js"></script>
+
+  <!-- Dashboard Specific Scripts -->
+  <script>
+    // Section switching
+    function switchSection(section) {
+      // Hide all sections
+      document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
+      
+      // Show selected section
+      document.getElementById(section + 'Section').classList.remove('hidden');
+      
+      // Update navigation active state
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      document.querySelector(`[data-section="${section}"]`).classList.add('active');
+      
+      // Update page title
+      const titles = {
+        'projects': 'Projeler',
+        'companies': 'Şirketler',
+        'users': 'Kullanıcılar'
+      };
+      document.getElementById('pageTitle').textContent = titles[section] || section;
+    }
+
+    // Tab switching in project modal
+    function switchTab(tab) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      
+      // Show selected tab
+      document.getElementById(tab + '-tab').classList.remove('hidden');
+      document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+    }
+
+    // Mobile menu toggle
+    document.getElementById('menuToggle').addEventListener('click', function() {
+      document.querySelector('.sidebar').classList.toggle('sidebar-open');
+    });
+
+    // Theme toggle
+    const themeToggle = document.getElementById('sidebarThemeToggle');
+    const currentTheme = localStorage.getItem('theme') || 'light';
+    
+    if (currentTheme === 'dark') {
+      document.body.classList.add('dark-mode');
+      themeToggle.textContent = '☀️';
+    }
+    
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      const isDark = document.body.classList.contains('dark-mode');
+      themeToggle.textContent = isDark ? '☀️' : '🌙';
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+
+    // Close sidebar on mobile when clicking outside
+    document.addEventListener('click', function(event) {
+      const sidebar = document.querySelector('.sidebar');
+      const menuToggle = document.getElementById('menuToggle');
+      
+      if (window.innerWidth <= 768 && 
+          sidebar.classList.contains('sidebar-open') && 
+          !sidebar.contains(event.target) && 
+          event.target !== menuToggle) {
+        sidebar.classList.remove('sidebar-open');
+      }
+    });
+  </script>
 </body>
 </html>

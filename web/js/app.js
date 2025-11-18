@@ -60,6 +60,51 @@ function switchDashboardTab(tabName) {
   }
 }
 
+// ========== SECTION SWITCHING (for new dashboard with sidebar) ==========
+function switchSection(section) {
+  // Hide all sections
+  document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
+  
+  // Show selected section
+  const sectionElement = document.getElementById(section + 'Section');
+  if (sectionElement) {
+    sectionElement.classList.remove('hidden');
+  }
+  
+  // Update navigation active state
+  document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+  const navItem = document.querySelector(`[data-section="${section}"]`);
+  if (navItem) {
+    navItem.classList.add('active');
+  }
+  
+  // Update page title
+  const titles = {
+    'projects': 'Projeler',
+    'employees': 'Çalışanlar',
+    'activity': 'Faaliyet Kayıtları',
+    'companies': 'Şirketler',
+    'users': 'Kullanıcılar'
+  };
+  const pageTitle = document.getElementById('pageTitle');
+  if (pageTitle) {
+    pageTitle.textContent = titles[section] || section;
+  }
+  
+  // Load section-specific data
+  if (section === 'employees' && typeof loadEmployees !== 'undefined') {
+    loadEmployees();
+  } else if (section === 'activity' && typeof loadActivityLogs !== 'undefined') {
+    loadActivityLogs();
+  } else if (section === 'users' && typeof loadUsers !== 'undefined') {
+    loadUsers();
+  } else if (section === 'companies' && typeof loadCompanies !== 'undefined') {
+    loadCompanies();
+  } else if (section === 'projects' && typeof loadProjects !== 'undefined') {
+    loadProjects();
+  }
+}
+
 // ========== MODAL HELPERS (Global) ==========
 function closeModal(modalId) {
   const modal = document.getElementById(modalId);
@@ -160,6 +205,7 @@ console.log('✅ app.js loaded - auth state listener will trigger on firebase-co
 
 // Export functions to window for global access
 window.switchDashboardTab = switchDashboardTab;
+window.switchSection = switchSection;
 window.toggleTheme = toggleTheme;
 window.closeModal = closeModal;
 window.openModal = openModal;

@@ -12,9 +12,12 @@ async function handleLogin(event) {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     console.log('✅ Kullanıcı giriş yaptı:', userCredential.user.email);
-    showAlert('Giriş başarılı!', 'success');
-    await loadUserData();
-    showDashboard();
+    showAlert('Giriş başarılı! Yönlendiriliyor...', 'success');
+    
+    // Redirect to dashboard after successful login
+    setTimeout(() => {
+      window.location.href = 'dashboard.html';
+    }, 500);
   } catch (error) {
     console.error('❌ Login hatası:', error.message);
     showAlert('Giriş başarısız: ' + error.message, 'danger');
@@ -26,37 +29,27 @@ async function handleLogout() {
     await signOut(auth);
     console.log('✅ Kullanıcı çıkış yaptı');
     showAlert('Çıkış yapıldı', 'success');
-    showLoginForm();
+    
+    // Redirect to login page
+    setTimeout(() => {
+      window.location.href = 'login.html';
+    }, 500);
   } catch (error) {
     console.error('❌ Logout hatası:', error.message);
   }
-}
-
-function showLoginForm() {
-  document.getElementById('loginContainer').classList.remove('hidden');
-  document.getElementById('dashboard').classList.add('hidden');
-  
-  document.getElementById('navLogin').classList.remove('hidden');
-  document.getElementById('navLogout').classList.add('hidden');
-  document.getElementById('navDashboard').classList.add('hidden');
-  document.getElementById('navProjects').classList.add('hidden');
-}
-
-function showDashboard() {
-  document.getElementById('loginContainer').classList.add('hidden');
-  document.getElementById('dashboard').classList.remove('hidden');
-  
-  document.getElementById('navLogin').classList.add('hidden');
-  document.getElementById('navLogout').classList.remove('hidden');
-  document.getElementById('navDashboard').classList.remove('hidden');
-  document.getElementById('navProjects').classList.remove('hidden');
 }
 
 async function loadUserData() {
   const user = auth.currentUser;
   if (user) {
     const email = user.email.split('@')[0];
-    document.getElementById('userNameDisplay').textContent = email;
+    
+    // Update user name displays (both exist in dashboard)
+    const userNameDisplay = document.getElementById('userNameDisplay');
+    const sidebarUserName = document.getElementById('sidebarUserName');
+    
+    if (userNameDisplay) userNameDisplay.textContent = email;
+    if (sidebarUserName) sidebarUserName.textContent = email;
     
     // Get user role from custom claims
     const idTokenResult = await user.getIdTokenResult(true);
@@ -71,24 +64,35 @@ async function loadUserData() {
       'company_admin': 'Şirket Admin',
       'user': 'Kullanıcı'
     };
-    document.getElementById('userRoleDisplay').textContent = `Rol: ${roleDisplay[role] || role}`;
     
-    // Show/hide admin tabs based on role
-    const usersTabBtn = document.getElementById('usersTabBtn');
-    const companiesTabBtn = document.getElementById('companiesTabBtn');
-    
-    // Company admin can see users tab
-    if (role === 'company_admin') {
-      usersTabBtn.classList.remove('hidden');
-    } else {
-      usersTabBtn.classList.add('hidden');
+    const sidebarUserRole = document.getElementById('sidebarUserRole');
+    if (sidebarUserRole) {
+      sidebarUserRole.textContent = roleDisplay[role] || role;
     }
     
-    // Super admin can see companies tab
+    // Show/hide admin navigation items based on role
+    const employeesNavBtn = document.getElementById('employeesNavBtn');
+    const activityNavBtn = document.getElementById('activityNavBtn');
+    const usersNavBtn = document.getElementById('usersNavBtn');
+    const companiesNavBtn = document.getElementById('companiesNavBtn');
+    
+    // Everyone can see activity logs
+    if (activityNavBtn) {
+      activityNavBtn.classList.remove('hidden');
+    }
+    
+    // Company admin can see employees
+    if (role === 'company_admin') {
+      if (employeesNavBtn) employeesNavBtn.classList.remove('hidden');
+      if (activityNavBtn) activityNavBtn.classList.remove('hidden');
+    }
+    
+    // Super admin can see everything
     if (role === 'super_admin') {
-      companiesTabBtn.classList.remove('hidden');
-    } else {
-      companiesTabBtn.classList.add('hidden');
+      if (employeesNavBtn) employeesNavBtn.classList.remove('hidden');
+      if (activityNavBtn) activityNavBtn.classList.remove('hidden');
+      if (usersNavBtn) usersNavBtn.classList.remove('hidden');
+      if (companiesNavBtn) companiesNavBtn.classList.remove('hidden');
     }
     
     // Store role and company for later use
@@ -97,21 +101,42 @@ async function loadUserData() {
   }
 }
 
-// Auth state listener
+// Auth state listener - checks if user is logged in
 onAuthStateChanged(auth, async (user) => {
+  const isLoginPage = window.location.pathname.includes('login.html');
+  const isDashboardPage = window.location.pathname.includes('dashboard.html');
+  
   if (user) {
     console.log('👤 Kullanıcı oturum açık:', user.email);
-    await loadUserData();
-    showDashboard();
-    loadProjects();
+    
+    // If on login page and logged in, redirect to dashboard
+    if (isLoginPage) {
+      window.location.href = 'dashboard.html';
+      return;
+    }
+    
+    // Load user data if on dashboard
+    if (isDashboardPage) {
+      await loadUserData();
+      // Load projects after user data is ready
+      if (typeof loadProjects === 'function') {
+        loadProjects();
+      }
+    }
   } else {
     console.log('👤 Kullanıcı oturum kapalı');
-    showLoginForm();
+    
+    // If on dashboard and not logged in, redirect to login
+    if (isDashboardPage) {
+      window.location.href = 'login.html';
+    }
   }
 });
 
 function showAlert(message, type = 'info') {
   const alertContainer = document.getElementById('alertContainer');
+  if (!alertContainer) return;
+  
   const alertDiv = document.createElement('div');
   alertDiv.className = `alert alert-${type} show`;
   alertDiv.textContent = message;
@@ -127,7 +152,5 @@ function showAlert(message, type = 'info') {
 // Global window exports
 window.handleLogin = handleLogin;
 window.handleLogout = handleLogout;
-window.showLoginForm = showLoginForm;
-window.showDashboard = showDashboard;
 window.showAlert = showAlert;
 window.loadUserData = loadUserData;

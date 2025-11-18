@@ -183,6 +183,20 @@ async function loadProjectLogs(projectId) {
       const log = docSnap.data();
       const logItem = document.createElement('div');
       logItem.style.cssText = 'padding: 1rem; border-bottom: 1px solid var(--border-color); background: var(--card-bg); margin-bottom: 0.5rem; border-radius: 4px;';
+      
+      // Photo display
+      let photoHtml = '';
+      if (log.photoUrl) {
+        photoHtml = `
+          <div style="margin-top: 0.75rem;">
+            <img src="${log.photoUrl}" 
+                 alt="Şantiye Fotoğrafı" 
+                 style="max-width: 200px; max-height: 200px; border-radius: 8px; cursor: pointer; border: 2px solid var(--border-color);"
+                 onclick="window.open('${log.photoUrl}', '_blank')">
+          </div>
+        `;
+      }
+      
       logItem.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: start;">
           <div>
@@ -195,6 +209,7 @@ async function loadProjectLogs(projectId) {
           <span style="color: #666;">👤 ${log.createdBy || 'Bilinmiyor'}</span> • 
           <span style="color: #999;">${new Date(log.createdAt?.toDate?.() || new Date()).toLocaleDateString('tr-TR')} ${new Date(log.createdAt?.toDate?.() || new Date()).toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'})}</span>
         </div>
+        ${photoHtml}
       `;
       logsList.appendChild(logItem);
     });
@@ -436,6 +451,21 @@ async function handleAddLog(event) {
       return;
     }
 
+    let photoUrl = null;
+
+    // Upload photo to ImgBB if selected
+    if (photoFile) {
+      try {
+        showAlert('Fotoğraf yükleniyor...', 'warning');
+        photoUrl = await window.uploadPhotoToImgBB(photoFile, currentProjectId);
+        console.log('✅ Photo uploaded to ImgBB:', photoUrl);
+      } catch (error) {
+        console.error('❌ Photo upload failed:', error);
+        showAlert('Fotoğraf yüklenemedi, günlük fotoğrafsız kaydedilecek', 'warning');
+        // Continue without photo
+      }
+    }
+
     // Create log entry
     const logsRef = collection(db, 'projects', currentProjectId, 'logs');
     await addDoc(logsRef, {
@@ -444,11 +474,11 @@ async function handleAddLog(event) {
       createdBy: worker,
       userId: user.uid,
       createdAt: serverTimestamp(),
-      photoUrl: photoFile ? 'pending-upload' : null,
+      photoUrl: photoUrl,
       status: 'completed'
     });
 
-    showAlert('Günlük kaydı eklendi!', 'success');
+    showAlert('✅ Günlük kaydı eklendi!', 'success');
     closeAddLogModal();
     await loadProjectLogs(currentProjectId);
   } catch (error) {
