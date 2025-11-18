@@ -27,17 +27,22 @@ try {
   console.error('❌ Firebase initialization error:', error);
 }
 
-// Enable offline persistence for better UX
-enableIndexedDbPersistence(db)
-  .catch((error) => {
-    if (error.code === 'failed-precondition') {
-      console.warn('⚠️ Multiple tabs open - offline persistence disabled');
-    } else if (error.code === 'unimplemented') {
-      console.warn('⚠️ Browser does not support offline persistence');
-    } else {
-      console.error('❌ Persistence error:', error);
-    }
-  });
+// Enable offline persistence for better UX (skip on mobile for faster load)
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+if (!isMobile) {
+  enableIndexedDbPersistence(db)
+    .catch((error) => {
+      if (error.code === 'failed-precondition') {
+        console.warn('⚠️ Multiple tabs open - offline persistence disabled');
+      } else if (error.code === 'unimplemented') {
+        console.warn('⚠️ Browser does not support offline persistence');
+      } else {
+        console.error('❌ Persistence error:', error);
+      }
+    });
+} else {
+  console.log('📱 Mobile device detected - skipping IndexedDB persistence for faster load');
+}
 
 // Enable Auth persistence
 setPersistence(auth, browserLocalPersistence)

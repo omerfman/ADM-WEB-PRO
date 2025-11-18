@@ -8,19 +8,29 @@ async function handleLogin(event) {
   
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
+  const loginBtn = document.querySelector('button[type="submit"]');
+  
+  // Prevent multiple submissions
+  if (loginBtn.disabled) return;
   
   try {
+    // Disable button and show loading
+    loginBtn.disabled = true;
+    loginBtn.textContent = '⏳ Giriş yapılıyor...';
+    
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     console.log('✅ Kullanıcı giriş yaptı:', userCredential.user.email);
-    showAlert('Giriş başarılı! Yönlendiriliyor...', 'success');
+    showAlert('Giriş başarılı!', 'success');
     
-    // Redirect to dashboard after successful login
-    setTimeout(() => {
-      window.location.href = 'dashboard.html';
-    }, 500);
+    // Immediate redirect for better mobile UX
+    window.location.href = 'dashboard.html';
   } catch (error) {
     console.error('❌ Login hatası:', error.message);
     showAlert('Giriş başarısız: ' + error.message, 'danger');
+    
+    // Re-enable button on error
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Giriş Yap';
   }
 }
 
