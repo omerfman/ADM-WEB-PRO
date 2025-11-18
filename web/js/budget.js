@@ -105,7 +105,15 @@ async function loadBudgetCategories(projectId) {
     categoriesList.innerHTML = '';
 
     if (snapshot.empty) {
-      categoriesList.innerHTML = '<p style="color: #999; padding: 1rem; text-align: center;">Henüz kategori yok. "Kategori Ekle" butonunu kullanın.</p>';
+      categoriesList.innerHTML = `
+        <p style="color: #999; padding: 1rem; text-align: center;">Henüz kategori yok.</p>
+        <button class="btn btn-primary" onclick="initializeDefaultCategories('${projectId}')" style="width: 100%; margin-top: 1rem;">
+          🏗️ İnşaat Kategorilerini Ekle
+        </button>
+        <p style="color: #666; font-size: 0.85rem; text-align: center; margin-top: 0.5rem;">
+          16 adet standart inşaat kategorisi eklenecektir
+        </p>
+      `;
       return;
     }
 
@@ -486,6 +494,60 @@ async function loadCategoriesForDropdown() {
 }
 
 /**
+ * Initialize default construction budget categories
+ * İnşaat projeleri için varsayılan kategoriler
+ */
+async function initializeDefaultCategories(projectId) {
+  try {
+    // Check if categories already exist
+    const categoriesRef = collection(db, 'projects', projectId, 'budget_categories');
+    const existingCats = await getDocs(categoriesRef);
+    
+    if (!existingCats.empty) {
+      console.log('⚠️ Kategoriler zaten mevcut');
+      return;
+    }
+
+    const defaultCategories = [
+      { name: 'İşçilik', description: 'Usta, işçi, formen ücretleri', allocated: 0 },
+      { name: 'Malzeme', description: 'İnşaat malzemeleri (çimento, demir, tuğla vb.)', allocated: 0 },
+      { name: 'Nakliye', description: 'Taşıma, sevkiyat giderleri', allocated: 0 },
+      { name: 'Makine-Ekipman', description: 'Vinç, kepçe, beton mikseri kiralama', allocated: 0 },
+      { name: 'Elektrik-Tesisat', description: 'Elektrik ve su tesisatı malzeme ve işçilik', allocated: 0 },
+      { name: 'Sıhhi Tesisat', description: 'Banyo, mutfak tesisatı', allocated: 0 },
+      { name: 'Altyapı', description: 'Zemin hazırlık, temel, istinat duvarı', allocated: 0 },
+      { name: 'Dış Cephe', description: 'Dış cephe kaplama, mantolama, boya', allocated: 0 },
+      { name: 'İç Mekan', description: 'Alçıpan, boya, parke, laminat', allocated: 0 },
+      { name: 'Doğrama', description: 'Kapı, pencere, panjur', allocated: 0 },
+      { name: 'Çatı', description: 'Çatı konstrüksiyon ve kaplama', allocated: 0 },
+      { name: 'Yalıtım', description: 'Isı ve su yalıtımı', allocated: 0 },
+      { name: 'Peyzaj', description: 'Bahçe düzenleme, yeşil alan', allocated: 0 },
+      { name: 'Ruhsat-İzin', description: 'İnşaat ruhsatı, belediye harçları', allocated: 0 },
+      { name: 'Genel Giderler', description: 'Sigorta, elektrik, su, güvenlik', allocated: 0 },
+      { name: 'Diğer', description: 'Diğer masraflar', allocated: 0 }
+    ];
+
+    let addedCount = 0;
+    for (const category of defaultCategories) {
+      await addDoc(categoriesRef, {
+        ...category,
+        createdAt: serverTimestamp(),
+        createdBy: auth.currentUser.uid,
+        isDefault: true
+      });
+      addedCount++;
+    }
+
+    showAlert(`✅ ${addedCount} varsayılan kategori eklendi!`, 'success');
+    await loadBudgetCategories(projectId);
+    
+  } catch (error) {
+    console.error('❌ Error initializing categories:', error);
+    showAlert('Kategori başlatma hatası: ' + error.message, 'danger');
+  }
+}
+
+/**
  * Show alert message
  */
 function showAlert(message, type = 'info') {
@@ -526,3 +588,4 @@ window.closeAddExpenseModal = closeAddExpenseModal;
 window.addBudgetExpense = addBudgetExpense;
 window.deleteBudgetCategory = deleteBudgetCategory;
 window.deleteBudgetExpense = deleteBudgetExpense;
+window.initializeDefaultCategories = initializeDefaultCategories;

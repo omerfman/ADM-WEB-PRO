@@ -37,6 +37,7 @@ async function initProjectDetail() {
     await loadProjectLogs();
     await loadProjectStocks();
     await loadProjectPayments();
+    await loadBudgetTabSummary();
 
   } catch (error) {
     console.error('❌ Proje detayı yüklenirken hata:', error);
@@ -306,6 +307,65 @@ async function loadProjectPayments() {
 }
 
 /**
+ * Load Budget Tab Summary
+ */
+async function loadBudgetTabSummary() {
+  try {
+    const budget = parseFloat(currentProject.budget || 0);
+    
+    // Calculate from budget expenses
+    const expensesRef = collection(db, 'projects', currentProjectId, 'budget_expenses');
+    const expensesSnap = await getDocs(expensesRef);
+    let budgetExpenses = 0;
+    expensesSnap.forEach(doc => {
+      budgetExpenses += doc.data().amount || 0;
+    });
+
+    // Calculate from stocks
+    const stocksRef = collection(db, 'projects', currentProjectId, 'stocks');
+    const stocksSnap = await getDocs(stocksRef);
+    let stocksTotal = 0;
+    stocksSnap.forEach(doc => {
+      const stock = doc.data();
+      stocksTotal += (stock.quantity || 0) * (stock.unitPrice || 0);
+    });
+
+    // Calculate from payments
+    const paymentsRef = collection(db, 'projects', currentProjectId, 'payments');
+    const paymentsSnap = await getDocs(paymentsRef);
+    let paymentsTotal = 0;
+    paymentsSnap.forEach(doc => {
+      const payment = doc.data();
+      paymentsTotal += payment.amount || (payment.unitPrice || 0) * (payment.quantity || 1);
+    });
+
+    const totalSpent = budgetExpenses + stocksTotal + paymentsTotal;
+    const remaining = budget - totalSpent;
+    const percentage = budget > 0 ? ((totalSpent / budget) * 100).toFixed(1) : 0;
+
+    // Update budget tab summary
+    const totalEl = document.getElementById('budgetTabTotal');
+    const spentEl = document.getElementById('budgetTabSpent');
+    const remainingEl = document.getElementById('budgetTabRemaining');
+    const percentageEl = document.getElementById('budgetTabPercentage');
+
+    if (totalEl) totalEl.textContent = formatCurrency(budget);
+    if (spentEl) spentEl.textContent = formatCurrency(totalSpent);
+    if (remainingEl) {
+      remainingEl.textContent = formatCurrency(remaining);
+      remainingEl.style.color = remaining >= 0 ? 'white' : '#ff6b6b';
+    }
+    if (percentageEl) {
+      percentageEl.textContent = percentage + '%';
+      percentageEl.style.color = percentage > 100 ? '#ff6b6b' : percentage > 80 ? '#ffd93d' : 'white';
+    }
+
+  } catch (error) {
+    console.error('❌ Bütçe özeti yüklenemedi:', error);
+  }
+}
+
+/**
  * Helper Functions
  */
 function formatCurrency(amount) {
@@ -375,8 +435,8 @@ function closeAddPaymentModal() {
 }
 
 function openBudgetModal() {
-  if (window.openBudgetManagement) {
-    window.openBudgetManagement(currentProjectId);
+  if (window.openBudgetModal && typeof window.openBudgetModal === 'function') {
+    window.openBudgetModal(currentProjectId);
   } else {
     showAlert('Bütçe modülü yüklenmedi', 'danger');
   }
@@ -579,6 +639,7 @@ window.openAddPaymentModal = openAddPaymentModal;
 window.closeAddPaymentModal = closeAddPaymentModal;
 window.openBudgetModal = openBudgetModal;
 window.closeBudgetModal = closeBudgetModal;
+window.loadBudgetTabSummary = loadBudgetTabSummary;
 window.openEditProjectModal = openEditProjectModal;
 window.closeEditProjectModal = closeEditProjectModal;
 window.handleAddLog = handleAddLog;
