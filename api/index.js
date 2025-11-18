@@ -133,6 +133,33 @@ app.get('/health', (req, res) => {
   res.json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
+// Debug endpoint - check Firebase initialization
+app.get('/api/debug', (req, res) => {
+  try {
+    const hasFirebaseApp = admin.apps.length > 0;
+    const hasAuth = !!auth;
+    const hasDb = !!db;
+    const envVars = {
+      hasServiceAccount: !!process.env.FIREBASE_SERVICE_ACCOUNT,
+      hasProjectId: !!process.env.FIREBASE_PROJECT_ID,
+      hasPrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
+      hasClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
+      nodeEnv: process.env.NODE_ENV,
+      isVercel: !!process.env.VERCEL
+    };
+    
+    res.json({ 
+      firebaseInitialized: hasFirebaseApp,
+      hasAuth,
+      hasDb,
+      envVars,
+      timestamp: new Date().toISOString() 
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message, stack: error.stack });
+  }
+});
+
 // Firestore connection check
 app.get('/api/health/firestore', async (req, res) => {
   try {
@@ -141,7 +168,7 @@ app.get('/api/health/firestore', async (req, res) => {
     });
     res.json({ status: 'connected', timestamp: new Date().toISOString() });
   } catch (error) {
-    res.status(500).json({ error: 'Firestore connection failed', details: error.message });
+    res.status(500).json({ error: 'Firestore connection failed', details: error.message, stack: error.stack });
   }
 });
 
