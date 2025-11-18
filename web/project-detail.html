@@ -18,11 +18,11 @@
       </div>
       
       <nav class="sidebar-nav">
-        <a href="dashboard.html" class="nav-item">
+        <a href="dashboard.html" class="nav-item" onclick="closeSidebarOnMobile()">
           <span class="nav-icon">📊</span>
           <span class="nav-text">Ana Sayfa</span>
         </a>
-        <a href="dashboard.html#projects" class="nav-item">
+        <a href="dashboard.html#projects" class="nav-item" onclick="closeSidebarOnMobile()">
           <span class="nav-icon">🏗️</span>
           <span class="nav-text">Projeler</span>
         </a>
@@ -819,9 +819,32 @@
   <script type="module" src="js/project-detail.js"></script>
 
   <script>
+    // Close sidebar on mobile helper function
+    function closeSidebarOnMobile() {
+      if (window.innerWidth <= 768) {
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) {
+          sidebar.classList.remove('sidebar-open');
+        }
+      }
+    }
+
     // Mobile menu toggle
     document.getElementById('menuToggle').addEventListener('click', function() {
       document.querySelector('.sidebar').classList.toggle('sidebar-open');
+    });
+
+    // Close sidebar on mobile when clicking outside
+    document.addEventListener('click', function(event) {
+      const sidebar = document.querySelector('.sidebar');
+      const menuToggle = document.getElementById('menuToggle');
+      
+      if (window.innerWidth <= 768 && 
+          sidebar.classList.contains('sidebar-open') && 
+          !sidebar.contains(event.target) && 
+          event.target !== menuToggle) {
+        sidebar.classList.remove('sidebar-open');
+      }
     });
 
     // Tab switching
@@ -835,6 +858,14 @@
       // Update nav active state
       document.querySelectorAll('.sidebar-nav .nav-item[data-tab]').forEach(item => item.classList.remove('active'));
       document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+      
+      // Close sidebar on mobile after tab switch
+      if (window.innerWidth <= 768) {
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) {
+          sidebar.classList.remove('sidebar-open');
+        }
+      }
       
       // Load data for the selected tab
       if (tab === 'overview' && window.loadProjectOverview) {
