@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Proje Detayı - ADM İnşaat Proje Yönetim Sistemi</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- SheetJS for Excel Import/Export -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="assets/adm_logo.png" alt="ADM Studio" class="sidebar-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+        <h1 style="display: none;">🏗️ ADM İnşaat</h1>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Ana Sayfa</span>
+        </a>
+        <a href="dashboard.html#projects" class="nav-item">
+          <span class="nav-icon">🏗️</span>
+          <span class="nav-text">Projeler</span>
+        </a>
+        
+        <!-- Project Specific Navigation -->
+        <div style="margin-top: 1.5rem; padding: 0 1rem; color: var(--text-secondary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+          Proje Menüsü
+        </div>
+        <a href="#" class="nav-item active" data-tab="logs" onclick="switchProjectTab('logs')">
+          <span class="nav-icon">📝</span>
+          <span class="nav-text">Şantiye Günlüğü</span>
+        </a>
+        <a href="#" class="nav-item" data-tab="stocks" onclick="switchProjectTab('stocks')">
+          <span class="nav-icon">📦</span>
+          <span class="nav-text">Stok Yönetimi</span>
+        </a>
+        <a href="#" class="nav-item" data-tab="payments" onclick="switchProjectTab('payments')">
+          <span class="nav-icon">💰</span>
+          <span class="nav-text">Hakediş Takibi</span>
+        </a>
+        <a href="#" class="nav-item" data-tab="budget" onclick="switchProjectTab('budget')">
+          <span class="nav-icon">💼</span>
+          <span class="nav-text">Bütçe Yönetimi</span>
+        </a>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">👤</div>
+          <div class="user-details">
+            <div class="user-name" id="sidebarUserName">Yükleniyor...</div>
+            <div class="user-role" id="sidebarUserRole">...</div>
+          </div>
+        </div>
+        <div class="sidebar-actions">
+          <button id="sidebarThemeToggle" class="theme-toggle-btn" onclick="toggleTheme()">
+            <div class="theme-option light-option">
+              <span class="theme-circle">⚪</span>
+              <span class="theme-label">Light</span>
+            </div>
+            <div class="theme-option dark-option active">
+              <span class="theme-circle">⚫</span>
+              <span class="theme-label">Dark</span>
+            </div>
+          </button>
+          <button id="logoutBtn" class="logout-btn" onclick="handleLogout()">Çıkış Yap</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Bar with Breadcrumb -->
+      <div class="topbar">
+        <div style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+          <button class="menu-toggle" id="menuToggle">☰</button>
+          <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">
+            <a href="dashboard.html" style="color: var(--text-secondary); text-decoration: none;">Dashboard</a>
+            <span>›</span>
+            <a href="dashboard.html#projects" style="color: var(--text-secondary); text-decoration: none;">Projeler</a>
+            <span>›</span>
+            <span id="projectNameBreadcrumb" style="color: var(--brand-red); font-weight: 600;">Yükleniyor...</span>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <span id="userNameDisplay" class="topbar-user"></span>
+        </div>
+      </div>
+
+      <div id="alertContainer"></div>
+
+      <!-- Project Header -->
+      <section class="content-section">
+        <div style="background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-red-dark) 100%); color: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem;">
+          <div style="display: flex; justify-content: space-between; align-items: start; gap: 2rem; flex-wrap: wrap;">
+            <div style="flex: 1;">
+              <h2 id="projectName" style="margin: 0 0 0.5rem 0; font-size: 2rem;">Yükleniyor...</h2>
+              <p id="projectLocation" style="margin: 0 0 0.5rem 0; opacity: 0.9; font-size: 1.1rem;">📍 Konum yükleniyor...</p>
+              <p id="projectDescription" style="margin: 0; opacity: 0.8;">Açıklama yükleniyor...</p>
+            </div>
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+              <button class="btn" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white;" onclick="window.location.href='dashboard.html#projects'">
+                ← Projelere Dön
+              </button>
+              <button id="editProjectBtn" class="btn" style="background: white; color: var(--brand-red);" onclick="openEditProjectModal()">
+                ✏️ Düzenle
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project Stats Cards -->
+        <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 2rem;" id="projectStatsCards">
+          <!-- Stats will be loaded dynamically -->
+        </div>
+
+        <!-- Tab Content -->
+        <div id="logs-tab" class="tab-content">
+          <div class="section-header">
+            <h3>📝 Şantiye Günlüğü</h3>
+            <button class="btn btn-primary" onclick="openAddLogModal()">+ Günlük Ekle</button>
+          </div>
+          <div id="logsList" style="margin-top: 1rem;">
+            <!-- Logs will be loaded here -->
+          </div>
+        </div>
+
+        <div id="stocks-tab" class="tab-content hidden">
+          <div class="section-header">
+            <h3>📦 Stok Yönetimi</h3>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-secondary" onclick="exportStocksToExcel()">📊 Excel'e Aktar</button>
+              <button class="btn btn-secondary" onclick="importStocksFromExcel()">📤 Excel'den İçe Aktar</button>
+              <button class="btn btn-primary" onclick="openAddStockModal()">+ Stok Ekle</button>
+            </div>
+          </div>
+          <div id="stocksList" style="margin-top: 1rem;">
+            <!-- Stocks will be loaded here -->
+          </div>
+        </div>
+
+        <div id="payments-tab" class="tab-content hidden">
+          <div class="section-header">
+            <h3>💰 Hakediş Takibi</h3>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-secondary" onclick="exportPaymentsToExcel()">📊 Excel'e Aktar</button>
+              <button class="btn btn-secondary" onclick="importPaymentsFromExcel()">📤 Excel'den İçe Aktar</button>
+              <button class="btn btn-primary" onclick="openAddPaymentModal()">+ Hakediş Ekle</button>
+            </div>
+          </div>
+          <div id="paymentsList" style="margin-top: 1rem;">
+            <!-- Payments will be loaded here -->
+          </div>
+        </div>
+
+        <div id="budget-tab" class="tab-content hidden">
+          <div class="section-header">
+            <h3>💼 Bütçe Yönetimi</h3>
+            <button class="btn btn-primary" onclick="openBudgetModal()">💰 Bütçe Ayarları</button>
+          </div>
+          <div id="budgetContent" style="margin-top: 1rem;">
+            <!-- Budget content will be loaded here -->
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modals (Same as dashboard.html) -->
+  
+  <!-- Add Log Modal -->
+  <div id="addLogModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Şantiye Günlüğü Ekle</h2>
+        <button class="modal-close" onclick="closeAddLogModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="addLogForm" onsubmit="handleAddLog(event)">
+          <!-- Form content will be added by JS -->
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Stock Modal -->
+  <div id="addStockModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Stok Ekle</h2>
+        <button class="modal-close" onclick="closeAddStockModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="addStockForm" onsubmit="handleAddStock(event)">
+          <!-- Form content will be added by JS -->
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Payment Modal -->
+  <div id="addPaymentModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Hakediş Ekle</h2>
+        <button class="modal-close" onclick="closeAddPaymentModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="addPaymentForm" onsubmit="handleAddPayment(event)">
+          <!-- Form content will be added by JS -->
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Budget Management Modal -->
+  <div id="budgetModal" class="modal">
+    <div class="modal-content" style="max-width: 1200px;">
+      <div class="modal-header">
+        <h2>💰 Bütçe Yönetimi</h2>
+        <button class="modal-close" onclick="closeBudgetModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="budgetModalContent">
+        <!-- Budget modal content will be loaded here -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeBudgetModal()">Kapat</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Project Modal -->
+  <div id="editProjectModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Proje Düzenle</h2>
+        <button class="modal-close" onclick="closeEditProjectModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="editProjectForm" onsubmit="handleUpdateProject(event)">
+          <!-- Form will be populated by JS -->
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeEditProjectModal()">İptal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase Config -->
+  <script type="module" src="js/firebase-config.js"></script>
+  
+  <!-- API Config -->
+  <script src="js/api-config.js"></script>
+  
+  <!-- Auth Module -->
+  <script type="module" src="js/auth.js"></script>
+  
+  <!-- Projects Module -->
+  <script type="module" src="js/projects.js"></script>
+  
+  <!-- Additional Modules -->
+  <script type="module" src="js/upload.js"></script>
+  <script type="module" src="js/budget.js"></script>
+  <script type="module" src="js/excel.js"></script>
+  
+  <!-- App Initialization -->
+  <script type="module" src="js/app.js"></script>
+
+  <!-- Project Detail Specific Scripts -->
+  <script type="module" src="js/project-detail.js"></script>
+
+  <script>
+    // Mobile menu toggle
+    document.getElementById('menuToggle').addEventListener('click', function() {
+      document.querySelector('.sidebar').classList.toggle('sidebar-open');
+    });
+
+    // Tab switching
+    function switchProjectTab(tab) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+      
+      // Show selected tab
+      document.getElementById(tab + '-tab').classList.remove('hidden');
+      
+      // Update nav active state
+      document.querySelectorAll('.sidebar-nav .nav-item[data-tab]').forEach(item => item.classList.remove('active'));
+      document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+    }
+    
+    // Export to window
+    window.switchProjectTab = switchProjectTab;
+  </script>
+</body>
+</html>

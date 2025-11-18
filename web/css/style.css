@@ -275,21 +275,20 @@ header nav button:hover {
 }
 
 .sidebar-header {
-  padding: 1.5rem;
+  padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--border-color);
-  background-color: white;
+  background-color: var(--bg-primary);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .sidebar-logo {
-  max-width: 150px;
+  max-width: 140px;
   height: auto;
   display: block;
   background-color: var(--logo-bg);
-  padding: 1.25rem;
-  border-radius: 12px;
+  padding: 0.5rem;
   transition: background-color 0.3s ease;
 }
 

@@ -128,236 +128,51 @@ function renderProjectsList() {
 }
 
 /**
- * Open project detail modal
+ * Open project detail page
  */
-async function openProjectDetail(projectId) {
-  try {
-    const projectRef = doc(db, 'projects', projectId);
-    const projectSnap = await getDoc(projectRef);
-
-    if (!projectSnap.exists()) {
-      showAlert('Proje bulunamadı', 'danger');
-      return;
-    }
-
-    const project = projectSnap.data();
-    currentProjectId = projectId;
-    window.currentProjectId = projectId; // Make it globally available
-
-    // Update modal
-    document.getElementById('projectTitle').textContent = project.name;
-    document.getElementById('projectDetailDesc').textContent = project.description || 'Açıklama yok';
-    document.getElementById('projectDetailLocation').textContent = project.location || 'Lokasyon belirtilmemiş';
-
-    // Load tab contents
-    await loadProjectLogs(projectId);
-    await loadProjectStocks(projectId);
-    await loadProjectPayments(projectId);
-
-    // Show modal and activate first tab
-    document.getElementById('projectDetailModal').classList.add('show');
-    switchTab('logs');
-    console.log(`✅ Proje açıldı: ${projectId}`);
-  } catch (error) {
-    console.error('❌ Proje açılırken hata:', error);
-    showAlert('Proje yüklenemedi: ' + error.message, 'danger');
-  }
+function openProjectDetail(projectId) {
+  // Redirect to project detail page with project ID
+  window.location.href = `project-detail.html?id=${projectId}`;
 }
 
 /**
- * Close project detail modal
+ * Close project detail modal (kept for backward compatibility)
  */
 function closeProjectModal() {
-  document.getElementById('projectDetailModal').classList.remove('show');
-  currentProjectId = null;
-  window.currentProjectId = null;
+  // Modal functionality removed - redirects to detail page instead
+  window.location.href = 'dashboard.html#projects';
 }
 
 /**
- * Switch between tabs
+ * Switch between tabs (kept for backward compatibility)
  */
 function switchTab(tabName) {
-  // Hide all tabs
-  document.querySelectorAll('.tab-content').forEach(tab => {
-    tab.classList.add('hidden');
-  });
-
-  // Remove active from buttons
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.style.borderBottom = 'none';
-    btn.style.color = 'inherit';
-  });
-
-  // Show selected tab
-  const tabElement = document.getElementById(tabName + '-tab');
-  if (tabElement) {
-    tabElement.classList.remove('hidden');
-  }
-
-  // Mark button as active
-  const btnElement = document.querySelector('[data-tab="' + tabName + '"]');
-  if (btnElement) {
-    btnElement.style.borderBottom = '3px solid var(--accent-color)';
-    btnElement.style.color = 'var(--primary-color)';
-  }
+  // This function is now handled in project-detail.html
+  console.log('switchTab called:', tabName);
 }
 
 /**
- * Load project logs
+ * Load project logs (moved to project-detail.js)
  */
 async function loadProjectLogs(projectId) {
-  try {
-    const logsRef = collection(db, 'projects', projectId, 'logs');
-    const q = query(logsRef, orderBy('createdAt', 'desc'), limit(50));
-    const snapshot = await getDocs(q);
-
-    const logsList = document.getElementById('logsList');
-    logsList.innerHTML = '';
-
-    if (snapshot.empty) {
-      logsList.innerHTML = '<p style="color: #999; font-size: 0.9rem; padding: 1rem; text-align: center;">Henüz log yok</p>';
-      return;
-    }
-
-    snapshot.forEach(docSnap => {
-      const log = docSnap.data();
-      const logItem = document.createElement('div');
-      logItem.style.cssText = 'padding: 1rem; border-bottom: 1px solid var(--border-color); background: var(--card-bg); margin-bottom: 0.5rem; border-radius: 4px;';
-      
-      // Photo display
-      let photoHtml = '';
-      if (log.photoUrl) {
-        photoHtml = `
-          <div style="margin-top: 0.75rem;">
-            <img src="${log.photoUrl}" 
-                 alt="Şantiye Fotoğrafı" 
-                 style="max-width: 200px; max-height: 200px; border-radius: 8px; cursor: pointer; border: 2px solid var(--border-color);"
-                 onclick="window.open('${log.photoUrl}', '_blank')">
-          </div>
-        `;
-      }
-      
-      logItem.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: start;">
-          <div>
-            <strong style="color: var(--primary-color); font-size: 1rem;">${log.title || 'Başlıksız'}</strong>
-            <p style="margin: 0.5rem 0 0 0; color: #666; font-size: 0.9rem;">${log.description || ''}</p>
-          </div>
-          <button style="background: none; border: none; color: #999; cursor: pointer; font-size: 1.2rem;" onclick="deleteLog('${projectId}', '${docSnap.id}')">×</button>
-        </div>
-        <div style="margin-top: 0.5rem; font-size: 0.85rem;">
-          <span style="color: #666;">👤 ${log.createdBy || 'Bilinmiyor'}</span> • 
-          <span style="color: #999;">${new Date(log.createdAt?.toDate?.() || new Date()).toLocaleDateString('tr-TR')} ${new Date(log.createdAt?.toDate?.() || new Date()).toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'})}</span>
-        </div>
-        ${photoHtml}
-      `;
-      logsList.appendChild(logItem);
-    });
-
-    console.log(`✅ ${snapshot.size} log yüklendi`);
-  } catch (error) {
-    console.error('❌ Loglar yüklenirken hata:', error);
-    document.getElementById('logsList').innerHTML = '<p style="color: red;">Loglar yüklenemedi</p>';
-  }
+  console.log('loadProjectLogs called - now handled in project-detail.js');
+  return Promise.resolve();
 }
 
 /**
- * Load project stocks
+ * Load project stocks (moved to project-detail.js)
  */
 async function loadProjectStocks(projectId) {
-  try {
-    const stocksRef = collection(db, 'projects', projectId, 'stocks');
-    const q = query(stocksRef, orderBy('createdAt', 'desc'));
-    const snapshot = await getDocs(q);
-
-    const stocksList = document.getElementById('stocksList');
-    stocksList.innerHTML = '';
-
-    if (snapshot.empty) {
-      stocksList.innerHTML = '<p style="color: #999; font-size: 0.9rem; padding: 1rem; text-align: center;">Henüz ürün yok</p>';
-      return;
-    }
-
-    snapshot.forEach(docSnap => {
-      const stock = docSnap.data();
-      const totalPrice = (stock.quantity || 0) * (stock.unitPrice || 0);
-      const stockItem = document.createElement('div');
-      stockItem.style.cssText = 'padding: 1rem; border-bottom: 1px solid var(--border-color); background: var(--card-bg); margin-bottom: 0.5rem; border-radius: 4px;';
-      stockItem.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: start;">
-          <div style="flex: 1;">
-            <strong style="color: var(--primary-color); font-size: 1rem;">${stock.name || 'Ürün'}</strong>
-            <div style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;">
-              <div>📦 Miktar: <strong>${stock.quantity || 0}</strong> ${stock.unit || ''}</div>
-              <div>💰 Birim Fiyatı: <strong>₺${(stock.unitPrice || 0).toLocaleString('tr-TR')}</strong></div>
-              <div>📊 Toplam: <strong>₺${totalPrice.toLocaleString('tr-TR')}</strong></div>
-            </div>
-          </div>
-          <button style="background: none; border: none; color: #999; cursor: pointer; font-size: 1.2rem;" onclick="deleteStock('${projectId}', '${docSnap.id}')">×</button>
-        </div>
-      `;
-      stocksList.appendChild(stockItem);
-    });
-
-    console.log(`✅ ${snapshot.size} ürün yüklendi`);
-  } catch (error) {
-    console.error('❌ Ürünler yüklenirken hata:', error);
-    document.getElementById('stocksList').innerHTML = '<p style="color: red;">Ürünler yüklenemedi</p>';
-  }
+  console.log('loadProjectStocks called - now handled in project-detail.js');
+  return Promise.resolve();
 }
 
 /**
- * Load project payments (Hakediş)
+ * Load project payments (moved to project-detail.js)
  */
 async function loadProjectPayments(projectId) {
-  try {
-    const paymentsRef = collection(db, 'projects', projectId, 'payments');
-    const q = query(paymentsRef, orderBy('createdAt', 'desc'));
-    const snapshot = await getDocs(q);
-
-    const paymentsList = document.getElementById('paymentsList');
-    paymentsList.innerHTML = '';
-
-    let totalAmount = 0;
-
-    if (snapshot.empty) {
-      paymentsList.innerHTML = '<p style="color: #999; font-size: 0.9rem; padding: 1rem; text-align: center;">Henüz hakediş yok</p>';
-      document.getElementById('totalPayments').textContent = '0';
-      return;
-    }
-
-    snapshot.forEach(docSnap => {
-      const payment = docSnap.data();
-      const unitPrice = payment.unitPrice || payment.amount || 0; // Support both field names
-      const quantity = payment.quantity || 1;
-      const rowTotal = unitPrice * quantity;
-      totalAmount += rowTotal;
-
-      const paymentItem = document.createElement('div');
-      paymentItem.style.cssText = 'padding: 1rem; border-bottom: 1px solid var(--border-color); background: var(--card-bg); margin-bottom: 0.5rem; border-radius: 4px;';
-      paymentItem.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: start;">
-          <div style="flex: 1;">
-            <strong style="color: var(--primary-color); font-size: 1rem;">${payment.description || 'Yapılan İş'}</strong>
-            <div style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;">
-              <div>👤 Yapan: <strong>${payment.createdBy || 'Bilinmiyor'}</strong></div>
-              <div>⚙️ Birim: <strong>${payment.unit || 'Adet'}</strong></div>
-              <div>💵 Birim Fiyatı: <strong>₺${unitPrice.toLocaleString('tr-TR')}</strong> × ${quantity} = <span style="color: var(--accent-color); font-weight: bold;">₺${rowTotal.toLocaleString('tr-TR')}</span></div>
-            </div>
-          </div>
-          <button style="background: none; border: none; color: #999; cursor: pointer; font-size: 1.2rem;" onclick="deletePayment('${projectId}', '${docSnap.id}')">×</button>
-        </div>
-      `;
-      paymentsList.appendChild(paymentItem);
-    });
-
-    // Update total
-    document.getElementById('totalPayments').textContent = totalAmount.toLocaleString('tr-TR');
-    console.log(`✅ ${snapshot.size} hakediş yüklendi. Toplam: ₺${totalAmount.toLocaleString('tr-TR')}`);
-  } catch (error) {
-    console.error('❌ Hakediş yüklenirken hata:', error);
-    document.getElementById('paymentsList').innerHTML = '<p style="color: red;">Hakediş yüklenemedi</p>';
-  }
+  console.log('loadProjectPayments called - now handled in project-detail.js');
+  return Promise.resolve();
 }
 
 /**

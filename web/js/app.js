@@ -40,6 +40,16 @@ function toggleTheme() {
   console.log(`🎨 Theme changed to: ${theme}`);
 }
 
+// Initialize theme on page load
+document.addEventListener('DOMContentLoaded', () => {
+  initializeTheme();
+  console.log('✅ Theme system initialized');
+});
+
+// Export functions globally
+window.toggleTheme = toggleTheme;
+window.initializeTheme = initializeTheme;
+
 // ========== DASHBOARD TAB SWITCHING ==========
 function switchDashboardTab(tabName) {
   // Hide all tabs

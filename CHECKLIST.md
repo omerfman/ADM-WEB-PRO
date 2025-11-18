@@ -772,6 +772,34 @@ FirebaseError: Missing or insufficient permissions
 4. ✅ Proje filtreleme - Tarih kaldırıldı, super admin şirket filtresi eklendi
 5. ✅ Modal taşma - max-height: 90vh, overflow-y: auto
 
+---
+
+## 🔧 Theme Toggle Sistemi Yeniden Yapıldı (18 Kasım 2025)
+
+### [x] Theme Toggle Tamamen Düzeltildi
+**Durum:** ✅ TAMAMLANDI
+**Öncelik:** KRİTİK
+
+**Sorun:** 
+- Dashboard.html ve app.js'de çakışan iki farklı theme toggle kodu vardı
+- initializeTheme() çağrılmıyordu
+- Light/Dark butonlar doğru çalışmıyordu
+
+**Yapılan Değişiklikler:**
+1. ✅ Dashboard.html'deki duplicate theme toggle kodu kaldırıldı
+2. ✅ app.js'de DOMContentLoaded içinde initializeTheme() çağrısı eklendi
+3. ✅ Login.html varsayılan dark mode yapıldı
+4. ✅ Sidebar theme toggle butonu app.js'deki toggleTheme() fonksiyonunu kullanıyor
+5. ✅ Theme state localStorage'da saklanıyor ve sayfa yüklendiğinde restore ediliyor
+6. ✅ Light/Dark option butonları active class ile doğru görünüyor
+
+**Test Edildi:**
+- ✅ Sayfa ilk açıldığında dark mode
+- ✅ Toggle butonu tıklandığında light mode'a geçiyor
+- ✅ Tekrar tıklandığında dark mode'a dönüyor
+- ✅ Sayfa yenilendiğinde son tema korunaıyor
+- ✅ Login ve dashboard arasında tema tutarlı
+
 **Öncelik Sırası:**
 1. 🔥 Dashboard Permissions (1. bug)
 2. 🔥 Theme Toggle (2. bug)
@@ -790,6 +818,61 @@ FirebaseError: Missing or insufficient permissions
 
 **Tahmini Süre:**
 - Görev 1-2: 2-3 saat (sayfa yapısı)
+
+---
+
+## 🆕 Yeni İyileştirmeler (18 Kasım 2025 - Gece)
+
+### [x] 1. Faaliyet Kayıtları - ID'ler Yerine İsimler Göster
+**Durum:** ✅ TAMAMLANDI
+**Öncelik:** YÜKSEK
+
+**Problem:** Faaliyet kayıtlarında projectId, companyId, userId gibi ID'ler gösteriliyor. Bu kullanıcı için kafa karıştırıcı.
+
+**Çözüm:**
+- ✅ ID'leri Firestore'dan sorgulayıp gerçek isimlere çevir
+- ✅ projectId → Proje adı
+- ✅ companyId → Şirket adı
+- ✅ userId → Kullanıcı adı/email
+- ✅ Önbellek sistemi ekle (aynı ID'leri tekrar sorgulamamak için)
+- ✅ getUserName, getProjectName, getCompanyName helper fonksiyonları
+- ✅ renderActivityLogs async yapıldı ve isimler resolve edildi
+
+---
+
+### [x] 2. Anasayfa Son Aktiviteler - Boş Görünme Hatası
+**Durum:** ✅ TAMAMLANDI
+**Öncelik:** YÜKSEK
+
+**Problem:** Dashboard ana sayfasında "Son Aktiviteler" kısmı boş görünüyor.
+
+**Çözüm:**
+- ✅ audit_logs collection kullanımı düzeltildi
+- ✅ Activity data resolve edilirken user ve project isimleri getiriliyor
+- ✅ getActivityDescription helper fonksiyonu eklendi
+- ✅ Veri yoksa "Henüz aktivite yok" mesajı gösteriliyor
+- ✅ Tarih formatı ve ikon sistemi iyileştirildi
+
+---
+
+### [x] 3. Proje Detay - Modal Yerine Yeni Sayfa
+**Durum:** ✅ TAMAMLANDI
+**Öncelik:** YÜKSEK
+
+**Problem:** Projeye tıklandığında modal açılıyor. Tam sayfa daha kullanışlı olacak.
+
+**Çözüm:**
+- ✅ Yeni `project-detail.html` sayfası oluşturuldu
+- ✅ URL parametresi ile proje ID'si gönderiliyor (?id=xxx)
+- ✅ project-detail.js modülü oluşturuldu
+- ✅ Breadcrumb navigasyon eklendi (Dashboard > Projeler > Proje Adı)
+- ✅ Proje-spesifik sidebar (Günlük, Stok, Hakediş, Bütçe)
+- ✅ Proje istatistikleri kartları (Günlük, Stok, Hakediş, Bütçe kullanımı)
+- ✅ Geri dön butonu ve düzenle butonu
+- ✅ projects.js'de openProjectDetail fonksiyonu yeni sayfaya yönlendiriyor
+- ✅ Modal ile ilgili eski kodlar temizlendi
+
+---
 - Görev 3-4: 3-4 saat (filtreleme + dashboard)
 - Görev 5-6: 2-3 saat (düzenleme + tema)
 - **Toplam:** ~8-10 saat

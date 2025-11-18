@@ -67,13 +67,49 @@ async function loadSuperAdminDashboard() {
     });
 
     // Get recent activities (last 5)
-    const activitiesRef = collection(db, 'activity_logs');
+    const activitiesRef = collection(db, 'audit_logs');
     const activitiesQuery = query(activitiesRef, orderBy('timestamp', 'desc'), limit(5));
     const activitiesSnap = await getDocs(activitiesQuery);
     const recentActivities = [];
-    activitiesSnap.forEach(doc => {
-      recentActivities.push({ id: doc.id, ...doc.data() });
-    });
+    
+    for (const activityDoc of activitiesSnap.docs) {
+      const activityData = activityDoc.data();
+      
+      // Get user name
+      let userName = 'Bilinmeyen';
+      if (activityData.userId) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', activityData.userId));
+          if (userDoc.exists()) {
+            const user = userDoc.data();
+            userName = user.displayName || user.email || 'Kullanıcı';
+          }
+        } catch (err) {
+          console.warn('User fetch error:', err);
+        }
+      }
+      
+      // Get project name if exists
+      let projectName = null;
+      if (activityData.projectId) {
+        try {
+          const projectDoc = await getDoc(doc(db, 'projects', activityData.projectId));
+          if (projectDoc.exists()) {
+            projectName = projectDoc.data().name;
+          }
+        } catch (err) {
+          console.warn('Project fetch error:', err);
+        }
+      }
+      
+      recentActivities.push({
+        id: activityDoc.id,
+        ...activityData,
+        userName,
+        projectName,
+        description: getActivityDescription(activityData, userName, projectName)
+      });
+    }
 
     // Render dashboard
     renderSuperAdminDashboard({
@@ -479,6 +515,19 @@ function formatDate(timestamp) {
 
 function getActivityIcon(action) {
   const icons = {
+    'CREATE_PROJECT': '📁',
+    'UPDATE_PROJECT': '✏️',
+    'DELETE_PROJECT': '🗑️',
+    'CREATE_USER': '👤',
+    'UPDATE_USER': '✏️',
+    'DELETE_USER': '🗑️',
+    'CREATE_COMPANY': '🏢',
+    'UPDATE_COMPANY': '✏️',
+    'DELETE_COMPANY': '🗑️',
+    'UPLOAD_PHOTO': '📸',
+    'ADD_LOG': '📝',
+    'ADD_STOCK': '📦',
+    'ADD_PAYMENT': '💰',
     'create': '➕',
     'update': '✏️',
     'delete': '🗑️',
@@ -488,6 +537,33 @@ function getActivityIcon(action) {
     'download': '📥'
   };
   return icons[action] || '📌';
+}
+
+function getActivityDescription(activityData, userName, projectName) {
+  const actionDescriptions = {
+    'CREATE_PROJECT': 'yeni proje oluşturdu',
+    'UPDATE_PROJECT': 'projeyi güncelledi',
+    'DELETE_PROJECT': 'projeyi sildi',
+    'CREATE_USER': 'yeni kullanıcı ekledi',
+    'UPDATE_USER': 'kullanıcıyı güncelledi',
+    'DELETE_USER': 'kullanıcıyı sildi',
+    'CREATE_COMPANY': 'yeni şirket oluşturdu',
+    'UPDATE_COMPANY': 'şirketi güncelledi',
+    'DELETE_COMPANY': 'şirketi sildi',
+    'UPLOAD_PHOTO': 'fotoğraf yükledi',
+    'ADD_LOG': 'şantiye günlüğü ekledi',
+    'ADD_STOCK': 'stok ekledi',
+    'ADD_PAYMENT': 'hakediş ekledi'
+  };
+  
+  const actionDesc = actionDescriptions[activityData.action] || activityData.action;
+  let description = `${userName} ${actionDesc}`;
+  
+  if (projectName) {
+    description += ` - ${projectName}`;
+  }
+  
+  return description;
 }
 
 // Export for global use

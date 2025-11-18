@@ -2,7 +2,77 @@
 
 const db = window.db;
 const auth = window.auth;
-const { collection, query, where, getDocs, orderBy, limit } = window.firestore;
+const { collection, query, where, getDocs, orderBy, limit, doc, getDoc } = window.firestore;
+
+// Cache for storing resolved names
+const nameCache = {
+  users: {},
+  projects: {},
+  companies: {}
+};
+
+// Helper function to get user name by ID
+async function getUserName(userId) {
+  if (!userId) return 'Bilinmeyen Kullanıcı';
+  if (nameCache.users[userId]) return nameCache.users[userId];
+
+  try {
+    const userDoc = await getDoc(doc(db, 'users', userId));
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      const name = userData.displayName || userData.email || userId;
+      nameCache.users[userId] = name;
+      return name;
+    }
+  } catch (error) {
+    console.warn('Could not fetch user name:', userId, error);
+  }
+  
+  nameCache.users[userId] = userId;
+  return userId;
+}
+
+// Helper function to get project name by ID
+async function getProjectName(projectId) {
+  if (!projectId) return null;
+  if (nameCache.projects[projectId]) return nameCache.projects[projectId];
+
+  try {
+    const projectDoc = await getDoc(doc(db, 'projects', projectId));
+    if (projectDoc.exists()) {
+      const projectData = projectDoc.data();
+      const name = projectData.name || projectId;
+      nameCache.projects[projectId] = name;
+      return name;
+    }
+  } catch (error) {
+    console.warn('Could not fetch project name:', projectId, error);
+  }
+  
+  nameCache.projects[projectId] = projectId;
+  return projectId;
+}
+
+// Helper function to get company name by ID
+async function getCompanyName(companyId) {
+  if (!companyId) return null;
+  if (nameCache.companies[companyId]) return nameCache.companies[companyId];
+
+  try {
+    const companyDoc = await getDoc(doc(db, 'companies', companyId));
+    if (companyDoc.exists()) {
+      const companyData = companyDoc.data();
+      const name = companyData.name || companyId;
+      nameCache.companies[companyId] = name;
+      return name;
+    }
+  } catch (error) {
+    console.warn('Could not fetch company name:', companyId, error);
+  }
+  
+  nameCache.companies[companyId] = companyId;
+  return companyId;
+}
 
 // Load activity logs based on user role
 async function loadActivityLogs() {
@@ -63,7 +133,7 @@ async function loadActivityLogs() {
 }
 
 // Render activity logs
-function renderActivityLogs(logs) {
+async function renderActivityLogs(logs) {
   const activityLogsList = document.getElementById('activityLogsList');
   if (!activityLogsList) return;
 
@@ -123,7 +193,21 @@ function renderActivityLogs(logs) {
     'ADD_PAYMENT': 'Hakediş Eklendi'
   };
 
-  activityLogsList.innerHTML = filteredLogs.map(log => {
+  // Resolve all names first
+  const logsWithNames = await Promise.all(filteredLogs.map(async (log) => {
+    const userName = await getUserName(log.userId);
+    const projectName = log.projectId ? await getProjectName(log.projectId) : null;
+    const companyName = log.companyId ? await getCompanyName(log.companyId) : null;
+    
+    return {
+      ...log,
+      userName,
+      projectName,
+      companyName
+    };
+  }));
+
+  activityLogsList.innerHTML = logsWithNames.map(log => {
     const icon = actionIcons[log.action] || '📋';
     const actionName = actionNames[log.action] || log.action;
     const timestamp = log.timestamp?.toDate ? log.timestamp.toDate() : new Date(log.timestamp);
@@ -157,8 +241,9 @@ function renderActivityLogs(logs) {
             <div>
               <strong style="color: var(--text-primary);">${actionName}</strong>
               <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
-                👤 Kullanıcı ID: ${log.userId}
-                ${log.projectId ? ` • 📁 Proje ID: ${log.projectId}` : ''}
+                👤 ${log.userName}
+                ${log.projectName ? ` • 📁 ${log.projectName}` : ''}
+                ${log.companyName ? ` • 🏢 ${log.companyName}` : ''}
               </div>
             </div>
           </div>
