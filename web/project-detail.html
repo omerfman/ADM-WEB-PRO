@@ -387,6 +387,15 @@
       // Update nav active state
       document.querySelectorAll('.sidebar-nav .nav-item[data-tab]').forEach(item => item.classList.remove('active'));
       document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+      
+      // Load data for the selected tab
+      if (tab === 'logs' && window.loadProjectLogs) {
+        window.loadProjectLogs();
+      } else if (tab === 'stocks' && window.loadProjectStocks) {
+        window.loadProjectStocks();
+      } else if (tab === 'payments' && window.loadProjectPayments) {
+        window.loadProjectPayments();
+      }
     }
     
     // Auto-calculate totals for stock form

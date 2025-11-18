@@ -99,8 +99,12 @@ async function uploadPhotoToImgBB(file, projectId) {
  */
 async function savePhotoMetadata(projectId, metadata) {
   try {
-    const photosRef = collection(db, 'projects', projectId, 'photos');
-    const docRef = await addDoc(photosRef, metadata);
+    // Get db from window if not available in module scope
+    const database = db || window.db;
+    const { collection: firestoreCollection, addDoc: firestoreAddDoc } = window.firestore;
+    
+    const photosRef = firestoreCollection(database, 'projects', projectId, 'photos');
+    const docRef = await firestoreAddDoc(photosRef, metadata);
     console.log('✅ Photo metadata saved:', docRef.id);
     return docRef.id;
   } catch (error) {

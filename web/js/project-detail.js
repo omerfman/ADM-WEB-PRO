@@ -2,7 +2,7 @@
 
 import { auth, db } from "./firebase-config.js";
 import {
-  doc, getDoc, collection, query, orderBy, getDocs
+  doc, getDoc, collection, query, orderBy, getDocs, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 let currentProjectId = null;
@@ -33,8 +33,10 @@ async function initProjectDetail() {
     // Load project stats
     await loadProjectStats();
     
-    // Load logs (default tab)
+    // Load all tabs data
     await loadProjectLogs();
+    await loadProjectStocks();
+    await loadProjectPayments();
 
   } catch (error) {
     console.error('❌ Proje detayı yüklenirken hata:', error);
@@ -192,6 +194,118 @@ async function loadProjectLogs() {
 }
 
 /**
+ * Load Project Stocks
+ */
+async function loadProjectStocks() {
+  try {
+    const stocksRef = collection(db, 'projects', currentProjectId, 'stocks');
+    const stocksQuery = query(stocksRef, orderBy('createdAt', 'desc'));
+    const stocksSnap = await getDocs(stocksQuery);
+
+    const stocksList = document.getElementById('stocksList');
+    
+    if (stocksSnap.empty) {
+      stocksList.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 2rem;">Henüz stok kaydı yok</p>';
+      return;
+    }
+
+    const stocks = [];
+    stocksSnap.forEach(doc => {
+      stocks.push({ id: doc.id, ...doc.data() });
+    });
+
+    let totalStockValue = 0;
+
+    stocksList.innerHTML = stocks.map(stock => {
+      const totalPrice = (stock.quantity || 0) * (stock.unitPrice || 0);
+      totalStockValue += totalPrice;
+
+      return `
+        <div class="card" style="margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
+            <div style="flex: 1;">
+              <div style="font-weight: 600; color: var(--brand-red); font-size: 1.1rem; margin-bottom: 0.5rem;">
+                ${stock.name || 'Ürün'}
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">
+                <div>📦 Miktar: <strong>${stock.quantity || 0} ${stock.unit || ''}</strong></div>
+                <div>💰 Birim: <strong>${formatCurrency(stock.unitPrice || 0)}</strong></div>
+                <div>📊 Toplam: <strong style="color: var(--brand-red);">${formatCurrency(totalPrice)}</strong></div>
+              </div>
+            </div>
+            <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem;" onclick="deleteStock('${stock.id}')">
+              🗑️ Sil
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+  } catch (error) {
+    console.error('❌ Stoklar yüklenemedi:', error);
+    showAlert('Stoklar yüklenemedi: ' + error.message, 'danger');
+  }
+}
+
+/**
+ * Load Project Payments
+ */
+async function loadProjectPayments() {
+  try {
+    const paymentsRef = collection(db, 'projects', currentProjectId, 'payments');
+    const paymentsQuery = query(paymentsRef, orderBy('createdAt', 'desc'));
+    const paymentsSnap = await getDocs(paymentsQuery);
+
+    const paymentsList = document.getElementById('paymentsList');
+    
+    if (paymentsSnap.empty) {
+      paymentsList.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 2rem;">Henüz hakediş kaydı yok</p>';
+      return;
+    }
+
+    const payments = [];
+    paymentsSnap.forEach(doc => {
+      payments.push({ id: doc.id, ...doc.data() });
+    });
+
+    let totalPayments = 0;
+
+    paymentsList.innerHTML = payments.map(payment => {
+      const totalPrice = (payment.quantity || 0) * (payment.unitPrice || 0);
+      totalPayments += totalPrice;
+
+      return `
+        <div class="card" style="margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
+            <div style="flex: 1;">
+              <div style="font-weight: 600; color: var(--brand-red); font-size: 1.1rem; margin-bottom: 0.5rem;">
+                ${payment.description || 'Yapılan İş'}
+              </div>
+              <div style="margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">
+                👤 ${payment.performedBy || 'Bilinmeyen'}
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">
+                <div>⚙️ Birim: <strong>${payment.unit || ''}</strong></div>
+                <div>📦 Miktar: <strong>${payment.quantity || 0}</strong></div>
+                <div>💰 Birim Fiyat: <strong>${formatCurrency(payment.unitPrice || 0)}</strong></div>
+                <div>📊 Toplam: <strong style="color: var(--brand-red);">${formatCurrency(totalPrice)}</strong></div>
+              </div>
+            </div>
+            <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem;" onclick="deletePayment('${payment.id}')">
+              🗑️ Sil
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+  } catch (error) {
+    console.error('❌ Hakediş yüklenemedi:', error);
+    showAlert('Hakediş yüklenemedi: ' + error.message, 'danger');
+  }
+}
+
+/**
  * Helper Functions
  */
 function formatCurrency(amount) {
@@ -282,6 +396,57 @@ function openEditProjectModal() {
 
 function closeEditProjectModal() {
   document.getElementById('editProjectModal').classList.remove('show');
+}
+
+/**
+ * Delete Functions
+ */
+async function deleteLog(logId) {
+  if (!confirm('Bu günlük kaydını silmek istediğinize emin misiniz?')) {
+    return;
+  }
+
+  try {
+    await deleteDoc(doc(db, 'projects', currentProjectId, 'logs', logId));
+    showAlert('Günlük kaydı silindi', 'success');
+    loadProjectLogs();
+    loadProjectStats();
+  } catch (error) {
+    console.error('❌ Günlük silinirken hata:', error);
+    showAlert('Günlük silinirken hata: ' + error.message, 'danger');
+  }
+}
+
+async function deleteStock(stockId) {
+  if (!confirm('Bu stok kaydını silmek istediğinize emin misiniz?')) {
+    return;
+  }
+
+  try {
+    await deleteDoc(doc(db, 'projects', currentProjectId, 'stocks', stockId));
+    showAlert('Stok kaydı silindi', 'success');
+    loadProjectStocks();
+    loadProjectStats();
+  } catch (error) {
+    console.error('❌ Stok silinirken hata:', error);
+    showAlert('Stok silinirken hata: ' + error.message, 'danger');
+  }
+}
+
+async function deletePayment(paymentId) {
+  if (!confirm('Bu hakediş kaydını silmek istediğinize emin misiniz?')) {
+    return;
+  }
+
+  try {
+    await deleteDoc(doc(db, 'projects', currentProjectId, 'payments', paymentId));
+    showAlert('Hakediş kaydı silindi', 'success');
+    loadProjectPayments();
+    loadProjectStats();
+  } catch (error) {
+    console.error('❌ Hakediş silinirken hata:', error);
+    showAlert('Hakediş silinirken hata: ' + error.message, 'danger');
+  }
 }
 
 /**
@@ -402,6 +567,11 @@ async function handleAddPayment(event) {
 // Export functions globally
 window.currentProjectId = currentProjectId;
 window.loadProjectLogs = loadProjectLogs;
+window.loadProjectStocks = loadProjectStocks;
+window.loadProjectPayments = loadProjectPayments;
+window.deleteLog = deleteLog;
+window.deleteStock = deleteStock;
+window.deletePayment = deletePayment;
 window.openAddLogModal = openAddLogModal;
 window.closeAddLogModal = closeAddLogModal;
 window.openAddStockModal = openAddStockModal;
