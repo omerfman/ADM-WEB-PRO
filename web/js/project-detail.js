@@ -39,6 +39,11 @@ async function initProjectDetail() {
     await loadProjectStocks();
     // Note: loadProjectPayments() removed - using progress-payments.js module
     await loadBudgetTabSummary();
+    
+    // Restore last active tab after all data loaded
+    if (window.restoreActiveTab) {
+      window.restoreActiveTab();
+    }
 
   } catch (error) {
     console.error('❌ Proje detayı yüklenirken hata:', error);

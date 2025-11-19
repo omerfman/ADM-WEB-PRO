@@ -875,6 +875,12 @@
       document.querySelectorAll('.sidebar-nav .nav-item[data-tab]').forEach(item => item.classList.remove('active'));
       document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
       
+      // Save current tab to localStorage
+      const projectId = new URLSearchParams(window.location.search).get('id');
+      if (projectId) {
+        localStorage.setItem(`project_${projectId}_activeTab`, tab);
+      }
+      
       // Close sidebar on mobile after tab switch
       if (window.innerWidth <= 768) {
         const sidebar = document.querySelector('.sidebar');
@@ -898,6 +904,17 @@
         window.loadProgressPayments(projectId);
       } else if (tab === 'budget' && window.loadBudgetTabSummary) {
         window.loadBudgetTabSummary();
+      }
+    }
+    
+    // Restore last active tab on page load
+    function restoreActiveTab() {
+      const projectId = new URLSearchParams(window.location.search).get('id');
+      if (projectId) {
+        const savedTab = localStorage.getItem(`project_${projectId}_activeTab`);
+        if (savedTab) {
+          switchProjectTab(savedTab);
+        }
       }
     }
     
