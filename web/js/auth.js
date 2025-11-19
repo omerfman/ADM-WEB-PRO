@@ -175,11 +175,17 @@ onAuthStateChanged(auth, async (user) => {
       await loadUserData();
     }
 
-    // Load dashboard overview as the default page
+    // Restore saved section or load overview as default
     if (isDashboardPage) {
-      if (typeof loadDashboardOverview === 'function') {
-        loadDashboardOverview();
-      }
+      // Wait for page to fully load before restoring section
+      setTimeout(() => {
+        const savedSection = localStorage.getItem('dashboard_activeSection');
+        if (savedSection && typeof restoreActiveSection === 'function') {
+          restoreActiveSection();
+        } else if (typeof loadDashboardOverview === 'function') {
+          loadDashboardOverview();
+        }
+      }, 100);
     }
   } else {
     console.log('👤 Kullanıcı oturum kapalı');

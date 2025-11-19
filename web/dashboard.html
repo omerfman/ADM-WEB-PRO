@@ -927,6 +927,9 @@
       // Wait a bit for auth check to complete
       setTimeout(restoreActiveSection, 500);
     });
+    
+    // Make restoreActiveSection available globally for auth.js
+    window.restoreActiveSection = restoreActiveSection;
 
     // Tab switching in project modal
     function switchTab(tab) {

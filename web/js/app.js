@@ -102,8 +102,12 @@ function switchSection(section) {
     navItem.classList.add('active');
   }
   
+  // Save active section to localStorage
+  localStorage.setItem('dashboard_activeSection', section);
+  
   // Update page title
   const titles = {
+    'overview': 'Ana Sayfa',
     'projects': 'Projeler',
     'employees': 'Çalışanlar',
     'activity': 'Faaliyet Kayıtları',
@@ -116,7 +120,9 @@ function switchSection(section) {
   }
   
   // Load section-specific data
-  if (section === 'employees' && typeof loadEmployees !== 'undefined') {
+  if (section === 'overview' && typeof loadDashboardOverview !== 'undefined') {
+    loadDashboardOverview();
+  } else if (section === 'employees' && typeof loadEmployees !== 'undefined') {
     loadEmployees();
   } else if (section === 'activity' && typeof loadActivityLogs !== 'undefined') {
     loadActivityLogs();
