@@ -326,29 +326,158 @@
 - ✅ Her fonksiyona `if (!currentProjectId)` kontrolü eklendi
 - ✅ Null durumunda console warning ve early return
 
-### [x] 5. Deprecated enableIndexedDbPersistence
-**Uyarı:** `enableIndexedDbPersistence() will be deprecated`
-**Sebep:** Firebase SDK 10.7.1 yeni cache API kullanıyor
-**Çözüm:**
-- ✅ `enableIndexedDbPersistence` yerine `initializeFirestore` kullanıldı
-- ✅ `persistentLocalCache` ve `persistentMultipleTabManager` eklendi
-- ✅ Mobile/slow connection check'leri kaldırıldı (yeni API otomatik hallediyor)
+#### [x] 6. Approval Workflow UI
+**Durum:** ✅ TAMAMLANDI
+**Commit:** ddb0acb
+
+**Yapılanlar:**
+- ✅ Approval section UI (admin/reviewer için)
+- ✅ Approve modal (onay notu ile)
+- ✅ Reject modal (red sebebi zorunlu)
+- ✅ Status transitions (pending_review → pending_approval → approved)
+- ✅ Approval history timeline
+- ✅ User name resolution (performedBy → user name)
+- ✅ Action icons and labels (submit, approve, reject, mark_paid)
+- ✅ Role-based visibility (sadece admin'ler görebilir)
+- ✅ Status-based actions (canApprove check)
+- ✅ Payment_approvals collection integration
+- ✅ Auto-load approval history on payment detail
+
+**Workflow:**
+1. User: draft → İncelemeye Gönder → pending_review
+2. Admin: pending_review → Onayla → pending_approval
+3. Admin: pending_approval → Onayla → approved
+4. Admin: Reddet → rejected (any status)
 
 ---
 
-## 📦 Son Deployment (19 Kasım 2025 - Sabah)
+#### [x] 7. PDF & Excel Export
+**Durum:** ✅ TAMAMLANDI
+**Commit:** ddb0acb
+
+**PDF Export Özellikleri:**
+- ✅ Professional print layout (A4)
+- ✅ Header (title, project, period)
+- ✅ Info grid (project info + status info)
+- ✅ Measurement table (all columns)
+- ✅ Summary calculation (gross, VAT, deductions, net)
+- ✅ Signature fields (preparer, reviewer, approver)
+- ✅ Auto-print dialog
+- ✅ Print-friendly CSS (@media print)
+
+**Excel Export Özellikleri:**
+- ✅ Measurement lines (Poz No, İş Tanımı, Birim, Önceki, Bu Dönem, Kümülatif, Birim Fiyat, Tutar, Notlar)
+- ✅ Summary rows (Toplam, KDV, Stopaj, Damga, Avans, Net)
+- ✅ Column width optimization
+- ✅ XLSX format with SheetJS
+- ✅ File name: Hakedis_[No]_[Project]_[Date].xlsx
+- ✅ Export buttons in payment header
+
+**UI:**
+- ✅ 📊 Excel button (green)
+- ✅ 📄 PDF button (red)
+- ✅ Only show when measurements exist
+- ✅ Positioned in header next to status badge
+
+---
+
+#### [ ] 8. Calculation Engine Refinements
+**Durum:** ⏳ BEKLEMEDE
+**Öncelik:** ORTA
+
+**Yapılacaklar:**
+- [ ] Advance deduction tracking (kümülatif avans takibi)
+- [ ] Contract amount validation (sözleşme tutarı aşım kontrolü)
+- [ ] Completion percentage calculation
+- [ ] Currency conversion (TRY/USD/EUR)
+- [ ] Retention money (teminat kesintisi)
+
+---
+
+#### [ ] 9. Live Testing
+**Durum:** ⏳ BEKLEMEDE
+**Öncelik:** KRİTİK
+
+**Test Senaryoları:**
+- [ ] BOQ CRUD operations
+- [ ] Excel import/export (BOQ)
+- [ ] Create payment period
+- [ ] Configure tax rates
+- [ ] Add measurements with photos
+- [ ] Calculate totals (auto-update)
+- [ ] Submit for review
+- [ ] Approve/reject workflow
+- [ ] PDF export (print test)
+- [ ] Excel export (download test)
+- [ ] Approval history display
+
+---
+
+#### [ ] 10. Final Deployment
+**Durum:** ⏳ BEKLEMEDE
+**Öncelik:** KRİTİK
+
+**Yapılacaklar:**
+- [ ] All features tested and approved
+- [ ] Bug fixes if any
+- [ ] Performance optimization
+- [ ] Final commit with version tag
+- [ ] Deploy to production Vercel
+- [ ] User acceptance
+- [ ] Documentation update
+
+---
+
+## 📊 Hakediş Modülü İlerleme Özeti
+
+**Toplam Adım:** 10
+**Tamamlanan:** 7 (Schema, BOQ, Payments, Measurements, Security, Approval, Export)
+**Devam Eden:** 0
+**Bekleyen:** 3 (Calculation Refinements, Testing, Deployment)
+
+**İlerleme:** 70% ✅
+
+**Son Commit:** ddb0acb - Approval workflow + PDF/Excel export
+**Son Deploy:** Vercel auto-deploy (GitHub push)
+
+**Sonraki Adım:** Live testing veya calculation refinements
+
+---
+
+### [x] 6. Measurement Modal Null Error
+**Hata:** `Cannot read properties of null (reading 'reset')`
+**Commit:** 7714f63
+**Çözüm:** All modal elements null-checked
+
+### [x] 7. BOQ newDoc Scope Error
+**Hata:** `ReferenceError: newDoc is not defined`
+**Commit:** 7714f63
+**Çözüm:** savedItemId variable added
+
+---
+
+## 📦 Son Deployment (19 Kasım 2025 - Öğleden Sonra)
 
 **Commits:**
-1. `0e76500` - Remove loadProjectPayments references + null checks
-2. `2510d50` - Update to new Firestore cache API
+1. `7714f63` - Null checks + BOQ scope fix
+2. `ddb0acb` - Approval workflow + PDF/Excel export
 
 **Deployed:**
 - ✅ GitHub (pushed)
-- ✅ Firestore indexes (deployed)
 - ✅ Vercel (auto-deploy)
 
-**Düzeltilen Hatalar:** 5
-**Kalan Hatalar:** 0
+**Tamamlanan Özellikler:** 7
+**Kalan Özellikler:** 3
+
+**Test Edilebilir:**
+- ✅ Hakediş oluşturma
+- ✅ Metraj girişi (tekli + toplu)
+- ✅ Fotoğraf yükleme
+- ✅ Hesaplama (otomatik)
+- ✅ İncelemeye gönderme
+- ✅ Onay/red (admin)
+- ✅ Excel export
+- ✅ PDF print
 
 ---
 
