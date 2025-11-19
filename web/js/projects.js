@@ -114,6 +114,16 @@ async function loadProjects() {
     renderProjectsList();
     console.log(`✅ ${projects.length} proje yüklendi`);
     
+    // Show create project button for admins and users (not clients)
+    const createProjectBtn = document.getElementById('createProjectBtn');
+    if (createProjectBtn) {
+      if (userRole === 'super_admin' || userRole === 'company_admin' || userRole === 'user') {
+        createProjectBtn.style.display = 'inline-block';
+      } else {
+        createProjectBtn.style.display = 'none';
+      }
+    }
+    
     // Initialize filters after projects are loaded
     initializeProjectFilters();
     
@@ -843,43 +853,47 @@ async function deleteProject(projectId, projectName) {
     const userDocSnap = await getDoc(userDocRef);
     const userData = userDocSnap.data();
 
-    // Delete project
-    await deleteDoc(doc(db, 'projects', projectId));
+    // Delete all related data first (subcollections and related collections)
+    console.log('🗑️ Deleting related data for project:', projectId);
 
     // Delete all related logs
     const logsQuery = query(collection(db, 'logs'), where('projectId', '==', projectId));
     const logsSnapshot = await getDocs(logsQuery);
-    logsSnapshot.forEach(async (logDoc) => {
-      await deleteDoc(logDoc.ref);
-    });
+    const logDeletePromises = logsSnapshot.docs.map(logDoc => deleteDoc(logDoc.ref));
+    await Promise.all(logDeletePromises);
+    console.log(`✅ Deleted ${logsSnapshot.size} logs`);
 
     // Delete all related stocks
     const stocksQuery = query(collection(db, 'stocks'), where('projectId', '==', projectId));
     const stocksSnapshot = await getDocs(stocksQuery);
-    stocksSnapshot.forEach(async (stockDoc) => {
-      await deleteDoc(stockDoc.ref);
-    });
+    const stockDeletePromises = stocksSnapshot.docs.map(stockDoc => deleteDoc(stockDoc.ref));
+    await Promise.all(stockDeletePromises);
+    console.log(`✅ Deleted ${stocksSnapshot.size} stocks`);
 
     // Delete all related payments
     const paymentsQuery = query(collection(db, 'payments'), where('projectId', '==', projectId));
     const paymentsSnapshot = await getDocs(paymentsQuery);
-    paymentsSnapshot.forEach(async (paymentDoc) => {
-      await deleteDoc(paymentDoc.ref);
-    });
+    const paymentDeletePromises = paymentsSnapshot.docs.map(paymentDoc => deleteDoc(paymentDoc.ref));
+    await Promise.all(paymentDeletePromises);
+    console.log(`✅ Deleted ${paymentsSnapshot.size} payments`);
 
     // Delete all related budget categories
     const categoriesQuery = query(collection(db, 'budget_categories'), where('projectId', '==', projectId));
     const categoriesSnapshot = await getDocs(categoriesQuery);
-    categoriesSnapshot.forEach(async (categoryDoc) => {
-      await deleteDoc(categoryDoc.ref);
-    });
+    const categoryDeletePromises = categoriesSnapshot.docs.map(categoryDoc => deleteDoc(categoryDoc.ref));
+    await Promise.all(categoryDeletePromises);
+    console.log(`✅ Deleted ${categoriesSnapshot.size} budget categories`);
 
     // Delete all related budget expenses
     const expensesQuery = query(collection(db, 'budget_expenses'), where('projectId', '==', projectId));
     const expensesSnapshot = await getDocs(expensesQuery);
-    expensesSnapshot.forEach(async (expenseDoc) => {
-      await deleteDoc(expenseDoc.ref);
-    });
+    const expenseDeletePromises = expensesSnapshot.docs.map(expenseDoc => deleteDoc(expenseDoc.ref));
+    await Promise.all(expenseDeletePromises);
+    console.log(`✅ Deleted ${expensesSnapshot.size} budget expenses`);
+
+    // Now delete the project itself
+    await deleteDoc(doc(db, 'projects', projectId));
+    console.log('✅ Project deleted:', projectId);
 
     // Log activity
     await addDoc(collection(db, 'activity_logs'), {

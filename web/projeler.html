@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projeler - ADM İnşaat Proje Yönetim Sistemi</title>
+  <link rel="stylesheet" href="css/style.css?v=5">
+  <!-- SheetJS for Excel Import/Export -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="assets/adm_logo.png" alt="ADM Studio" class="sidebar-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+        <h1 style="display: none;">🏗️ ADM İnşaat</h1>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="anasayfa.html" class="nav-item">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Anasayfa</span>
+        </a>
+        <a href="projeler.html" class="nav-item active">
+          <span class="nav-icon">🏗️</span>
+          <span class="nav-text">Projeler</span>
+        </a>
+        <a href="calisanlar.html" class="nav-item hidden" id="employeesNavBtn">
+          <span class="nav-icon">👷</span>
+          <span class="nav-text">Çalışanlar</span>
+        </a>
+        <a href="sirketler.html" class="nav-item hidden" id="companiesNavBtn">
+          <span class="nav-icon">🏢</span>
+          <span class="nav-text">Şirketler</span>
+        </a>
+        <a href="kullanicilar.html" class="nav-item hidden" id="usersNavBtn">
+          <span class="nav-icon">👥</span>
+          <span class="nav-text">Kullanıcılar</span>
+        </a>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">👤</div>
+          <div class="user-details">
+            <div class="user-name" id="sidebarUserName">Kullanıcı</div>
+            <div class="user-role" id="sidebarUserRole">Rol</div>
+          </div>
+        </div>
+        <div class="sidebar-actions">
+          <button id="sidebarThemeToggle" class="theme-toggle-btn" onclick="toggleTheme()">
+            <span class="theme-option light-option">
+              <span class="theme-circle">⚪</span>
+              <span class="theme-label">Light</span>
+            </span>
+            <span class="theme-option dark-option active">
+              <span class="theme-circle">⚫</span>
+              <span class="theme-label">Dark</span>
+            </span>
+          </button>
+          <button id="logoutBtn" class="logout-btn" onclick="handleLogout()">Çıkış Yap</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <div class="topbar">
+        <button class="menu-toggle" id="menuToggle">☰</button>
+        <h2 id="pageTitle">Projeler</h2>
+        <div class="topbar-actions">
+          <span id="userNameDisplay" class="topbar-user"></span>
+        </div>
+      </div>
+
+      <div id="alertContainer"></div>
+
+      <!-- Projects Section -->
+      <section id="projectsSection" class="content-section">
+        <div class="section-header">
+          <h3>Tüm Projeler</h3>
+          <button class="btn btn-primary" id="createProjectBtn" onclick="openCreateProjectModal()" style="display: none;">+ Yeni Proje</button>
+        </div>
+        
+        <!-- Project Filters -->
+        <div class="filter-bar" style="margin-bottom: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+          <input type="text" id="projectSearchInput" placeholder="Proje adı ara..." style="flex: 1; min-width: 200px; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+          
+          <select id="projectStatusFilter" style="padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+            <option value="">Tüm Durumlar</option>
+            <option value="Devam Ediyor">Devam Ediyor</option>
+            <option value="Tamamlandı">Tamamlandı</option>
+            <option value="Beklemede">Beklemede</option>
+          </select>
+          
+          <select id="projectCompanyFilter" class="hidden" style="padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+            <option value="">Tüm Şirketler</option>
+            <!-- Companies will be loaded here for super admin -->
+          </select>
+          
+          <button class="btn btn-secondary" onclick="clearProjectFilters()" style="padding: 0.75rem 1.25rem;">🔄 Temizle</button>
+          
+          <div id="projectFilterResults" style="margin-left: auto; color: var(--text-secondary); font-size: 0.9rem; font-weight: 600;">
+            <!-- Results count will be shown here -->
+          </div>
+        </div>
+        
+        <div id="projectsList" class="dashboard-grid">
+          <!-- Projects will be loaded here -->
+          <div style="text-align: center; padding: 3rem; color: var(--text-secondary); grid-column: 1 / -1;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🏗️</div>
+            <p>Projeler yükleniyor...</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Create Project Modal -->
+  <div id="createProjectModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>➡️ Yeni Proje Oluştur</h2>
+        <button class="modal-close" onclick="closeCreateProjectModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="createProjectForm" onsubmit="handleCreateProject(event)">
+          <div class="form-group">
+            <label for="projectName">Proje Adı *</label>
+            <input type="text" id="projectName" placeholder="Proje adı giriniz" required>
+          </div>
+          <div class="form-group">
+            <label for="projectDesc">Açıklama</label>
+            <textarea id="projectDesc" placeholder="Proje açıklaması" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; height: 80px;"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="projectLocation">Konum</label>
+            <input type="text" id="projectLocation" placeholder="Proje konumu">
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Oluştur</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Project Modal -->
+  <div id="editProjectModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>✏️ Projeyi Düzenle</h2>
+        <button class="modal-close" onclick="closeEditProjectModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="editProjectForm" onsubmit="handleUpdateProject(event)">
+          <input type="hidden" id="editProjectId">
+          <div class="form-group">
+            <label for="editProjectName">Proje Adı *</label>
+            <input type="text" id="editProjectName" required>
+          </div>
+          <div class="form-group">
+            <label for="editProjectDesc">Açıklama</label>
+            <textarea id="editProjectDesc" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; height: 80px;"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="editProjectLocation">Konum</label>
+            <input type="text" id="editProjectLocation">
+          </div>
+          <div class="form-group">
+            <label for="editProjectBudget">Bütçe</label>
+            <input type="number" id="editProjectBudget" step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="editProjectStatus">Durum</label>
+            <select id="editProjectStatus" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px;">
+              <option value="Devam Ediyor">Devam Ediyor</option>
+              <option value="Tamamlandı">Tamamlandı</option>
+              <option value="Beklemede">Beklemede</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="editProjectClient">Müşteri</label>
+            <input type="text" id="editProjectClient">
+          </div>
+          <div class="form-group">
+            <label for="editProjectStartDate">Başlangıç Tarihi</label>
+            <input type="date" id="editProjectStartDate">
+          </div>
+          <div class="form-group">
+            <label for="editProjectEndDate">Bitiş Tarihi</label>
+            <input type="date" id="editProjectEndDate">
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Kaydet</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase already initialized in firebase-config.js -->
+
+  <!-- Load JS modules -->
+  <script type="module" src="js/auth.js?v=5"></script>
+  <script type="module" src="js/projects.js?v=5"></script>
+  <script type="module" src="js/app.js?v=5"></script>
+
+  <script>
+    // Theme toggle function
+    function toggleTheme() {
+      document.body.classList.toggle('dark-mode');
+      localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+      
+      // Update theme toggle button
+      const lightOption = document.querySelector('.light-option');
+      const darkOption = document.querySelector('.dark-option');
+      
+      if (document.body.classList.contains('dark-mode')) {
+        lightOption.classList.remove('active');
+        darkOption.classList.add('active');
+      } else {
+        lightOption.classList.add('active');
+        darkOption.classList.remove('active');
+      }
+    }
+
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      document.body.classList.add('dark-mode');
+      document.querySelector('.dark-option')?.classList.add('active');
+      document.querySelector('.light-option')?.classList.remove('active');
+    } else {
+      document.querySelector('.light-option')?.classList.add('active');
+      document.querySelector('.dark-option')?.classList.remove('active');
+    }
+
+    // Logout function
+    async function handleLogout() {
+      if (confirm('Çıkış yapmak istediğinize emin misiniz?')) {
+        try {
+          await window.auth.signOut();
+          window.location.href = 'login.html';
+        } catch (error) {
+          console.error('Logout error:', error);
+          alert('Çıkış yapılırken bir hata oluştu.');
+        }
+      }
+    }
+
+    // Mobile menu toggle
+    document.getElementById('menuToggle')?.addEventListener('click', () => {
+      document.querySelector('.sidebar')?.classList.toggle('sidebar-open');
+    });
+  </script>
+</body>
+</html>

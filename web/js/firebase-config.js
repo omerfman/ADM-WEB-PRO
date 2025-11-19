@@ -91,6 +91,7 @@ window.firestore = {
 
 // ES Module exports (for import statements)
 export { 
+  firebaseConfig,
   auth, 
   db, 
   verifyFirebaseConnection, 

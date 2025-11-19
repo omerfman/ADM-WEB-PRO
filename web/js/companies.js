@@ -519,6 +519,13 @@ async function handleAddCompanyUser(event, companyId) {
     // Get API base URL from config or use default
     const apiBaseUrl = window.API_BASE_URL || '';
     
+    if (!apiBaseUrl) {
+      alert('❌ Backend API yapılandırılmamış!\n\nKullanıcı oluşturmak için backend API sunucusu gereklidir.\n\nLütfen admin-api sunucusunu başlatın veya Vercel\'a deploy edin.');
+      return;
+    }
+    
+    console.log('🔗 API URL:', `${apiBaseUrl}/api/users`);
+    
     const response = await fetch(`${apiBaseUrl}/api/users`, {
       method: 'POST',
       headers: {
@@ -569,7 +576,18 @@ async function handleAddCompanyUser(event, companyId) {
     loadCompanyUsersList(companyId);
   } catch (error) {
     console.error('❌ Error creating user:', error);
-    alert('Hata: ' + error.message);
+    
+    // Check if it's a network error (API server not running)
+    if (error.message.includes('fetch') || error.message.includes('NetworkError') || error.name === 'TypeError') {
+      alert('❌ Backend API sunucusuna erişilemiyor!\n\n' +
+            'Lütfen admin-api sunucusunu başlatın:\n' +
+            '1. Terminal\'de: cd admin-api\n' +
+            '2. npm install (ilk seferinde)\n' +
+            '3. npm start\n\n' +
+            'Veya Vercel\'a deploy edin.');
+    } else {
+      alert('Hata: ' + error.message);
+    }
   }
 }
 

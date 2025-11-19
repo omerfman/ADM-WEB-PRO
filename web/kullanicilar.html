@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kullanıcılar - ADM İnşaat Proje Yönetim Sistemi</title>
+  <link rel="stylesheet" href="css/style.css?v=5">
+</head>
+<body>
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="assets/adm_logo.png" alt="ADM Studio" class="sidebar-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+        <h1 style="display: none;">🏗️ ADM İnşaat</h1>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="anasayfa.html" class="nav-item">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Anasayfa</span>
+        </a>
+        <a href="projeler.html" class="nav-item">
+          <span class="nav-icon">🏗️</span>
+          <span class="nav-text">Projeler</span>
+        </a>
+        <a href="calisanlar.html" class="nav-item hidden" id="employeesNavBtn">
+          <span class="nav-icon">👷</span>
+          <span class="nav-text">Çalışanlar</span>
+        </a>
+        <a href="sirketler.html" class="nav-item hidden" id="companiesNavBtn">
+          <span class="nav-icon">🏢</span>
+          <span class="nav-text">Şirketler</span>
+        </a>
+        <a href="kullanicilar.html" class="nav-item active" id="usersNavBtn">
+          <span class="nav-icon">👥</span>
+          <span class="nav-text">Kullanıcılar</span>
+        </a>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">👤</div>
+          <div class="user-details">
+            <div class="user-name" id="sidebarUserName">Kullanıcı</div>
+            <div class="user-role" id="sidebarUserRole">Rol</div>
+          </div>
+        </div>
+        <div class="sidebar-actions">
+          <button id="sidebarThemeToggle" class="theme-toggle-btn" onclick="toggleTheme()">
+            <span class="theme-option light-option">
+              <span class="theme-circle">⚪</span>
+              <span class="theme-label">Light</span>
+            </span>
+            <span class="theme-option dark-option active">
+              <span class="theme-circle">⚫</span>
+              <span class="theme-label">Dark</span>
+            </span>
+          </button>
+          <button id="logoutBtn" class="logout-btn" onclick="handleLogout()">Çıkış Yap</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <div class="topbar">
+        <button class="menu-toggle" id="menuToggle">☰</button>
+        <h2 id="pageTitle">Kullanıcılar</h2>
+        <div class="topbar-actions">
+          <span id="userNameDisplay" class="topbar-user"></span>
+        </div>
+      </div>
+
+      <div id="alertContainer"></div>
+
+      <!-- Users Section (Company Admin) -->
+      <section id="usersSection" class="content-section">
+        <div class="section-header">
+          <h3>Kullanıcı Yönetimi</h3>
+          <button class="btn btn-primary" onclick="openCreateUserModal()">+ Yeni Kullanıcı</button>
+        </div>
+        
+        <div id="usersList" class="dashboard-grid">
+          <!-- Users will be loaded here -->
+          <div style="text-align: center; padding: 3rem; color: var(--text-secondary); grid-column: 1 / -1;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">👥</div>
+            <p>Kullanıcılar yükleniyor...</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Firebase already initialized in firebase-config.js -->
+
+  <!-- Load JS modules -->
+  <script type="module" src="js/auth.js?v=5"></script>
+  <script type="module" src="js/users.js?v=5"></script>
+  <script type="module" src="js/app.js?v=5"></script>
+
+  <script>
+    // Theme toggle function
+    function toggleTheme() {
+      document.body.classList.toggle('dark-mode');
+      localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+      
+      // Update theme toggle button
+      const lightOption = document.querySelector('.light-option');
+      const darkOption = document.querySelector('.dark-option');
+      
+      if (document.body.classList.contains('dark-mode')) {
+        lightOption.classList.remove('active');
+        darkOption.classList.add('active');
+      } else {
+        lightOption.classList.add('active');
+        darkOption.classList.remove('active');
+      }
+    }
+
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      document.body.classList.add('dark-mode');
+      document.querySelector('.dark-option')?.classList.add('active');
+      document.querySelector('.light-option')?.classList.remove('active');
+    } else {
+      document.querySelector('.light-option')?.classList.add('active');
+      document.querySelector('.dark-option')?.classList.remove('active');
+    }
+
+    // Logout function
+    async function handleLogout() {
+      if (confirm('Çıkış yapmak istediğinize emin misiniz?')) {
+        try {
+          await window.auth.signOut();
+          window.location.href = 'login.html';
+        } catch (error) {
+          console.error('Logout error:', error);
+          alert('Çıkış yapılırken bir hata oluştu.');
+        }
+      }
+    }
+
+    // Mobile menu toggle
+    document.getElementById('menuToggle')?.addEventListener('click', () => {
+      document.querySelector('.sidebar')?.classList.toggle('sidebar-open');
+    });
+
+    // User functions - will be loaded from users.js
+    window.openCreateUserModal = function() {
+      alert('Kullanıcı oluşturma modal\'ı açılacak - users.js\'den yüklenecek');
+    };
+  </script>
+</body>
+</html>

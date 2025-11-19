@@ -6,13 +6,50 @@ const auth = window.auth;
 const { collection, query, where, getDocs, addDoc, deleteDoc, doc, updateDoc, getDoc } = window.firestore;
 
 // Open create employee modal
-function openCreateEmployeeModal() {
+async function openCreateEmployeeModal() {
   const modal = document.getElementById('createEmployeeModal');
   if (modal) {
     modal.classList.remove('hidden');
     modal.classList.add('active');
     const form = document.getElementById('createEmployeeForm');
     if (form) form.reset();
+    
+    // If super_admin, show company selector and load companies
+    const empCompanyGroup = document.getElementById('empCompanyGroup');
+    const empCompanyId = document.getElementById('empCompanyId');
+    
+    if (window.userRole === 'super_admin' && empCompanyGroup && empCompanyId) {
+      empCompanyGroup.style.display = 'block';
+      empCompanyId.required = true;
+      
+      // Load companies from Firestore
+      try {
+        console.log('📥 Loading companies for super_admin...');
+        const companiesRef = collection(db, 'companies');
+        const snapshot = await getDocs(companiesRef);
+        
+        // Clear existing options except first one
+        empCompanyId.innerHTML = '<option value="">Şirket seçiniz...</option>';
+        
+        snapshot.forEach(doc => {
+          const company = doc.data();
+          const option = document.createElement('option');
+          option.value = doc.id;
+          option.textContent = company.name;
+          empCompanyId.appendChild(option);
+        });
+        
+        console.log(`✅ Loaded ${snapshot.size} companies`);
+      } catch (error) {
+        console.error('❌ Error loading companies:', error);
+        alert('Şirketler yüklenirken hata: ' + error.message);
+      }
+    } else if (empCompanyGroup) {
+      // Hide company selector for non-super_admin users
+      empCompanyGroup.style.display = 'none';
+      empCompanyId.required = false;
+    }
+    
     console.log('✅ Employee modal opened');
   }
 }
@@ -47,9 +84,25 @@ async function handleCreateEmployee(event) {
     return;
   }
 
-  if (!window.userCompanyId) {
-    alert('Hata: Şirket bilgisi bulunamadı');
-    return;
+  // Determine company ID
+  let companyId;
+  if (window.userRole === 'super_admin') {
+    // Super admin must select a company
+    const empCompanyId = document.getElementById('empCompanyId');
+    companyId = empCompanyId ? empCompanyId.value : null;
+    
+    if (!companyId) {
+      alert('Lütfen bir şirket seçiniz');
+      return;
+    }
+  } else {
+    // Regular users use their own company
+    companyId = window.userCompanyId;
+    
+    if (!companyId) {
+      alert('Hata: Şirket bilgisi bulunamadı');
+      return;
+    }
   }
   
   // Prepare employee data
@@ -58,7 +111,7 @@ async function handleCreateEmployee(event) {
     password,
     fullName,
     role,
-    companyId: window.userCompanyId,
+    companyId: companyId,  // Use the determined companyId (from selector or user's company)
     phone: phone || '',
     position: position || ''
   };
@@ -82,7 +135,12 @@ async function handleCreateEmployee(event) {
     const idToken = await auth.currentUser.getIdToken();
     const apiBaseUrl = window.API_BASE_URL || '';
     
-    console.log('🔄 Creating employee with data:', employeeData);
+    if (!apiBaseUrl) {
+      alert('❌ Backend API yapılandırılmamış!\n\nÇalışan oluşturmak için backend API sunucusu gereklidir.\n\nLütfen admin-api sunucusunu başlatın veya Vercel\'a deploy edin.\n\nKomut: cd admin-api && npm start');
+      return;
+    }
+    
+    console.log('🔄 Creating employee with data:', { ...employeeData, password: '***' });
     
     const response = await fetch(`${apiBaseUrl}/api/users`, {
       method: 'POST',
@@ -117,7 +175,18 @@ async function handleCreateEmployee(event) {
     loadEmployees();
   } catch (error) {
     console.error('❌ Error creating employee:', error);
-    alert('Backend API bağlantı hatası: ' + error.message);
+    
+    // Check if it's a network error (API server not running)
+    if (error.message.includes('fetch') || error.message.includes('NetworkError') || error.name === 'TypeError') {
+      alert('❌ Backend API sunucusuna erişilemiyor!\n\n' +
+            'Lütfen admin-api sunucusunu başlatın:\n' +
+            '1. Terminal\'de: cd admin-api\n' +
+            '2. npm install (ilk seferinde)\n' +
+            '3. npm start\n\n' +
+            'Veya Vercel\'a deploy edin.');
+    } else {
+      alert('Backend API bağlantı hatası: ' + error.message);
+    }
   }
 }
 
@@ -413,37 +482,42 @@ async function deleteEmployee(employeeId, employeeName) {
   if (!confirm(confirmMsg)) return;
 
   // Double confirmation for critical action
-  const doubleConfirm = confirm('⚠️ SON UYARI: Bu kullanıcı Firebase Authentication ve Firestore\'dan tamamen silinecektir. Devam edilsin mi?');
+  const doubleConfirm = confirm('⚠️ SON UYARI: Bu kullanıcı Firestore\'dan silinecektir. Devam edilsin mi?');
   if (!doubleConfirm) return;
 
   try {
-    const idToken = await auth.currentUser.getIdToken();
-    const apiBaseUrl = window.API_BASE_URL || '';
-
     console.log('🗑️ Deleting employee:', employeeId);
 
-    const response = await fetch(`${apiBaseUrl}/api/users/${employeeId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': 'Bearer ' + idToken
-      }
-    });
-
-    if (!response.ok) {
-      const data = await response.json();
-      throw new Error(data.error || 'Silme işlemi başarısız');
-    }
-
-    alert('✅ Çalışan başarıyla silindi');
+    // Delete from Firestore users collection
+    await deleteDoc(doc(db, 'users', employeeId));
+    
+    console.log('✅ Employee deleted from Firestore:', employeeId);
+    
+    // Note: Firebase Auth user deletion requires backend API
+    alert('✅ Çalışan Firestore\'dan silindi\n\n⚠️ Not: Firebase Auth hesabı hala aktif. Tam silme için backend API gereklidir.');
+    
     loadEmployees();
   } catch (error) {
     console.error('❌ Error deleting employee:', error);
-    alert('Hata: ' + error.message);
+    
+    if (error.code === 'permission-denied') {
+      alert('Hata: Bu işlem için yetkiniz yok.');
+    } else {
+      alert('Hata: ' + error.message);
+    }
   }
 }
 
 // Filter employees
 function filterEmployees() {
+  loadEmployees();
+}
+
+// Clear employee filters
+function clearEmployeeFilters() {
+  document.getElementById('employeeSearchInput').value = '';
+  document.getElementById('employeeRoleFilter').value = '';
+  document.getElementById('employeeStatusFilter').value = '';
   loadEmployees();
 }
 
@@ -478,3 +552,4 @@ window.handleEditEmployee = handleEditEmployee;
 window.toggleEmployeeStatus = toggleEmployeeStatus;
 window.deleteEmployee = deleteEmployee;
 window.filterEmployees = filterEmployees;
+window.clearEmployeeFilters = clearEmployeeFilters;

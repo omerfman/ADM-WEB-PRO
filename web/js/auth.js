@@ -35,7 +35,7 @@ async function handleLogin(event) {
     showAlert('Giriş başarılı!', 'success');
     
     // Immediate redirect for better mobile UX
-    window.location.href = 'dashboard.html';
+    window.location.href = 'anasayfa.html';
   } catch (error) {
     console.error('❌ Login hatası:', error);
     
@@ -82,9 +82,11 @@ async function handleLogout() {
 }
 
 async function loadUserData() {
+  console.log('🔄 loadUserData başlatıldı...');
   const user = auth.currentUser;
   if (user) {
     const email = user.email.split('@')[0];
+    console.log(`📧 User email: ${email}`);
     
     // Update user name displays (both exist in dashboard)
     const userNameDisplay = document.getElementById('userNameDisplay');
@@ -167,34 +169,166 @@ async function loadUserData() {
     window.userRole = String(role || '');
     window.userCompanyId = companyId ? String(companyId) : null;
     
+    // Cache user data for instant next load
+    try {
+      localStorage.setItem('cached_user_data', JSON.stringify({
+        name: email,
+        role: role,
+        companyId: companyId,
+        timestamp: Date.now()
+      }));
+    } catch (e) {
+      console.warn('Failed to cache user data:', e);
+    }
+    
     console.log('🔑 Stored - Role:', window.userRole, '| Company:', window.userCompanyId);
   }
 }
 
+// Fast load cached user data before Firebase loads (for instant UI)
+function loadCachedUserData() {
+  const cached = localStorage.getItem('cached_user_data');
+  if (!cached) return false;
+  
+  try {
+    const data = JSON.parse(cached);
+    const age = Date.now() - data.timestamp;
+    
+    // Use cache if less than 5 minutes old
+    if (age < 5 * 60 * 1000) {
+      const sidebarUserName = document.getElementById('sidebarUserName');
+      const sidebarUserRole = document.getElementById('sidebarUserRole');
+      
+      if (sidebarUserName) sidebarUserName.textContent = data.name;
+      if (sidebarUserRole) {
+        const roleNames = {
+          'super_admin': 'Super Admin',
+          'company_admin': 'Şirket Admin',
+          'user': 'Kullanıcı',
+          'client': 'Müşteri'
+        };
+        sidebarUserRole.textContent = roleNames[data.role] || data.role;
+      }
+      
+      // Show nav items based on cached role (instant visibility)
+      const employeesNavBtn = document.getElementById('employeesNavBtn');
+      const usersNavBtn = document.getElementById('usersNavBtn');
+      const companiesNavBtn = document.getElementById('companiesNavBtn');
+      
+      if (data.role === 'company_admin') {
+        if (employeesNavBtn) employeesNavBtn.classList.remove('hidden');
+      }
+      
+      if (data.role === 'super_admin') {
+        if (employeesNavBtn) employeesNavBtn.classList.remove('hidden');
+        if (usersNavBtn) usersNavBtn.classList.remove('hidden');
+        if (companiesNavBtn) companiesNavBtn.classList.remove('hidden');
+      }
+      
+      window.userRole = data.role;
+      window.userCompanyId = data.companyId;
+      
+      return true;
+    }
+  } catch (e) {
+    console.warn('Cache parse error:', e);
+  }
+  
+  return false;
+}
+
+// Load cached data immediately (before Firebase auth check)
+if (typeof document !== 'undefined') {
+  if (loadCachedUserData()) {
+    console.log('✅ Loaded cached user data for instant UI');
+  }
+}
+
+// Helper: Wait for a function to be available, then call callback
+function waitForFunction(funcName, callback, maxAttempts = 50) {
+  console.log(`🔍 Waiting for function: ${funcName}`);
+  let attempts = 0;
+  const interval = setInterval(() => {
+    attempts++;
+    if (typeof window[funcName] === 'function') {
+      clearInterval(interval);
+      console.log(`✅ Found function ${funcName} after ${attempts} attempts`);
+      callback();
+    } else if (attempts >= maxAttempts) {
+      clearInterval(interval);
+      console.warn(`⚠️ Function ${funcName} not available after ${maxAttempts} attempts`);
+      console.log('Available window functions:', Object.keys(window).filter(k => typeof window[k] === 'function'));
+    }
+  }, 100);
+}
+
 // Export loadUserData for use in other scripts
 window.loadUserData = loadUserData;
+window.loadCachedUserData = loadCachedUserData;
 
 // Auth state listener - checks if user is logged in
 onAuthStateChanged(auth, async (user) => {
   const isLoginPage = window.location.pathname.includes('login.html');
   const isDashboardPage = window.location.pathname.includes('dashboard.html');
   const isProjectDetailPage = window.location.pathname.includes('project-detail.html');
+  const isAnasayfaPage = window.location.pathname.includes('anasayfa.html');
+  const isProjelerPage = window.location.pathname.includes('projeler.html');
+  const isCalisanlarPage = window.location.pathname.includes('calisanlar.html');
+  const isSirketlerPage = window.location.pathname.includes('sirketler.html');
+  const isKullanicilarPage = window.location.pathname.includes('kullanicilar.html');
   
   if (user) {
     console.log('👤 Kullanıcı oturum açık:', user.email);
     
-    // If on login page and logged in, redirect to dashboard
+    // If on login page and logged in, redirect to anasayfa
     if (isLoginPage) {
-      window.location.href = 'dashboard.html';
+      window.location.href = 'anasayfa.html';
       return;
     }
     
-    // Load user data if on dashboard or project detail page
-    if (isDashboardPage || isProjectDetailPage) {
+    // Load user data for all authenticated pages
+    if (isDashboardPage || isProjectDetailPage || isAnasayfaPage || isProjelerPage || 
+        isCalisanlarPage || isSirketlerPage || isKullanicilarPage) {
       await loadUserData();
     }
 
-    // Restore saved section or load overview as default
+    // Initialize page-specific modules
+    if (isAnasayfaPage) {
+      waitForFunction('loadDashboardOverview', () => {
+        console.log('📊 Loading dashboard overview for anasayfa.html');
+        window.loadDashboardOverview();
+      });
+    }
+    
+    if (isProjelerPage) {
+      waitForFunction('loadProjects', () => {
+        console.log('🏗️ Loading projects for projeler.html');
+        window.loadProjects();
+      });
+    }
+    
+    if (isCalisanlarPage) {
+      waitForFunction('loadEmployees', () => {
+        console.log('👷 Loading employees for calisanlar.html');
+        window.loadEmployees();
+      });
+    }
+    
+    if (isSirketlerPage) {
+      waitForFunction('loadCompanies', () => {
+        console.log('🏢 Loading companies for sirketler.html');
+        window.loadCompanies();
+      });
+    }
+    
+    if (isKullanicilarPage) {
+      waitForFunction('loadUsers', () => {
+        console.log('👥 Loading users for kullanicilar.html');
+        window.loadUsers();
+      });
+    }
+
+    // Restore saved section or load overview as default (legacy dashboard.html support)
     if (isDashboardPage) {
       // Wait for page to fully load before restoring section
       setTimeout(() => {
@@ -221,8 +355,9 @@ onAuthStateChanged(auth, async (user) => {
   } else {
     console.log('👤 Kullanıcı oturum kapalı');
     
-    // If on dashboard and not logged in, redirect to login
-    if (isDashboardPage || isProjectDetailPage) {
+    // If on any authenticated page and not logged in, redirect to login
+    if (isDashboardPage || isProjectDetailPage || isAnasayfaPage || isProjelerPage || 
+        isCalisanlarPage || isSirketlerPage || isKullanicilarPage) {
       window.location.href = 'login.html';
     }
   }

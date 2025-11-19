@@ -71,6 +71,17 @@ body {
   color: var(--text-primary);
   line-height: 1.6;
   transition: background-color 0.3s ease, color 0.3s ease;
+  /* Page transition fade-in */
+  animation: pageLoadFadeIn 0.3s ease-in;
+}
+
+@keyframes pageLoadFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* All headings use Montserrat */
@@ -285,6 +296,9 @@ header nav button:hover {
   height: 100vh;
   z-index: 1000;
   transition: transform 0.3s ease;
+  /* Performance optimizations */
+  will-change: transform;
+  contain: layout style paint;
 }
 
 .sidebar-header {
@@ -510,6 +524,9 @@ header nav button:hover {
   min-height: 100vh;
   background-color: var(--bg-primary);
   transition: margin-left 0.3s ease;
+  /* Performance optimizations for smooth transitions */
+  will-change: contents;
+  contain: layout style;
 }
 
 .topbar {
