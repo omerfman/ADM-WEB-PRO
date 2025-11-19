@@ -1070,3 +1070,66 @@ header nav button:hover {
 .card[onclick] {
   transition: transform 0.2s, box-shadow 0.2s;
 }
+
+/* ========== BOQ INLINE EDITING ANIMATIONS ========== */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+}
+
+.boq-edit-row {
+  animation: slideIn 0.3s ease-out;
+}
+
+.boq-edit-row input,
+.boq-edit-row textarea,
+.boq-edit-row select {
+  transition: all 0.2s ease;
+}
+
+.boq-edit-row input:focus,
+.boq-edit-row textarea:focus,
+.boq-edit-row select:focus {
+  transform: scale(1.02);
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+  outline: none;
+}

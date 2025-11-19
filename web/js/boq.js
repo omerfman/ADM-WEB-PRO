@@ -89,14 +89,14 @@ function renderBoqTable() {
         <button class="btn btn-secondary" onclick="openBoqImportModal()">
           📤 Excel İçe Aktar
         </button>
-        <button class="btn btn-primary" onclick="openBoqItemModal()">
+        <button class="btn btn-primary" onclick="addInlineBoqRow()">
           ➕ Yeni Kalem Ekle
         </button>
       </div>
     </div>
 
     <div class="table-container" style="overflow-x: auto;">
-      <table class="data-table">
+      <table class="data-table" id="boqTable">
         <thead>
           <tr>
             <th style="width: 100px;">Poz No</th>
@@ -107,13 +107,13 @@ function renderBoqTable() {
             <th style="width: 120px; text-align: right;">Miktar</th>
             <th style="width: 120px; text-align: right;">Birim Fiyat</th>
             <th style="width: 150px; text-align: right;">Toplam Tutar</th>
-            <th style="width: 120px;">İşlemler</th>
+            <th style="width: 150px;">İşlemler</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="boqTableBody">
           ${boqItems.length > 0
             ? boqItems.map(item => `
-              <tr>
+              <tr data-item-id="${item.id}">
                 <td><strong>${item.pozNo}</strong></td>
                 <td>${item.category}</td>
                 <td>${item.subCategory || '-'}</td>
@@ -126,7 +126,7 @@ function renderBoqTable() {
                   <div style="display: flex; gap: 0.25rem; justify-content: center;">
                     <button 
                       class="btn btn-icon" 
-                      onclick="editBoqItem('${item.id}')"
+                      onclick="editBoqItemInline('${item.id}')"
                       title="Düzenle"
                     >✏️</button>
                     <button 
@@ -139,7 +139,7 @@ function renderBoqTable() {
               </tr>
             `).join('')
             : `
-              <tr>
+              <tr id="emptyStateRow">
                 <td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
                   <div style="font-size: 3rem; margin-bottom: 1rem;">📋</div>
                   <p style="margin: 0; font-size: 1.1rem;">Henüz metraj kalemi eklenmemiş</p>
@@ -845,6 +845,469 @@ async function importBoqFromExcel() {
 }
 
 // Export functions
+/**
+ * Add inline editing row to BOQ table
+ */
+function addInlineBoqRow() {
+  const tbody = document.getElementById('boqTableBody');
+  if (!tbody) return;
+  
+  // Remove empty state if exists
+  const emptyRow = document.getElementById('emptyStateRow');
+  if (emptyRow) emptyRow.remove();
+  
+  // Check if there's already an edit row
+  const existingEditRow = tbody.querySelector('.boq-edit-row');
+  if (existingEditRow) {
+    alert('Lütfen önce mevcut eklemeyi tamamlayın veya iptal edin');
+    existingEditRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+  
+  const editRow = document.createElement('tr');
+  editRow.className = 'boq-edit-row';
+  editRow.style.background = 'linear-gradient(135deg, #E3F2FD 0%, #F3E5F5 100%)';
+  editRow.style.animation = 'slideIn 0.3s ease-out';
+  
+  editRow.innerHTML = `
+    <td>
+      <input 
+        type="text" 
+        id="inlinePozNo" 
+        placeholder="01.01.001"
+        style="width: 100%; padding: 0.5rem; border: 2px solid #2196F3; border-radius: 4px; font-weight: bold;"
+        required
+      >
+    </td>
+    <td>
+      <input 
+        type="text" 
+        id="inlineCategory" 
+        placeholder="İnşaat İşleri"
+        style="width: 100%; padding: 0.5rem; border: 2px solid #2196F3; border-radius: 4px;"
+        required
+      >
+    </td>
+    <td>
+      <input 
+        type="text" 
+        id="inlineSubCategory" 
+        placeholder="Alt Kategori"
+        style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;"
+      >
+    </td>
+    <td>
+      <textarea 
+        id="inlineDescription" 
+        placeholder="İş tanımı..."
+        rows="2"
+        style="width: 100%; padding: 0.5rem; border: 2px solid #2196F3; border-radius: 4px; resize: vertical;"
+        required
+      ></textarea>
+    </td>
+    <td>
+      <select 
+        id="inlineUnit" 
+        style="width: 100%; padding: 0.5rem; border: 2px solid #2196F3; border-radius: 4px;"
+        required
+      >
+        <option value="">Birim</option>
+        <option value="m">m</option>
+        <option value="m²">m²</option>
+        <option value="m³">m³</option>
+        <option value="Ad">Ad</option>
+        <option value="Kg">Kg</option>
+        <option value="Ton">Ton</option>
+        <option value="Lt">Lt</option>
+        <option value="Takım">Takım</option>
+        <option value="Gt">Gt</option>
+      </select>
+    </td>
+    <td>
+      <input 
+        type="number" 
+        id="inlineQuantity" 
+        placeholder="0.00"
+        step="0.01"
+        min="0.01"
+        style="width: 100%; padding: 0.5rem; border: 2px solid #2196F3; border-radius: 4px; text-align: right;"
+        oninput="calculateInlineTotal()"
+        required
+      >
+    </td>
+    <td>
+      <input 
+        type="number" 
+        id="inlineUnitPrice" 
+        placeholder="0.00"
+        step="0.01"
+        min="0.01"
+        style="width: 100%; padding: 0.5rem; border: 2px solid #2196F3; border-radius: 4px; text-align: right;"
+        oninput="calculateInlineTotal()"
+        required
+      >
+    </td>
+    <td style="text-align: right;">
+      <strong id="inlineTotalPrice" style="color: #1976D2; font-size: 1.1rem;">0,00 TL</strong>
+    </td>
+    <td>
+      <div style="display: flex; gap: 0.25rem; justify-content: center; flex-wrap: wrap;">
+        <button 
+          class="btn btn-primary" 
+          onclick="saveInlineBoqItem()"
+          title="Kaydet"
+          style="padding: 0.5rem 1rem; white-space: nowrap;"
+        >
+          ✅ Ekle
+        </button>
+        <button 
+          class="btn btn-secondary" 
+          onclick="cancelInlineBoqEdit()"
+          title="İptal"
+          style="padding: 0.5rem 1rem;"
+        >
+          ❌
+        </button>
+      </div>
+    </td>
+  `;
+  
+  tbody.insertBefore(editRow, tbody.firstChild);
+  
+  // Focus on first input
+  document.getElementById('inlinePozNo')?.focus();
+  
+  // Scroll to the new row
+  editRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+/**
+ * Calculate total for inline editing
+ */
+function calculateInlineTotal() {
+  const quantity = parseFloat(document.getElementById('inlineQuantity')?.value) || 0;
+  const unitPrice = parseFloat(document.getElementById('inlineUnitPrice')?.value) || 0;
+  const total = quantity * unitPrice;
+  
+  const totalEl = document.getElementById('inlineTotalPrice');
+  if (totalEl) {
+    totalEl.textContent = formatCurrency(total);
+  }
+}
+
+/**
+ * Save inline BOQ item
+ */
+async function saveInlineBoqItem() {
+  const pozNo = document.getElementById('inlinePozNo')?.value.trim();
+  const category = document.getElementById('inlineCategory')?.value.trim();
+  const subCategory = document.getElementById('inlineSubCategory')?.value.trim();
+  const description = document.getElementById('inlineDescription')?.value.trim();
+  const unit = document.getElementById('inlineUnit')?.value;
+  const quantity = parseFloat(document.getElementById('inlineQuantity')?.value);
+  const unitPrice = parseFloat(document.getElementById('inlineUnitPrice')?.value);
+  
+  // Validation
+  if (!pozNo || !category || !description || !unit || !quantity || !unitPrice) {
+    alert('❌ Lütfen tüm zorunlu alanları doldurun (Poz No, Kategori, İş Tanımı, Birim, Miktar, Birim Fiyat)');
+    return;
+  }
+  
+  if (quantity <= 0 || unitPrice <= 0) {
+    alert('❌ Miktar ve Birim Fiyat sıfırdan büyük olmalıdır');
+    return;
+  }
+  
+  const totalPrice = quantity * unitPrice;
+  
+  try {
+    // Add to Firestore
+    const boqRef = collection(db, 'boq_items');
+    const newItem = {
+      projectId: currentProjectId,
+      pozNo,
+      category,
+      subCategory: subCategory || '',
+      description,
+      unit,
+      quantity,
+      unitPrice,
+      totalPrice,
+      isDeleted: false,
+      createdAt: Timestamp.now(),
+      createdBy: auth.currentUser.email
+    };
+    
+    await addDoc(boqRef, newItem);
+    
+    // Reload BOQ
+    await loadBoq(currentProjectId);
+    
+    // Show success message
+    showSuccessMessage('✅ Metraj kalemi başarıyla eklendi!');
+    
+  } catch (error) {
+    console.error('❌ Error saving BOQ item:', error);
+    alert('Hata: ' + error.message);
+  }
+}
+
+/**
+ * Cancel inline editing
+ */
+function cancelInlineBoqEdit() {
+  const editRow = document.querySelector('.boq-edit-row');
+  if (editRow) {
+    editRow.style.animation = 'slideOut 0.3s ease-out';
+    setTimeout(() => {
+      editRow.remove();
+      
+      // Re-add empty state if no items
+      if (boqItems.length === 0) {
+        const tbody = document.getElementById('boqTableBody');
+        if (tbody && !tbody.querySelector('tr')) {
+          tbody.innerHTML = `
+            <tr id="emptyStateRow">
+              <td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">📋</div>
+                <p style="margin: 0; font-size: 1.1rem;">Henüz metraj kalemi eklenmemiş</p>
+                <p style="margin: 0.5rem 0 0 0;">Excel içe aktararak veya manuel ekleyerek başlayın</p>
+              </td>
+            </tr>
+          `;
+        }
+      }
+    }, 300);
+  }
+}
+
+/**
+ * Edit BOQ item inline
+ */
+function editBoqItemInline(itemId) {
+  const item = boqItems.find(i => i.id === itemId);
+  if (!item) return;
+  
+  const row = document.querySelector(`tr[data-item-id="${itemId}"]`);
+  if (!row) return;
+  
+  // Check if there's already an edit row
+  const existingEditRow = document.querySelector('.boq-edit-row');
+  if (existingEditRow) {
+    alert('Lütfen önce mevcut düzenlemeyi tamamlayın veya iptal edin');
+    return;
+  }
+  
+  const editRow = document.createElement('tr');
+  editRow.className = 'boq-edit-row';
+  editRow.style.background = 'linear-gradient(135deg, #FFF9C4 0%, #FFE0B2 100%)';
+  editRow.dataset.editingId = itemId;
+  
+  editRow.innerHTML = `
+    <td>
+      <input 
+        type="text" 
+        id="editPozNo" 
+        value="${item.pozNo}"
+        style="width: 100%; padding: 0.5rem; border: 2px solid #FF9800; border-radius: 4px; font-weight: bold;"
+        required
+      >
+    </td>
+    <td>
+      <input 
+        type="text" 
+        id="editCategory" 
+        value="${item.category}"
+        style="width: 100%; padding: 0.5rem; border: 2px solid #FF9800; border-radius: 4px;"
+        required
+      >
+    </td>
+    <td>
+      <input 
+        type="text" 
+        id="editSubCategory" 
+        value="${item.subCategory || ''}"
+        style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px;"
+      >
+    </td>
+    <td>
+      <textarea 
+        id="editDescription" 
+        rows="2"
+        style="width: 100%; padding: 0.5rem; border: 2px solid #FF9800; border-radius: 4px; resize: vertical;"
+        required
+      >${item.description}</textarea>
+    </td>
+    <td>
+      <select 
+        id="editUnit" 
+        style="width: 100%; padding: 0.5rem; border: 2px solid #FF9800; border-radius: 4px;"
+        required
+      >
+        <option value="m" ${item.unit === 'm' ? 'selected' : ''}>m</option>
+        <option value="m²" ${item.unit === 'm²' ? 'selected' : ''}>m²</option>
+        <option value="m³" ${item.unit === 'm³' ? 'selected' : ''}>m³</option>
+        <option value="Ad" ${item.unit === 'Ad' ? 'selected' : ''}>Ad</option>
+        <option value="Kg" ${item.unit === 'Kg' ? 'selected' : ''}>Kg</option>
+        <option value="Ton" ${item.unit === 'Ton' ? 'selected' : ''}>Ton</option>
+        <option value="Lt" ${item.unit === 'Lt' ? 'selected' : ''}>Lt</option>
+        <option value="Takım" ${item.unit === 'Takım' ? 'selected' : ''}>Takım</option>
+        <option value="Gt" ${item.unit === 'Gt' ? 'selected' : ''}>Gt</option>
+      </select>
+    </td>
+    <td>
+      <input 
+        type="number" 
+        id="editQuantity" 
+        value="${item.quantity}"
+        step="0.01"
+        min="0.01"
+        style="width: 100%; padding: 0.5rem; border: 2px solid #FF9800; border-radius: 4px; text-align: right;"
+        oninput="calculateEditTotal()"
+        required
+      >
+    </td>
+    <td>
+      <input 
+        type="number" 
+        id="editUnitPrice" 
+        value="${item.unitPrice}"
+        step="0.01"
+        min="0.01"
+        style="width: 100%; padding: 0.5rem; border: 2px solid #FF9800; border-radius: 4px; text-align: right;"
+        oninput="calculateEditTotal()"
+        required
+      >
+    </td>
+    <td style="text-align: right;">
+      <strong id="editTotalPrice" style="color: #F57C00; font-size: 1.1rem;">${formatCurrency(item.totalPrice)}</strong>
+    </td>
+    <td>
+      <div style="display: flex; gap: 0.25rem; justify-content: center; flex-wrap: wrap;">
+        <button 
+          class="btn btn-primary" 
+          onclick="saveEditedBoqItem('${itemId}')"
+          title="Kaydet"
+          style="padding: 0.5rem 1rem; white-space: nowrap;"
+        >
+          ✅ Güncelle
+        </button>
+        <button 
+          class="btn btn-secondary" 
+          onclick="cancelInlineBoqEdit()"
+          title="İptal"
+          style="padding: 0.5rem 1rem;"
+        >
+          ❌
+        </button>
+      </div>
+    </td>
+  `;
+  
+  row.parentNode.insertBefore(editRow, row);
+  row.style.display = 'none';
+  
+  // Focus on first input
+  document.getElementById('editPozNo')?.focus();
+  editRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+/**
+ * Calculate total for edit mode
+ */
+function calculateEditTotal() {
+  const quantity = parseFloat(document.getElementById('editQuantity')?.value) || 0;
+  const unitPrice = parseFloat(document.getElementById('editUnitPrice')?.value) || 0;
+  const total = quantity * unitPrice;
+  
+  const totalEl = document.getElementById('editTotalPrice');
+  if (totalEl) {
+    totalEl.textContent = formatCurrency(total);
+  }
+}
+
+/**
+ * Save edited BOQ item
+ */
+async function saveEditedBoqItem(itemId) {
+  const pozNo = document.getElementById('editPozNo')?.value.trim();
+  const category = document.getElementById('editCategory')?.value.trim();
+  const subCategory = document.getElementById('editSubCategory')?.value.trim();
+  const description = document.getElementById('editDescription')?.value.trim();
+  const unit = document.getElementById('editUnit')?.value;
+  const quantity = parseFloat(document.getElementById('editQuantity')?.value);
+  const unitPrice = parseFloat(document.getElementById('editUnitPrice')?.value);
+  
+  // Validation
+  if (!pozNo || !category || !description || !unit || !quantity || !unitPrice) {
+    alert('❌ Lütfen tüm zorunlu alanları doldurun');
+    return;
+  }
+  
+  if (quantity <= 0 || unitPrice <= 0) {
+    alert('❌ Miktar ve Birim Fiyat sıfırdan büyük olmalıdır');
+    return;
+  }
+  
+  const totalPrice = quantity * unitPrice;
+  
+  try {
+    // Update in Firestore
+    const itemRef = doc(db, 'boq_items', itemId);
+    await updateDoc(itemRef, {
+      pozNo,
+      category,
+      subCategory: subCategory || '',
+      description,
+      unit,
+      quantity,
+      unitPrice,
+      totalPrice,
+      updatedAt: Timestamp.now(),
+      updatedBy: auth.currentUser.email
+    });
+    
+    // Reload BOQ
+    await loadBoq(currentProjectId);
+    
+    // Show success message
+    showSuccessMessage('✅ Metraj kalemi başarıyla güncellendi!');
+    
+  } catch (error) {
+    console.error('❌ Error updating BOQ item:', error);
+    alert('Hata: ' + error.message);
+  }
+}
+
+/**
+ * Show success message (toast notification)
+ */
+function showSuccessMessage(message) {
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 10000;
+    font-weight: 600;
+    animation: slideInRight 0.3s ease-out;
+  `;
+  toast.textContent = message;
+  
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.animation = 'slideOutRight 0.3s ease-out';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// Export functions
 window.loadBoq = loadBoq;
 window.openBoqItemModal = openBoqItemModal;
 window.closeBoqItemModal = closeBoqItemModal;
@@ -858,5 +1321,12 @@ window.openBoqImportModal = openBoqImportModal;
 window.closeBoqImportModal = closeBoqImportModal;
 window.previewBoqExcel = previewBoqExcel;
 window.importBoqFromExcel = importBoqFromExcel;
+window.addInlineBoqRow = addInlineBoqRow;
+window.saveInlineBoqItem = saveInlineBoqItem;
+window.cancelInlineBoqEdit = cancelInlineBoqEdit;
+window.calculateInlineTotal = calculateInlineTotal;
+window.editBoqItemInline = editBoqItemInline;
+window.calculateEditTotal = calculateEditTotal;
+window.saveEditedBoqItem = saveEditedBoqItem;
 
 console.log('✅ BOQ module loaded');
