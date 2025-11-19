@@ -104,7 +104,8 @@ async function loadUserData() {
     const roleDisplay = {
       'super_admin': 'Super Admin',
       'company_admin': 'Şirket Admin',
-      'user': 'Kullanıcı'
+      'user': 'Kullanıcı',
+      'client': 'Müşteri'
     };
     
     const sidebarUserRole = document.getElementById('sidebarUserRole');
@@ -112,39 +113,54 @@ async function loadUserData() {
       sidebarUserRole.textContent = roleDisplay[role] || role;
     }
     
-    // Show/hide admin navigation items based on role
+    // Show/hide navigation items based on role
     const employeesNavBtn = document.getElementById('employeesNavBtn');
     const activityNavBtn = document.getElementById('activityNavBtn');
     const usersNavBtn = document.getElementById('usersNavBtn');
     const companiesNavBtn = document.getElementById('companiesNavBtn');
     
-    // Everyone can see activity logs
-    if (activityNavBtn) {
-      activityNavBtn.classList.remove('hidden');
-    }
-    
-    // Show/hide "Yeni Proje" button based on role
-    const createProjectBtn = document.getElementById('createProjectBtn');
-    if (createProjectBtn) {
-      if (role === 'super_admin' || role === 'company_admin') {
-        createProjectBtn.style.display = 'block';
-      } else {
+    // Clients have very limited UI access - only projects
+    if (role === 'client') {
+      // Hide all admin/internal sections from clients
+      if (employeesNavBtn) employeesNavBtn.classList.add('hidden');
+      if (activityNavBtn) activityNavBtn.classList.add('hidden');
+      if (usersNavBtn) usersNavBtn.classList.add('hidden');
+      if (companiesNavBtn) companiesNavBtn.classList.add('hidden');
+      
+      // Hide create project button
+      const createProjectBtn = document.getElementById('createProjectBtn');
+      if (createProjectBtn) {
         createProjectBtn.style.display = 'none';
       }
-    }
-    
-    // Company admin can see employees
-    if (role === 'company_admin') {
-      if (employeesNavBtn) employeesNavBtn.classList.remove('hidden');
-      if (activityNavBtn) activityNavBtn.classList.remove('hidden');
-    }
-    
-    // Super admin can see everything
-    if (role === 'super_admin') {
-      if (employeesNavBtn) employeesNavBtn.classList.remove('hidden');
-      if (activityNavBtn) activityNavBtn.classList.remove('hidden');
-      if (usersNavBtn) usersNavBtn.classList.remove('hidden');
-      if (companiesNavBtn) companiesNavBtn.classList.remove('hidden');
+    } else {
+      // Non-client users can see activity logs
+      if (activityNavBtn) {
+        activityNavBtn.classList.remove('hidden');
+      }
+      
+      // Show/hide "Yeni Proje" button for non-clients
+      const createProjectBtn = document.getElementById('createProjectBtn');
+      if (createProjectBtn) {
+        if (role === 'super_admin' || role === 'company_admin') {
+          createProjectBtn.style.display = 'block';
+        } else {
+          createProjectBtn.style.display = 'none';
+        }
+      }
+      
+      // Company admin can see employees
+      if (role === 'company_admin') {
+        if (employeesNavBtn) employeesNavBtn.classList.remove('hidden');
+        if (activityNavBtn) activityNavBtn.classList.remove('hidden');
+      }
+      
+      // Super admin can see everything
+      if (role === 'super_admin') {
+        if (employeesNavBtn) employeesNavBtn.classList.remove('hidden');
+        if (activityNavBtn) activityNavBtn.classList.remove('hidden');
+        if (usersNavBtn) usersNavBtn.classList.remove('hidden');
+        if (companiesNavBtn) companiesNavBtn.classList.remove('hidden');
+      }
     }
     
     // Store role and company for later use (ensure string values)

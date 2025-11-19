@@ -37,20 +37,28 @@
   uid: "firebase-uid",
   email: "user@adm.com",
   displayName: "Kullanıcı Adı",
-  role: "operator", // superadmin, admin, operator, finance, viewer
+  role: "user", // super_admin, company_admin, user, client
   companyId: "default-company",
-  permissions: ["read", "write"], // read, write, delete, manage_users
   phone: "0555 123 4567",
   status: "active", // active, inactive
   createdAt: Timestamp,
   updatedAt: Timestamp,
-  lastLogin: Timestamp
+  lastLogin: Timestamp,
+  
+  // Client-specific fields (only for role="client")
+  clientInfo: {
+    companyName: "Müşteri Firma A.Ş.",
+    contactPerson: "Ahmet Yılmaz",
+    taxId: "1234567890",
+    address: "..."
+  },
+  authorizedProjects: ["proj-001", "proj-002"] // Only for clients - project IDs they can view
 }
 
 /*
  * Collection: projects
  * Description: İnşaat projeleri
- * Access: Users in same company can read
+ * Access: Users in same company can read, clients can read only authorized projects
  */
 // Example document:
 {
@@ -72,7 +80,16 @@
   createdAt: Timestamp,
   updatedAt: Timestamp,
   tags: ["residential", "villa"],
-  progress: 45 // percentage 0-100
+  progress: 45, // percentage 0-100
+  
+  // Client Access Control
+  allowedClients: ["client-uid-1", "client-uid-2"], // UIDs of clients authorized to view this project
+  clientVisibility: {
+    showBudget: false, // Hide detailed budget from clients
+    showPayments: true, // Show payment info to clients
+    showStocks: false, // Hide stock details from clients
+    showLogs: true // Show construction logs to clients
+  }
 }
 
 /*

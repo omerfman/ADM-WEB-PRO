@@ -31,11 +31,26 @@ service cloud.firestore {
     function isCompanyUser() {
       return getUserRole() == 'user';
     }
+    
+    function isClient() {
+      return getUserRole() == 'client';
+    }
+    
+    function isAdminRole() {
+      return isSuperAdmin() || isCompanyAdmin();
+    }
 
     // Note: hasCompanyAccess not used for hakediş collections (super_admin has null companyId)
     // Keeping for future use in other collections
     function hasCompanyAccess(companyId) {
       return isSignedIn() && (isSuperAdmin() || getUserCompanyId() == companyId);
+    }
+    
+    // Check if client has access to specific project
+    function clientHasProjectAccess(projectId) {
+      return isClient() && 
+             exists(/databases/$(database)/documents/projects/$(projectId)) &&
+             request.auth.uid in get(/databases/$(database)/documents/projects/$(projectId)).data.allowedClients;
     }
 
     // ========== COMPANIES COLLECTION ==========
@@ -53,59 +68,101 @@ service cloud.firestore {
 
     // ========== USERS COLLECTION ==========
     match /users/{userId} {
-      // All authenticated users can read
-      allow read: if isSignedIn();
-      // All authenticated users can create
-      allow create: if isSignedIn() && 
+      // Read: All authenticated users can read users in their company
+      // Clients can only read their own profile
+      allow read: if isSignedIn() && (
+        !isClient() || 
+        userId == request.auth.uid
+      );
+      
+      // Create: Only admins can create users (including clients)
+      allow create: if isAdminRole() && 
                        request.resource.data.email != null;
-      // All authenticated users can update
-      allow update: if isSignedIn();
-      // All authenticated users can delete
-      allow delete: if isSignedIn();
+      
+      // Update: Admins can update all users, clients can update only their own profile (limited fields)
+      allow update: if isSignedIn() && (
+        isAdminRole() ||
+        (isClient() && userId == request.auth.uid && 
+         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'companyId', 'authorizedProjects']))
+      );
+      
+      // Delete: Only admins can delete users
+      allow delete: if isAdminRole();
     }
 
     // ========== PROJECTS COLLECTION ==========
     match /projects/{projectId} {
-      // Read: all authenticated users (for now - will be restricted by role later)
-      allow read: if isSignedIn();
+      // Read: Company users + authorized clients can read
+      allow read: if isSignedIn() && (
+        !isClient() || 
+        request.auth.uid in resource.data.get('allowedClients', [])
+      );
       
-      // Create: authenticated users
-      allow create: if isSignedIn() &&
+      // Create: Only admins and company users (not clients)
+      allow create: if isSignedIn() && !isClient() &&
                        request.resource.data.companyId != null;
       
-      // Update: same company access or creator
-      allow update: if isSignedIn();
+      // Update: Only admins and company users (not clients)
+      allow update: if isSignedIn() && !isClient();
       
-      // Delete: authenticated users
-      allow delete: if isSignedIn();
+      // Delete: Only admins (not clients or regular users)
+      allow delete: if isAdminRole();
 
       // ========== PROJECT SUBCOLLECTIONS ==========
       match /logs/{logId} {
-        allow read, create, update, delete: if isSignedIn();
+        // Clients can read logs if they have project access
+        allow read: if isSignedIn() && (
+          !isClient() || 
+          clientHasProjectAccess(projectId)
+        );
+        // Only non-clients can write
+        allow create, update, delete: if isSignedIn() && !isClient();
       }
 
       match /stocks/{stockId} {
-        allow read, create, update, delete: if isSignedIn();
+        // Stocks visible only to non-clients (company internal data)
+        allow read: if isSignedIn() && !isClient();
+        allow create, update, delete: if isSignedIn() && !isClient();
       }
 
       match /payments/{paymentId} {
-        allow read, create, update, delete: if isSignedIn();
+        // Clients can read payments if visibility is enabled and they have project access
+        allow read: if isSignedIn() && (
+          !isClient() || 
+          (clientHasProjectAccess(projectId) && 
+           get(/databases/$(database)/documents/projects/$(projectId)).data.get('clientVisibility', {}).get('showPayments', false))
+        );
+        allow create, update, delete: if isSignedIn() && !isClient();
       }
 
       match /uploads/{uploadId} {
-        allow read, create, delete: if isSignedIn();
+        // Clients can view uploads if they have project access
+        allow read: if isSignedIn() && (
+          !isClient() || 
+          clientHasProjectAccess(projectId)
+        );
+        allow create, delete: if isSignedIn() && !isClient();
       }
 
       match /photos/{photoId} {
-        allow read, create, delete: if isSignedIn();
+        // Clients can view photos if they have project access
+        allow read: if isSignedIn() && (
+          !isClient() || 
+          clientHasProjectAccess(projectId)
+        );
+        allow create, delete: if isSignedIn() && !isClient();
       }
 
       match /budget_categories/{categoryId} {
-        allow read, create, update, delete: if isSignedIn();
+        // Budget hidden from clients
+        allow read: if isSignedIn() && !isClient();
+        allow create, update, delete: if isSignedIn() && !isClient();
       }
 
       match /budget_expenses/{expenseId} {
-        allow read, create, update, delete: if isSignedIn();
+        // Expenses hidden from clients
+        allow read: if isSignedIn() && !isClient();
+        allow create, update, delete: if isSignedIn() && !isClient();
       }
     }
 
@@ -133,17 +190,23 @@ service cloud.firestore {
     
     // BOQ Items (Bill of Quantities)
     match /boq_items/{itemId} {
-      // Super admin sees all, others need to check project ownership via separate query
-      allow read: if isSignedIn();
-      allow create, update: if isSignedIn() && (isCompanyAdmin() || isSuperAdmin());
+      // Clients cannot see BOQ details (internal pricing)
+      allow read: if isSignedIn() && !isClient();
+      allow create, update: if isSignedIn() && !isClient() && (isCompanyAdmin() || isSuperAdmin());
       allow delete: if isSuperAdmin();
     }
 
     // Progress Payments (Hakediş Dönemleri)
     match /progress_payments/{paymentId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn() && (isCompanyAdmin() || isCompanyUser() || isSuperAdmin());
-      allow update: if isSignedIn() && (
+      // Clients can read if they have project access and visibility is enabled
+      allow read: if isSignedIn() && (
+        !isClient() ||
+        (exists(/databases/$(database)/documents/projects/$(resource.data.projectId)) &&
+         request.auth.uid in get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.get('allowedClients', []) &&
+         get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.get('clientVisibility', {}).get('showPayments', false))
+      );
+      allow create: if isSignedIn() && !isClient() && (isCompanyAdmin() || isCompanyUser() || isSuperAdmin());
+      allow update: if isSignedIn() && !isClient() && (
         isCompanyAdmin() || 
         isSuperAdmin() ||
         (isCompanyUser() && resource.data.status == 'draft')
@@ -153,19 +216,21 @@ service cloud.firestore {
 
     // Measurement Lines (Metraj Satırları)
     match /measurement_lines/{lineId} {
-      allow read: if isSignedIn();
-      allow create, update: if isSignedIn() && (
+      // Clients cannot see measurement details (internal data)
+      allow read: if isSignedIn() && !isClient();
+      allow create, update: if isSignedIn() && !isClient() && (
         isCompanyAdmin() || 
         isCompanyUser() || 
         isSuperAdmin()
       );
-      allow delete: if isSignedIn() && (isCompanyAdmin() || isSuperAdmin());
+      allow delete: if isSignedIn() && !isClient() && (isCompanyAdmin() || isSuperAdmin());
     }
 
     // Payment Config (Proje Bazlı Ayarlar)
     match /payment_config/{configId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if isSignedIn() && (
+      // Clients cannot see payment config (internal settings)
+      allow read: if isSignedIn() && !isClient();
+      allow create, update, delete: if isSignedIn() && !isClient() && (
         isCompanyAdmin() || 
         isSuperAdmin()
       );
@@ -173,8 +238,9 @@ service cloud.firestore {
 
     // Payment Approvals (Onay Logları - Audit Trail)
     match /payment_approvals/{approvalId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn() && (isCompanyAdmin() || isSuperAdmin());
+      // Clients cannot see approval workflow (internal process)
+      allow read: if isSignedIn() && !isClient();
+      allow create: if isSignedIn() && !isClient() && (isCompanyAdmin() || isSuperAdmin());
       // No updates or deletes - this is an audit trail
       allow update, delete: if false;
     }

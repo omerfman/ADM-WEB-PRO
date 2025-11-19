@@ -27,8 +27,9 @@ async function loadProjects() {
     // Get user's company ID and role
     const userDocRef = doc(db, 'users', user.uid);
     const userDocSnap = await getDoc(userDocRef);
-    const companyId = userDocSnap.data()?.companyId || 'default-company';
-    const userRole = window.userRole || userDocSnap.data()?.role;
+    const userData = userDocSnap.data() || {};
+    const companyId = userData.companyId || 'default-company';
+    const userRole = window.userRole || userData.role;
 
     // Query projects
     const projectsRef = collection(db, 'projects');
@@ -38,8 +39,47 @@ async function loadProjects() {
     if (userRole === 'super_admin') {
       q = query(projectsRef);
       console.log('🔑 Super admin: Tüm projeler yükleniyor');
-    } else {
-      // Regular users only see their company's projects
+    } 
+    // Clients can only see authorized projects
+    else if (userRole === 'client') {
+      const authorizedProjects = userData.authorizedProjects || [];
+      console.log('🏢 Client: Yetkili projeler yükleniyor:', authorizedProjects.length);
+      
+      if (authorizedProjects.length === 0) {
+        projects = [];
+        renderProjectsList();
+        console.log('⚠️ Müşteriye henüz proje yetkisi verilmemiş');
+        return;
+      }
+      
+      // Load authorized projects one by one
+      // Note: Firestore doesn't support 'in' with empty arrays, so we handle manually
+      projects = [];
+      for (const projectId of authorizedProjects) {
+        try {
+          const projectDoc = await getDoc(doc(db, 'projects', projectId));
+          if (projectDoc.exists()) {
+            projects.push({ id: projectDoc.id, ...projectDoc.data() });
+          }
+        } catch (err) {
+          console.warn(`⚠️ Could not load project ${projectId}:`, err.message);
+        }
+      }
+      
+      // Sort and render
+      projects.sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(0);
+        const dateB = b.createdAt?.toDate?.() || new Date(0);
+        return dateB - dateA;
+      });
+      
+      renderProjectsList();
+      console.log(`✅ ${projects.length} yetkili proje yüklendi`);
+      initializeProjectFilters();
+      return;
+    } 
+    // Regular users only see their company's projects
+    else {
       q = query(
         projectsRef,
         where('companyId', '==', companyId)
@@ -103,11 +143,14 @@ function renderProjectsList() {
       'Beklemede': '#FFA500'
     };
 
-    // Check if user can delete (only super_admin and company_admin)
+    // Check if user can delete/edit (only super_admin and company_admin)
     const userRole = window.userRole;
     const canDelete = userRole === 'super_admin' || userRole === 'company_admin';
+    const canEdit = userRole !== 'client'; // Clients cannot edit
+    const isClient = userRole === 'client';
 
     projectCard.innerHTML = `
+      ${isClient ? '<div style="position: absolute; top: 10px; right: 10px; background: #FF9800; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">👁️ SADECE GÖRÜNTÜLEME</div>' : ''}
       <div onclick="openProjectDetail('${project.id}')" style="cursor: pointer;">
         <h4 style="margin: 0 0 0.5rem 0; color: var(--brand-red);">${project.name || 'Unnamed'}</h4>
         <p style="margin: 0.5rem 0; color: var(--text-secondary); font-size: 0.9rem;">${project.location || 'Lokasyon belirtilmemiş'}</p>
@@ -119,7 +162,9 @@ function renderProjectsList() {
           <small style="color: var(--text-secondary);">${new Date(project.createdAt?.toDate?.() || new Date()).toLocaleDateString('tr-TR')}</small>
         </div>
       </div>
+      ${!isClient ? `
       <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;">
+        ${canEdit ? `
         <button 
           onclick="event.stopPropagation(); openEditProjectModal('${project.id}')" 
           class="btn btn-secondary" 
@@ -127,6 +172,7 @@ function renderProjectsList() {
         >
           ✏️ Düzenle
         </button>
+        ` : ''}
         ${canDelete ? `
         <button 
           onclick="event.stopPropagation(); deleteProject('${project.id}', '${project.name || 'Unnamed'}')" 
@@ -137,6 +183,7 @@ function renderProjectsList() {
         </button>
         ` : ''}
       </div>
+      ` : ''}
     `;
     projectsList.appendChild(projectCard);
   });

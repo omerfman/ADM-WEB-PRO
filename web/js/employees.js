@@ -51,17 +51,38 @@ async function handleCreateEmployee(event) {
     alert('Hata: Şirket bilgisi bulunamadı');
     return;
   }
+  
+  // Prepare employee data
+  const employeeData = {
+    email,
+    password,
+    fullName,
+    role,
+    companyId: window.userCompanyId,
+    phone: phone || '',
+    position: position || ''
+  };
+  
+  // If role is client, add client-specific info
+  if (role === 'client') {
+    const empClientCompany = document.getElementById('empClientCompany')?.value || '';
+    const empClientContact = document.getElementById('empClientContact')?.value || '';
+    
+    employeeData.clientInfo = {
+      companyName: empClientCompany,
+      contactPerson: empClientContact,
+      taxId: '',
+      address: ''
+    };
+    
+    employeeData.authorizedProjects = [];
+  }
 
   try {
     const idToken = await auth.currentUser.getIdToken();
     const apiBaseUrl = window.API_BASE_URL || '';
     
-    console.log('🔄 Creating employee with data:', {
-      email,
-      fullName,
-      role,
-      companyId: window.userCompanyId
-    });
+    console.log('🔄 Creating employee with data:', employeeData);
     
     const response = await fetch(`${apiBaseUrl}/api/users`, {
       method: 'POST',
@@ -69,15 +90,7 @@ async function handleCreateEmployee(event) {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + idToken
       },
-      body: JSON.stringify({
-        email,
-        password,
-        fullName,
-        role,
-        companyId: window.userCompanyId,
-        phone: phone || '',
-        position: position || ''
-      })
+      body: JSON.stringify(employeeData)
     });
 
     console.log('📡 Response status:', response.status, response.statusText);
@@ -310,6 +323,7 @@ async function editEmployee(employeeId) {
               <select id="editEmpRole" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px;">
                 <option value="user" ${empData.role === 'user' ? 'selected' : ''}>Kullanıcı</option>
                 <option value="company_admin" ${empData.role === 'company_admin' ? 'selected' : ''}>Şirket Yöneticisi</option>
+                <option value="client" ${empData.role === 'client' ? 'selected' : ''}>Müşteri</option>
               </select>
             </div>
             <button type="submit" class="btn btn-primary">Kaydet</button>
