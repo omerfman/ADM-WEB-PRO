@@ -909,6 +909,7 @@ function addInlineBoqRow() {
       <select 
         id="inlineUnit" 
         style="width: 100%; padding: 0.5rem; border: 2px solid #2196F3; border-radius: 4px;"
+        onchange="toggleInlineDimensionInputs()"
         required
       >
         <option value="">Birim</option>
@@ -924,16 +925,18 @@ function addInlineBoqRow() {
       </select>
     </td>
     <td>
-      <input 
-        type="number" 
-        id="inlineQuantity" 
-        placeholder="0.00"
-        step="0.01"
-        min="0.01"
-        style="width: 100%; padding: 0.5rem; border: 2px solid #2196F3; border-radius: 4px; text-align: right;"
-        oninput="calculateInlineTotal()"
-        required
-      >
+      <div id="inlineQuantityContainer">
+        <input 
+          type="number" 
+          id="inlineQuantity" 
+          placeholder="0.00"
+          step="0.01"
+          min="0.01"
+          style="width: 100%; padding: 0.5rem; border: 2px solid #2196F3; border-radius: 4px; text-align: right;"
+          oninput="calculateInlineTotal()"
+          required
+        >
+      </div>
     </td>
     <td>
       <input 
@@ -979,6 +982,235 @@ function addInlineBoqRow() {
   
   // Scroll to the new row
   editRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+/**
+ * Toggle dimension inputs for inline mode (m² or m³)
+ */
+function toggleInlineDimensionInputs() {
+  const unit = document.getElementById('inlineUnit')?.value;
+  const container = document.getElementById('inlineQuantityContainer');
+  
+  if (!container) return;
+  
+  if (unit === 'm²') {
+    // Show width x length inputs for area
+    container.innerHTML = `
+      <div style="display: flex; gap: 0.25rem; align-items: center;">
+        <input 
+          type="number" 
+          id="inlineWidth" 
+          placeholder="En (m)"
+          step="0.01"
+          min="0.01"
+          style="width: 100%; padding: 0.5rem; border: 2px solid #2196F3; border-radius: 4px; font-size: 0.85rem;"
+          oninput="calculateDimensionQuantity('inline')"
+          title="En (metre)"
+        >
+        <span style="color: var(--text-secondary); font-weight: bold;">×</span>
+        <input 
+          type="number" 
+          id="inlineLength" 
+          placeholder="Boy (m)"
+          step="0.01"
+          min="0.01"
+          style="width: 100%; padding: 0.5rem; border: 2px solid #2196F3; border-radius: 4px; font-size: 0.85rem;"
+          oninput="calculateDimensionQuantity('inline')"
+          title="Boy (metre)"
+        >
+      </div>
+      <input type="hidden" id="inlineQuantity" value="0">
+      <div id="inlineDimensionResult" style="margin-top: 0.25rem; text-align: right; font-size: 0.85rem; color: #1976D2; font-weight: bold;"></div>
+    `;
+  } else if (unit === 'm³') {
+    // Show width x length x height inputs for volume
+    container.innerHTML = `
+      <div style="display: flex; gap: 0.25rem; align-items: center; flex-wrap: wrap;">
+        <input 
+          type="number" 
+          id="inlineWidth" 
+          placeholder="En"
+          step="0.01"
+          min="0.01"
+          style="flex: 1; min-width: 60px; padding: 0.5rem; border: 2px solid #2196F3; border-radius: 4px; font-size: 0.85rem;"
+          oninput="calculateDimensionQuantity('inline')"
+          title="En (metre)"
+        >
+        <span style="color: var(--text-secondary);">×</span>
+        <input 
+          type="number" 
+          id="inlineLength" 
+          placeholder="Boy"
+          step="0.01"
+          min="0.01"
+          style="flex: 1; min-width: 60px; padding: 0.5rem; border: 2px solid #2196F3; border-radius: 4px; font-size: 0.85rem;"
+          oninput="calculateDimensionQuantity('inline')"
+          title="Boy (metre)"
+        >
+        <span style="color: var(--text-secondary);">×</span>
+        <input 
+          type="number" 
+          id="inlineHeight" 
+          placeholder="Yük."
+          step="0.01"
+          min="0.01"
+          style="flex: 1; min-width: 60px; padding: 0.5rem; border: 2px solid #2196F3; border-radius: 4px; font-size: 0.85rem;"
+          oninput="calculateDimensionQuantity('inline')"
+          title="Yükseklik (metre)"
+        >
+      </div>
+      <input type="hidden" id="inlineQuantity" value="0">
+      <div id="inlineDimensionResult" style="margin-top: 0.25rem; text-align: right; font-size: 0.85rem; color: #1976D2; font-weight: bold;"></div>
+    `;
+  } else {
+    // Default single quantity input
+    container.innerHTML = `
+      <input 
+        type="number" 
+        id="inlineQuantity" 
+        placeholder="0.00"
+        step="0.01"
+        min="0.01"
+        style="width: 100%; padding: 0.5rem; border: 2px solid #2196F3; border-radius: 4px; text-align: right;"
+        oninput="calculateInlineTotal()"
+        required
+      >
+    `;
+  }
+  
+  calculateInlineTotal();
+}
+
+/**
+ * Toggle dimension inputs for edit mode (m² or m³)
+ */
+function toggleEditDimensionInputs() {
+  const unit = document.getElementById('editUnit')?.value;
+  const container = document.getElementById('editQuantityContainer');
+  
+  if (!container) return;
+  
+  if (unit === 'm²') {
+    container.innerHTML = `
+      <div style="display: flex; gap: 0.25rem; align-items: center;">
+        <input 
+          type="number" 
+          id="editWidth" 
+          placeholder="En (m)"
+          step="0.01"
+          min="0.01"
+          style="width: 100%; padding: 0.5rem; border: 2px solid #FF9800; border-radius: 4px; font-size: 0.85rem;"
+          oninput="calculateDimensionQuantity('edit')"
+        >
+        <span style="color: var(--text-secondary); font-weight: bold;">×</span>
+        <input 
+          type="number" 
+          id="editLength" 
+          placeholder="Boy (m)"
+          step="0.01"
+          min="0.01"
+          style="width: 100%; padding: 0.5rem; border: 2px solid #FF9800; border-radius: 4px; font-size: 0.85rem;"
+          oninput="calculateDimensionQuantity('edit')"
+        >
+      </div>
+      <input type="hidden" id="editQuantity" value="0">
+      <div id="editDimensionResult" style="margin-top: 0.25rem; text-align: right; font-size: 0.85rem; color: #F57C00; font-weight: bold;"></div>
+    `;
+  } else if (unit === 'm³') {
+    container.innerHTML = `
+      <div style="display: flex; gap: 0.25rem; align-items: center; flex-wrap: wrap;">
+        <input 
+          type="number" 
+          id="editWidth" 
+          placeholder="En"
+          step="0.01"
+          min="0.01"
+          style="flex: 1; min-width: 60px; padding: 0.5rem; border: 2px solid #FF9800; border-radius: 4px; font-size: 0.85rem;"
+          oninput="calculateDimensionQuantity('edit')"
+        >
+        <span style="color: var(--text-secondary);">×</span>
+        <input 
+          type="number" 
+          id="editLength" 
+          placeholder="Boy"
+          step="0.01"
+          min="0.01"
+          style="flex: 1; min-width: 60px; padding: 0.5rem; border: 2px solid #FF9800; border-radius: 4px; font-size: 0.85rem;"
+          oninput="calculateDimensionQuantity('edit')"
+        >
+        <span style="color: var(--text-secondary);">×</span>
+        <input 
+          type="number" 
+          id="editHeight" 
+          placeholder="Yük."
+          step="0.01"
+          min="0.01"
+          style="flex: 1; min-width: 60px; padding: 0.5rem; border: 2px solid #FF9800; border-radius: 4px; font-size: 0.85rem;"
+          oninput="calculateDimensionQuantity('edit')"
+        >
+      </div>
+      <input type="hidden" id="editQuantity" value="0">
+      <div id="editDimensionResult" style="margin-top: 0.25rem; text-align: right; font-size: 0.85rem; color: #F57C00; font-weight: bold;"></div>
+    `;
+  } else {
+    // Get current quantity if exists
+    const currentQuantity = document.getElementById('editQuantity')?.value || '';
+    container.innerHTML = `
+      <input 
+        type="number" 
+        id="editQuantity" 
+        value="${currentQuantity}"
+        step="0.01"
+        min="0.01"
+        style="width: 100%; padding: 0.5rem; border: 2px solid #FF9800; border-radius: 4px; text-align: right;"
+        oninput="calculateEditTotal()"
+        required
+      >
+    `;
+  }
+  
+  calculateEditTotal();
+}
+
+/**
+ * Calculate quantity from dimensions
+ */
+function calculateDimensionQuantity(mode) {
+  const prefix = mode; // 'inline' or 'edit'
+  const width = parseFloat(document.getElementById(`${prefix}Width`)?.value) || 0;
+  const length = parseFloat(document.getElementById(`${prefix}Length`)?.value) || 0;
+  const height = parseFloat(document.getElementById(`${prefix}Height`)?.value) || 0;
+  const unit = document.getElementById(`${prefix}Unit`)?.value;
+  
+  let quantity = 0;
+  let resultText = '';
+  
+  if (unit === 'm²' && width > 0 && length > 0) {
+    quantity = width * length;
+    resultText = `= ${formatNumber(quantity)} m²`;
+  } else if (unit === 'm³' && width > 0 && length > 0 && height > 0) {
+    quantity = width * length * height;
+    resultText = `= ${formatNumber(quantity)} m³`;
+  }
+  
+  // Update hidden quantity input
+  const quantityInput = document.getElementById(`${prefix}Quantity`);
+  if (quantityInput) {
+    quantityInput.value = quantity;
+  }
+  
+  // Update result display
+  const resultEl = document.getElementById(`${prefix}DimensionResult`);
+  if (resultEl) {
+    resultEl.textContent = resultText;
+  }
+  
+  // Recalculate total
+  if (mode === 'inline') {
+    calculateInlineTotal();
+  } else {
+    calculateEditTotal();
+  }
 }
 
 /**
@@ -1142,6 +1374,7 @@ function editBoqItemInline(itemId) {
       <select 
         id="editUnit" 
         style="width: 100%; padding: 0.5rem; border: 2px solid #FF9800; border-radius: 4px;"
+        onchange="toggleEditDimensionInputs()"
         required
       >
         <option value="m" ${item.unit === 'm' ? 'selected' : ''}>m</option>
@@ -1156,16 +1389,18 @@ function editBoqItemInline(itemId) {
       </select>
     </td>
     <td>
-      <input 
-        type="number" 
-        id="editQuantity" 
-        value="${item.quantity}"
-        step="0.01"
-        min="0.01"
-        style="width: 100%; padding: 0.5rem; border: 2px solid #FF9800; border-radius: 4px; text-align: right;"
-        oninput="calculateEditTotal()"
-        required
-      >
+      <div id="editQuantityContainer">
+        <input 
+          type="number" 
+          id="editQuantity" 
+          value="${item.quantity}"
+          step="0.01"
+          min="0.01"
+          style="width: 100%; padding: 0.5rem; border: 2px solid #FF9800; border-radius: 4px; text-align: right;"
+          oninput="calculateEditTotal()"
+          required
+        >
+      </div>
     </td>
     <td>
       <input 
@@ -1328,5 +1563,8 @@ window.calculateInlineTotal = calculateInlineTotal;
 window.editBoqItemInline = editBoqItemInline;
 window.calculateEditTotal = calculateEditTotal;
 window.saveEditedBoqItem = saveEditedBoqItem;
+window.toggleInlineDimensionInputs = toggleInlineDimensionInputs;
+window.toggleEditDimensionInputs = toggleEditDimensionInputs;
+window.calculateDimensionQuantity = calculateDimensionQuantity;
 
 console.log('✅ BOQ module loaded');
