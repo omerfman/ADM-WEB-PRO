@@ -2,7 +2,7 @@
 // Firebase Web SDK v10+ with modular imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, enableIndexedDbPersistence, collection, query, where, getDocs, addDoc, deleteDoc, doc, getDoc, updateDoc, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, persistentLocalCache, persistentMultipleTabManager, initializeFirestore, collection, query, where, getDocs, addDoc, deleteDoc, doc, getDoc, updateDoc, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // ✅ Firebase Config (adm-web-pro)
 const firebaseConfig = {
@@ -20,30 +20,18 @@ let app, auth, db;
 try {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
-  db = getFirestore(app);
+  
+  // Use new cache configuration instead of deprecated enableIndexedDbPersistence
+  db = initializeFirestore(app, {
+    localCache: persistentLocalCache({
+      tabManager: persistentMultipleTabManager()
+    })
+  });
+  
   console.log('✅ Firebase successfully initialized');
   console.log('📱 Project ID:', firebaseConfig.projectId);
 } catch (error) {
   console.error('❌ Firebase initialization error:', error);
-}
-
-// Enable offline persistence for better UX (skip on mobile for faster load)
-const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-const isSlowConnection = navigator.connection && (navigator.connection.effectiveType === 'slow-2g' || navigator.connection.effectiveType === '2g');
-
-if (!isMobile && !isSlowConnection) {
-  enableIndexedDbPersistence(db)
-    .catch((error) => {
-      if (error.code === 'failed-precondition') {
-        console.warn('⚠️ Multiple tabs open - offline persistence disabled');
-      } else if (error.code === 'unimplemented') {
-        console.warn('⚠️ Browser does not support offline persistence');
-      } else {
-        console.error('❌ Persistence error:', error);
-      }
-    });
-} else {
-  console.log('📱 Mobile device or slow connection detected - skipping IndexedDB persistence for faster load');
 }
 
 // Enable Auth persistence
