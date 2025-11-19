@@ -1084,19 +1084,24 @@ function toggleInlineDimensionInputs() {
 /**
  * Toggle dimension inputs for edit mode (m² or m³)
  */
-function toggleEditDimensionInputs() {
+function toggleEditDimensionInputs(currentQuantity = 0) {
   const unit = document.getElementById('editUnit')?.value;
   const container = document.getElementById('editQuantityContainer');
   
   if (!container) return;
   
   if (unit === 'm²') {
+    // Try to estimate width and length (assume square if not specified)
+    const existingQuantity = parseFloat(currentQuantity) || 0;
+    const estimatedSide = existingQuantity > 0 ? Math.sqrt(existingQuantity).toFixed(2) : '';
+    
     container.innerHTML = `
       <div style="display: flex; gap: 0.25rem; align-items: center;">
         <input 
           type="number" 
           id="editWidth" 
           placeholder="En (m)"
+          value="${estimatedSide}"
           step="0.01"
           min="0.01"
           style="width: 100%; padding: 0.5rem; border: 2px solid #FF9800; border-radius: 4px; font-size: 0.85rem;"
@@ -1107,22 +1112,33 @@ function toggleEditDimensionInputs() {
           type="number" 
           id="editLength" 
           placeholder="Boy (m)"
+          value="${estimatedSide}"
           step="0.01"
           min="0.01"
           style="width: 100%; padding: 0.5rem; border: 2px solid #FF9800; border-radius: 4px; font-size: 0.85rem;"
           oninput="calculateDimensionQuantity('edit')"
         >
       </div>
-      <input type="hidden" id="editQuantity" value="0">
+      <input type="hidden" id="editQuantity" value="${existingQuantity}">
       <div id="editDimensionResult" style="margin-top: 0.25rem; text-align: right; font-size: 0.85rem; color: #F57C00; font-weight: bold;"></div>
     `;
+    
+    // Trigger calculation if we have values
+    if (estimatedSide) {
+      calculateDimensionQuantity('edit');
+    }
   } else if (unit === 'm³') {
+    // Try to estimate dimensions (assume cube if not specified)
+    const existingQuantity = parseFloat(currentQuantity) || 0;
+    const estimatedSide = existingQuantity > 0 ? Math.cbrt(existingQuantity).toFixed(2) : '';
+    
     container.innerHTML = `
       <div style="display: flex; gap: 0.25rem; align-items: center; flex-wrap: wrap;">
         <input 
           type="number" 
           id="editWidth" 
           placeholder="En"
+          value="${estimatedSide}"
           step="0.01"
           min="0.01"
           style="flex: 1; min-width: 60px; padding: 0.5rem; border: 2px solid #FF9800; border-radius: 4px; font-size: 0.85rem;"
@@ -1133,6 +1149,7 @@ function toggleEditDimensionInputs() {
           type="number" 
           id="editLength" 
           placeholder="Boy"
+          value="${estimatedSide}"
           step="0.01"
           min="0.01"
           style="flex: 1; min-width: 60px; padding: 0.5rem; border: 2px solid #FF9800; border-radius: 4px; font-size: 0.85rem;"
@@ -1143,23 +1160,29 @@ function toggleEditDimensionInputs() {
           type="number" 
           id="editHeight" 
           placeholder="Yük."
+          value="${estimatedSide}"
           step="0.01"
           min="0.01"
           style="flex: 1; min-width: 60px; padding: 0.5rem; border: 2px solid #FF9800; border-radius: 4px; font-size: 0.85rem;"
           oninput="calculateDimensionQuantity('edit')"
         >
       </div>
-      <input type="hidden" id="editQuantity" value="0">
+      <input type="hidden" id="editQuantity" value="${existingQuantity}">
       <div id="editDimensionResult" style="margin-top: 0.25rem; text-align: right; font-size: 0.85rem; color: #F57C00; font-weight: bold;"></div>
     `;
+    
+    // Trigger calculation if we have values
+    if (estimatedSide) {
+      calculateDimensionQuantity('edit');
+    }
   } else {
     // Get current quantity if exists
-    const currentQuantity = document.getElementById('editQuantity')?.value || '';
+    const existingQuantity = parseFloat(currentQuantity) || '';
     container.innerHTML = `
       <input 
         type="number" 
         id="editQuantity" 
-        value="${currentQuantity}"
+        value="${existingQuantity}"
         step="0.01"
         min="0.01"
         style="width: 100%; padding: 0.5rem; border: 2px solid #FF9800; border-radius: 4px; text-align: right;"
@@ -1374,7 +1397,7 @@ function editBoqItemInline(itemId) {
       <select 
         id="editUnit" 
         style="width: 100%; padding: 0.5rem; border: 2px solid #FF9800; border-radius: 4px;"
-        onchange="toggleEditDimensionInputs()"
+        onchange="toggleEditDimensionInputs(${item.quantity})"
         required
       >
         <option value="m" ${item.unit === 'm' ? 'selected' : ''}>m</option>
@@ -1441,6 +1464,11 @@ function editBoqItemInline(itemId) {
   
   row.parentNode.insertBefore(editRow, row);
   row.style.display = 'none';
+  
+  // If unit is m² or m³, trigger dimension inputs
+  if (item.unit === 'm²' || item.unit === 'm³') {
+    toggleEditDimensionInputs(item.quantity);
+  }
   
   // Focus on first input
   document.getElementById('editPozNo')?.focus();
