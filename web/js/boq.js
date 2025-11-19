@@ -379,6 +379,8 @@ async function saveBoqItem(event) {
       isDeleted: false
     };
     
+    let savedItemId = itemId;
+    
     if (itemId) {
       // Update existing
       await updateDoc(doc(db, 'boq_items', itemId), itemData);
@@ -388,6 +390,7 @@ async function saveBoqItem(event) {
       itemData.createdAt = Timestamp.now();
       itemData.createdBy = user.uid;
       const newDoc = await addDoc(collection(db, 'boq_items'), itemData);
+      savedItemId = newDoc.id;
       console.log('✅ BOQ item created:', newDoc.id);
     }
     
@@ -399,7 +402,7 @@ async function saveBoqItem(event) {
       timestamp: Timestamp.now(),
       metadata: {
         projectId: currentProjectId,
-        boqItemId: itemId || newDoc.id,
+        boqItemId: savedItemId,
         pozNo
       }
     });

@@ -486,12 +486,24 @@ window.loadPaymentDetail = loadPaymentDetail;
 
 // Modal functions (stubs - will implement next)
 window.openMeasurementModal = () => {
-  document.getElementById('measurementModal').style.display = 'flex';
-  document.getElementById('measurementForm').reset();
-  document.getElementById('measurementLineId').value = '';
-  document.getElementById('measurementModalTitle').textContent = '➕ Metraj Girişi';
-  document.getElementById('boqInfoDisplay').style.display = 'none';
-  document.getElementById('photoPreviewContainer').innerHTML = '';
+  const modal = document.getElementById('measurementModal');
+  const form = document.getElementById('measurementForm');
+  const lineId = document.getElementById('measurementLineId');
+  const title = document.getElementById('measurementModalTitle');
+  const boqInfo = document.getElementById('boqInfoDisplay');
+  const photoPreview = document.getElementById('photoPreviewContainer');
+  
+  if (!modal) {
+    console.error('❌ measurementModal element not found');
+    return;
+  }
+  
+  modal.style.display = 'flex';
+  if (form) form.reset();
+  if (lineId) lineId.value = '';
+  if (title) title.textContent = '➕ Metraj Girişi';
+  if (boqInfo) boqInfo.style.display = 'none';
+  if (photoPreview) photoPreview.innerHTML = '';
 };
 
 window.closeMeasurementModal = () => {
