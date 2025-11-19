@@ -136,7 +136,7 @@ async function handleCreateEmployee(event) {
     const apiBaseUrl = window.API_BASE_URL || '';
     
     if (!apiBaseUrl) {
-      alert('❌ Backend API yapılandırılmamış!\n\nÇalışan oluşturmak için backend API sunucusu gereklidir.\n\nLütfen admin-api sunucusunu başlatın veya Vercel\'a deploy edin.\n\nKomut: cd admin-api && npm start');
+      alert('❌ Çalışan oluşturma işlemi şu anda kullanılamıyor. Lütfen sistem yöneticinize başvurun.');
       return;
     }
     
@@ -185,7 +185,7 @@ async function handleCreateEmployee(event) {
             '3. npm start\n\n' +
             'Veya Vercel\'a deploy edin.');
     } else {
-      alert('Backend API bağlantı hatası: ' + error.message);
+      alert('Çalışan oluşturma işlemi başarısız oldu. Lütfen tekrar deneyin.');
     }
   }
 }
@@ -494,7 +494,7 @@ async function deleteEmployee(employeeId, employeeName) {
     console.log('✅ Employee deleted from Firestore:', employeeId);
     
     // Note: Firebase Auth user deletion requires backend API
-    alert('✅ Çalışan Firestore\'dan silindi\n\n⚠️ Not: Firebase Auth hesabı hala aktif. Tam silme için backend API gereklidir.');
+    alert('✅ Çalışan silindi.');
     
     loadEmployees();
   } catch (error) {

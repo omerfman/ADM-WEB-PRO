@@ -186,6 +186,39 @@ service cloud.firestore {
       allow update, delete: if isSuperAdmin();
     }
 
+    // ========== ROOT-LEVEL PROJECT-RELATED COLLECTIONS ==========
+    // These are used by the application instead of subcollections
+    
+    // Logs (Root-level)
+    match /logs/{logId} {
+      allow read: if isSignedIn() && !isClient();
+      allow create, update, delete: if isSignedIn() && !isClient();
+    }
+
+    // Stocks (Root-level)
+    match /stocks/{stockId} {
+      allow read: if isSignedIn() && !isClient();
+      allow create, update, delete: if isSignedIn() && !isClient();
+    }
+
+    // Payments (Root-level)
+    match /payments/{paymentId} {
+      allow read: if isSignedIn() && !isClient();
+      allow create, update, delete: if isSignedIn() && !isClient();
+    }
+
+    // Budget Categories (Root-level)
+    match /budget_categories/{categoryId} {
+      allow read: if isSignedIn() && !isClient();
+      allow create, update, delete: if isSignedIn() && !isClient();
+    }
+
+    // Budget Expenses (Root-level)
+    match /budget_expenses/{expenseId} {
+      allow read: if isSignedIn() && !isClient();
+      allow create, update, delete: if isSignedIn() && !isClient();
+    }
+
     // ========== HAKEDIŞ (PROGRESS PAYMENT) COLLECTIONS ==========
     
     // BOQ Items (Bill of Quantities)

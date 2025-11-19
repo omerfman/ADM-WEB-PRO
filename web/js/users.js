@@ -121,7 +121,7 @@ async function handleCreateUser(event) {
     console.error('❌ Error creating user:', error);
     
     // Fallback: If API is not available, show helpful message
-    alert('Backend API bağlantı hatası: ' + error.message + '\n\nNot: Kullanıcı oluşturma işlemi için backend API\'nin çalışıyor olması gerekir.');
+    alert('Kullanıcı oluşturma işlemi başarısız oldu. Lütfen tekrar deneyin veya sistem yöneticinize başvurun.');
   }
 }
 

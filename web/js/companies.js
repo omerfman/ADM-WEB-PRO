@@ -520,7 +520,7 @@ async function handleAddCompanyUser(event, companyId) {
     const apiBaseUrl = window.API_BASE_URL || '';
     
     if (!apiBaseUrl) {
-      alert('❌ Backend API yapılandırılmamış!\n\nKullanıcı oluşturmak için backend API sunucusu gereklidir.\n\nLütfen admin-api sunucusunu başlatın veya Vercel\'a deploy edin.');
+      alert('❌ Bu işlem şu anda kullanılamıyor. Lütfen sistem yöneticinize başvurun.');
       return;
     }
     
