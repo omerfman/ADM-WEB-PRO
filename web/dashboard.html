@@ -865,13 +865,59 @@
     // Restore last active section on page load
     function restoreActiveSection() {
       const savedSection = localStorage.getItem('dashboard_activeSection');
-      if (savedSection && savedSection !== 'overview') {
+      if (savedSection) {
         // Check if the section element exists and is accessible
         const sectionElement = document.getElementById(savedSection + 'Section');
         const navElement = document.querySelector(`[data-section="${savedSection}"]`);
         
         if (sectionElement && navElement && !navElement.classList.contains('hidden')) {
-          switchSection(savedSection);
+          // Hide all sections first
+          document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden'));
+          
+          // Show selected section
+          sectionElement.classList.remove('hidden');
+          
+          // Update navigation active state
+          document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+          navElement.classList.add('active');
+          
+          // Update page title
+          const titles = {
+            'overview': 'Ana Sayfa',
+            'projects': 'Projeler',
+            'companies': 'Şirketler',
+            'users': 'Kullanıcılar',
+            'employees': 'Çalışanlar',
+            'activity': 'Faaliyet Kayıtları'
+          };
+          document.getElementById('pageTitle').textContent = titles[savedSection] || savedSection;
+          
+          // Load data for the section
+          if (savedSection === 'overview') {
+            if (window.loadDashboardOverview) {
+              window.loadDashboardOverview();
+            }
+          } else if (savedSection === 'projects') {
+            if (window.loadProjects) {
+              window.loadProjects();
+            }
+          } else if (savedSection === 'employees') {
+            if (window.loadEmployees) {
+              window.loadEmployees();
+            }
+          } else if (savedSection === 'activity') {
+            if (window.loadActivityLogs) {
+              window.loadActivityLogs();
+            }
+          } else if (savedSection === 'companies') {
+            if (window.loadCompanies) {
+              window.loadCompanies();
+            }
+          } else if (savedSection === 'users') {
+            if (window.loadUsers) {
+              window.loadUsers();
+            }
+          }
         }
       }
     }
