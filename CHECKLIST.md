@@ -305,6 +305,51 @@
 **Sebep:** `loadProjectPayments()` deprecated fonksiyonu çağrılıyordu
 **Çözüm:** Eski fonksiyon kaldırıldı, yeni modül kullanılıyor
 
+### [x] 3. Firestore Composite Index Missing
+**Hata:** `The query requires an index`
+**Sebep:** `measurement_lines` collection'ı için composite index yoktu
+**Çözüm:** 
+- ✅ `firestore.indexes.json` oluşturuldu
+- ✅ 4 composite index tanımlandı:
+  - measurement_lines (paymentId + createdAt)
+  - measurement_lines (projectId + paymentId)
+  - boq_items (projectId + isDeleted + pozNo)
+  - progress_payments (projectId + paymentNo)
+- ✅ Firebase'e deploy edildi: `firebase deploy --only firestore:indexes`
+
+**Not:** Index'ler oluşturulana kadar (5-10 dakika) console'daki link'ten manuel oluşturabilirsiniz.
+
+### [x] 4. currentProjectId Null Errors
+**Hata:** `Cannot read properties of null (reading 'indexOf')`
+**Sebep:** `loadProjectLogs`, `loadProjectStocks`, `loadProjectOverview` fonksiyonları `currentProjectId` kontrolü yapmıyordu
+**Çözüm:** 
+- ✅ Her fonksiyona `if (!currentProjectId)` kontrolü eklendi
+- ✅ Null durumunda console warning ve early return
+
+### [x] 5. Deprecated enableIndexedDbPersistence
+**Uyarı:** `enableIndexedDbPersistence() will be deprecated`
+**Sebep:** Firebase SDK 10.7.1 yeni cache API kullanıyor
+**Çözüm:**
+- ✅ `enableIndexedDbPersistence` yerine `initializeFirestore` kullanıldı
+- ✅ `persistentLocalCache` ve `persistentMultipleTabManager` eklendi
+- ✅ Mobile/slow connection check'leri kaldırıldı (yeni API otomatik hallediyor)
+
+---
+
+## 📦 Son Deployment (19 Kasım 2025 - Sabah)
+
+**Commits:**
+1. `0e76500` - Remove loadProjectPayments references + null checks
+2. `2510d50` - Update to new Firestore cache API
+
+**Deployed:**
+- ✅ GitHub (pushed)
+- ✅ Firestore indexes (deployed)
+- ✅ Vercel (auto-deploy)
+
+**Düzeltilen Hatalar:** 5
+**Kalan Hatalar:** 0
+
 ---
 
 0123456)
