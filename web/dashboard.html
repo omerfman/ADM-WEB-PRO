@@ -812,6 +812,9 @@
       document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
       document.querySelector(`[data-section="${section}"]`).classList.add('active');
       
+      // Save active section to localStorage
+      localStorage.setItem('dashboard_activeSection', section);
+      
       // Close sidebar on mobile after navigation
       if (window.innerWidth <= 768) {
         const sidebar = document.querySelector('.sidebar');
@@ -858,6 +861,26 @@
       };
       document.getElementById('pageTitle').textContent = titles[section] || section;
     }
+    
+    // Restore last active section on page load
+    function restoreActiveSection() {
+      const savedSection = localStorage.getItem('dashboard_activeSection');
+      if (savedSection && savedSection !== 'overview') {
+        // Check if the section element exists and is accessible
+        const sectionElement = document.getElementById(savedSection + 'Section');
+        const navElement = document.querySelector(`[data-section="${savedSection}"]`);
+        
+        if (sectionElement && navElement && !navElement.classList.contains('hidden')) {
+          switchSection(savedSection);
+        }
+      }
+    }
+    
+    // Call restore function when page loads (after auth check)
+    window.addEventListener('load', function() {
+      // Wait a bit for auth check to complete
+      setTimeout(restoreActiveSection, 500);
+    });
 
     // Tab switching in project modal
     function switchTab(tab) {
