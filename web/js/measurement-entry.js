@@ -88,6 +88,9 @@ async function loadPaymentDetail(paymentId) {
 
     console.log(`✅ Loaded ${measurementLines.length} measurements, ${boqItems.length} BOQ items`);
     renderPaymentDetail();
+    
+    // Load approval history after rendering
+    await loadApprovalHistory();
 
   } catch (error) {
     console.error('❌ Payment detail loading error:', error);
@@ -157,8 +160,16 @@ function renderPaymentDetail() {
             ${currentProject?.name || 'Proje'} - ${formatPeriod(currentPayment.periodStart, currentPayment.periodEnd)}
           </p>
         </div>
-        <div style="display: flex; gap: 0.5rem; align-items: center;">
+        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
           ${getStatusBadge(currentPayment.status)}
+          ${measurementLines.length > 0 ? `
+            <button class="btn" style="background: white; color: #10b981;" onclick="exportPaymentToExcel()" title="Excel'e Aktar">
+              📊 Excel
+            </button>
+            <button class="btn" style="background: white; color: #ef4444;" onclick="exportPaymentToPDF()" title="PDF Yazdır">
+              📄 PDF
+            </button>
+          ` : ''}
           <button class="btn" style="background: white; color: var(--brand-red);" onclick="window.history.back()">
             ← Geri Dön
           </button>
@@ -308,6 +319,9 @@ function renderPaymentDetail() {
       </div>
     </div>
 
+    <!-- Approval Section (for admin/reviewers) -->
+    ${renderApprovalSection()}
+
     <!-- Actions -->
     ${isEditable ? `
       <div style="display: flex; gap: 1rem; margin-top: 2rem; justify-content: flex-end;">
@@ -425,6 +439,111 @@ function renderPaymentDetail() {
 /**
  * Helper functions
  */
+function renderApprovalSection() {
+  const user = auth.currentUser;
+  const userRole = localStorage.getItem('userRole');
+  const isAdmin = userRole === 'super_admin' || userRole === 'company_admin';
+  
+  // Show approval section only for reviewers/admins and non-draft status
+  if (!isAdmin || currentPayment.status === 'draft') {
+    return '';
+  }
+  
+  const canApprove = currentPayment.status === 'pending_review' || currentPayment.status === 'pending_approval';
+  const isPaid = currentPayment.status === 'paid';
+  const isRejected = currentPayment.status === 'rejected';
+  
+  return `
+    <div class="card" style="margin-top: 2rem; border: 2px solid ${canApprove ? '#3b82f6' : '#e5e7eb'};">
+      <h3 style="margin-bottom: 1rem;">
+        ${canApprove ? '🔍 Onay İşlemleri' : '✅ Onay Durumu'}
+      </h3>
+      
+      ${canApprove ? `
+        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+          <button class="btn btn-primary" onclick="openApproveModal()" style="flex: 1; background: #10b981;">
+            ✅ Onayla
+          </button>
+          <button class="btn btn-secondary" onclick="openRejectModal()" style="flex: 1; background: #ef4444; color: white;">
+            ❌ Reddet
+          </button>
+        </div>
+      ` : ''}
+      
+      ${isPaid ? `
+        <div style="padding: 1rem; background: #d1fae5; border-radius: 8px; color: #065f46;">
+          <strong>✅ Ödeme Tamamlandı</strong>
+          <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">
+            Ödeme Tarihi: ${formatDate(currentPayment.paidAt)}
+          </p>
+        </div>
+      ` : ''}
+      
+      ${isRejected ? `
+        <div style="padding: 1rem; background: #fee2e2; border-radius: 8px; color: #991b1b;">
+          <strong>❌ Reddedildi</strong>
+          ${currentPayment.rejectionReason ? `
+            <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">
+              <strong>Sebep:</strong> ${currentPayment.rejectionReason}
+            </p>
+          ` : ''}
+        </div>
+      ` : ''}
+      
+      <div id="approvalHistoryContainer" style="margin-top: 1rem;">
+        <h4 style="font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--text-secondary);">Onay Geçmişi</h4>
+        <div id="approvalHistoryList">
+          <!-- Will be loaded dynamically -->
+        </div>
+      </div>
+    </div>
+    
+    <!-- Approve Modal -->
+    <div id="approveModal" class="modal" style="display: none;">
+      <div class="modal-content" style="max-width: 500px;">
+        <h3>✅ Hakediş Onaylama</h3>
+        <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">
+          Bu hakediş dönemini onaylamak istediğinizden emin misiniz?
+        </p>
+        
+        <form id="approveForm" onsubmit="approvePayment(event)">
+          <div class="form-group">
+            <label>Onay Notu (İsteğe bağlı)</label>
+            <textarea id="approvalNotes" rows="3" placeholder="Onay notunuz..."></textarea>
+          </div>
+          
+          <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1; background: #10b981;">✅ Onayla</button>
+            <button type="button" class="btn btn-secondary" onclick="closeApproveModal()" style="flex: 1;">İptal</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <!-- Reject Modal -->
+    <div id="rejectModal" class="modal" style="display: none;">
+      <div class="modal-content" style="max-width: 500px;">
+        <h3>❌ Hakediş Reddetme</h3>
+        <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">
+          Bu hakediş dönemini reddetmek istediğinizden emin misiniz?
+        </p>
+        
+        <form id="rejectForm" onsubmit="rejectPayment(event)">
+          <div class="form-group">
+            <label>Red Sebebi <span style="color: red;">*</span></label>
+            <textarea id="rejectionReason" rows="4" required placeholder="Reddetme sebebini açıklayınız..."></textarea>
+          </div>
+          
+          <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-secondary" style="flex: 1; background: #ef4444; color: white;">❌ Reddet</button>
+            <button type="button" class="btn btn-secondary" onclick="closeRejectModal()" style="flex: 1;">İptal</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+}
+
 function formatCurrency(amount) {
   return new Intl.NumberFormat('tr-TR', {
     style: 'currency',
@@ -1023,5 +1142,480 @@ window.submitForReview = async () => {
     alert('Hakediş gönderilirken hata oluştu: ' + error.message);
   }
 };
+
+// Approval functions
+window.openApproveModal = () => {
+  document.getElementById('approveModal').style.display = 'flex';
+  document.getElementById('approvalNotes').value = '';
+};
+
+window.closeApproveModal = () => {
+  document.getElementById('approveModal').style.display = 'none';
+};
+
+window.openRejectModal = () => {
+  document.getElementById('rejectModal').style.display = 'flex';
+  document.getElementById('rejectionReason').value = '';
+};
+
+window.closeRejectModal = () => {
+  document.getElementById('rejectModal').style.display = 'none';
+};
+
+window.approvePayment = async (event) => {
+  event.preventDefault();
+  
+  const notes = document.getElementById('approvalNotes').value;
+  const currentStatus = currentPayment.status;
+  let newStatus = '';
+  
+  // Determine next status based on current status
+  if (currentStatus === 'pending_review') {
+    newStatus = 'pending_approval';
+  } else if (currentStatus === 'pending_approval') {
+    newStatus = 'approved';
+  } else {
+    alert('❌ Bu hakediş onaylanamaz');
+    return;
+  }
+  
+  if (!confirm(`Hakediş onaylanacak ve durumu "${newStatus}" olarak değişecek. Devam edilsin mi?`)) return;
+  
+  try {
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = '⏳ Onaylanıyor...';
+    
+    // Update payment status
+    await updateDoc(doc(db, 'progress_payments', currentPaymentId), {
+      status: newStatus,
+      approvedAt: Timestamp.now(),
+      approvedBy: auth.currentUser.uid,
+      approvalNotes: notes || '',
+      updatedAt: Timestamp.now()
+    });
+    
+    // Create approval record
+    await addDoc(collection(db, 'payment_approvals'), {
+      paymentId: currentPaymentId,
+      projectId: currentProjectId,
+      action: 'approve',
+      fromStatus: currentStatus,
+      toStatus: newStatus,
+      performedBy: auth.currentUser.uid,
+      performedAt: Timestamp.now(),
+      notes: notes || 'Hakediş onaylandı'
+    });
+    
+    console.log(`✅ Payment approved: ${currentStatus} → ${newStatus}`);
+    alert('✅ Hakediş başarıyla onaylandı');
+    
+    closeApproveModal();
+    await loadPaymentDetail(currentPaymentId);
+    
+  } catch (error) {
+    console.error('❌ Approve error:', error);
+    alert('Onay sırasında hata oluştu: ' + error.message);
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = false;
+    submitBtn.textContent = '✅ Onayla';
+  }
+};
+
+window.rejectPayment = async (event) => {
+  event.preventDefault();
+  
+  const reason = document.getElementById('rejectionReason').value;
+  const currentStatus = currentPayment.status;
+  
+  if (!reason.trim()) {
+    alert('❌ Lütfen red sebebini yazınız');
+    return;
+  }
+  
+  if (!confirm('Hakediş reddedilecek. Devam edilsin mi?')) return;
+  
+  try {
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = '⏳ Reddediliyor...';
+    
+    // Update payment status
+    await updateDoc(doc(db, 'progress_payments', currentPaymentId), {
+      status: 'rejected',
+      rejectedAt: Timestamp.now(),
+      rejectedBy: auth.currentUser.uid,
+      rejectionReason: reason,
+      updatedAt: Timestamp.now()
+    });
+    
+    // Create approval record
+    await addDoc(collection(db, 'payment_approvals'), {
+      paymentId: currentPaymentId,
+      projectId: currentProjectId,
+      action: 'reject',
+      fromStatus: currentStatus,
+      toStatus: 'rejected',
+      performedBy: auth.currentUser.uid,
+      performedAt: Timestamp.now(),
+      notes: reason
+    });
+    
+    console.log(`✅ Payment rejected: ${currentStatus} → rejected`);
+    alert('✅ Hakediş reddedildi');
+    
+    closeRejectModal();
+    await loadPaymentDetail(currentPaymentId);
+    
+  } catch (error) {
+    console.error('❌ Reject error:', error);
+    alert('Red işlemi sırasında hata oluştu: ' + error.message);
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = false;
+    submitBtn.textContent = '❌ Reddet';
+  }
+};
+
+// Load approval history when payment detail loads
+async function loadApprovalHistory() {
+  if (!currentPaymentId) return;
+  
+  try {
+    const approvalsQuery = query(
+      collection(db, 'payment_approvals'),
+      where('paymentId', '==', currentPaymentId),
+      orderBy('performedAt', 'desc')
+    );
+    const approvalsSnap = await getDocs(approvalsQuery);
+    
+    const container = document.getElementById('approvalHistoryList');
+    if (!container) return;
+    
+    if (approvalsSnap.empty) {
+      container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 1rem; font-size: 0.9rem;">Henüz onay işlemi yapılmamış</p>';
+      return;
+    }
+    
+    const approvals = [];
+    approvalsSnap.forEach(doc => {
+      approvals.push({ id: doc.id, ...doc.data() });
+    });
+    
+    // Get user names for performers
+    const userIds = [...new Set(approvals.map(a => a.performedBy))];
+    const userNames = {};
+    
+    for (const userId of userIds) {
+      const userDoc = await getDoc(doc(db, 'users', userId));
+      if (userDoc.exists()) {
+        userNames[userId] = userDoc.data().name || userDoc.data().email || 'Bilinmeyen';
+      }
+    }
+    
+    container.innerHTML = approvals.map(approval => {
+      const actionIcon = {
+        'submit': '📤',
+        'approve': '✅',
+        'reject': '❌',
+        'mark_paid': '💰'
+      }[approval.action] || '📝';
+      
+      const actionText = {
+        'submit': 'İncelemeye gönderildi',
+        'approve': 'Onaylandı',
+        'reject': 'Reddedildi',
+        'mark_paid': 'Ödendi olarak işaretlendi'
+      }[approval.action] || 'İşlem yapıldı';
+      
+      return `
+        <div style="padding: 0.75rem; background: var(--bg-secondary); border-radius: 8px; margin-bottom: 0.5rem; font-size: 0.9rem;">
+          <div style="display: flex; justify-content: space-between; align-items: start;">
+            <div>
+              <strong>${actionIcon} ${actionText}</strong>
+              <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.25rem;">
+                ${formatDate(approval.performedAt)} - ${userNames[approval.performedBy] || 'Bilinmeyen'}
+              </div>
+            </div>
+            <div style="text-align: right; font-size: 0.85rem;">
+              <span style="color: var(--text-secondary);">${approval.fromStatus}</span>
+              →
+              <span style="font-weight: 600;">${approval.toStatus}</span>
+            </div>
+          </div>
+          ${approval.notes ? `
+            <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--border-color); font-size: 0.85rem; color: var(--text-secondary);">
+              ${approval.notes}
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }).join('');
+    
+  } catch (error) {
+    console.error('❌ Approval history loading error:', error);
+  }
+}
+
+/**
+ * Export payment to Excel
+ */
+window.exportPaymentToExcel = () => {
+  if (!currentPayment || !measurementLines || measurementLines.length === 0) {
+    alert('❌ Export edilecek metraj verisi yok');
+    return;
+  }
+  
+  try {
+    // Prepare data for Excel
+    const excelData = measurementLines.map(line => {
+      const boqItem = boqItems.find(b => b.id === line.boqItemId);
+      return {
+        'Poz No': boqItem?.pozNo || '',
+        'İş Tanımı': boqItem?.description || '',
+        'Birim': boqItem?.unit || '',
+        'Önceki Dönem': line.previousQuantity || 0,
+        'Bu Dönem': line.measuredQuantity || 0,
+        'Kümülatif': line.cumulativeQuantity || 0,
+        'Birim Fiyat': line.unitPrice || 0,
+        'Tutar': line.lineTotal || 0,
+        'Notlar': line.notes || ''
+      };
+    });
+    
+    // Add summary rows
+    excelData.push({});
+    excelData.push({ 'Poz No': 'TOPLAM', 'Tutar': currentPayment.grossAmount });
+    excelData.push({ 'Poz No': `KDV (%${currentPaymentConfig?.vatRate || 0})`, 'Tutar': currentPayment.vatAmount });
+    excelData.push({ 'Poz No': `Stopaj (%${currentPaymentConfig?.withholdingRate || 0})`, 'Tutar': -currentPayment.withholdingAmount });
+    excelData.push({ 'Poz No': `Damga Vergisi (%${currentPaymentConfig?.stampTaxRate || 0})`, 'Tutar': -currentPayment.stampTaxAmount });
+    if (currentPayment.advanceDeduction > 0) {
+      excelData.push({ 'Poz No': 'Avans Kesintisi', 'Tutar': -currentPayment.advanceDeduction });
+    }
+    excelData.push({});
+    excelData.push({ 'Poz No': 'NET TUTAR', 'Tutar': currentPayment.netAmount });
+    
+    // Create worksheet
+    const ws = XLSX.utils.json_to_sheet(excelData);
+    
+    // Set column widths
+    ws['!cols'] = [
+      { wch: 12 }, // Poz No
+      { wch: 40 }, // İş Tanımı
+      { wch: 10 }, // Birim
+      { wch: 15 }, // Önceki Dönem
+      { wch: 15 }, // Bu Dönem
+      { wch: 15 }, // Kümülatif
+      { wch: 15 }, // Birim Fiyat
+      { wch: 18 }, // Tutar
+      { wch: 30 }  // Notlar
+    ];
+    
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Hakediş');
+    
+    // Download
+    const fileName = `Hakedis_${currentPayment.paymentNo}_${currentProject.name}_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+    
+    console.log('✅ Excel export successful');
+    
+  } catch (error) {
+    console.error('❌ Excel export error:', error);
+    alert('Excel export hatası: ' + error.message);
+  }
+};
+
+/**
+ * Export payment to PDF (Simple print version)
+ */
+window.exportPaymentToPDF = () => {
+  if (!currentPayment) {
+    alert('❌ Export edilecek hakediş verisi yok');
+    return;
+  }
+  
+  // Create print-friendly view
+  const printWindow = window.open('', '_blank');
+  
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Hakediş ${currentPayment.paymentNo} - ${currentProject.name}</title>
+      <style>
+        @page { size: A4; margin: 2cm; }
+        body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.4; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
+        .header h1 { margin: 0; color: #d32f2f; }
+        .header p { margin: 5px 0; color: #666; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+        .info-box { border: 1px solid #ddd; padding: 15px; }
+        .info-box h3 { margin: 0 0 10px 0; font-size: 12pt; color: #333; }
+        .info-row { display: flex; justify-content: space-between; margin: 5px 0; padding: 3px 0; }
+        .info-label { color: #666; }
+        .info-value { font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #f5f5f5; font-weight: bold; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .total-row { background: #f9f9f9; font-weight: bold; }
+        .net-total { background: #d32f2f; color: white; font-size: 14pt; }
+        .summary { margin-top: 30px; border: 2px solid #333; padding: 20px; }
+        .summary-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ddd; }
+        .summary-row.total { border-top: 2px solid #333; font-size: 14pt; font-weight: bold; margin-top: 10px; }
+        .footer { margin-top: 50px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 50px; }
+        .signature { border-top: 1px solid #333; padding-top: 5px; text-align: center; }
+        @media print { body { margin: 0; } }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>HAKEDİŞ RAPORU</h1>
+        <p><strong>${currentPayment.title}</strong></p>
+        <p>${currentProject?.name || ''}</p>
+        <p>${formatPeriod(currentPayment.periodStart, currentPayment.periodEnd)}</p>
+      </div>
+      
+      <div class="info-grid">
+        <div class="info-box">
+          <h3>Proje Bilgileri</h3>
+          <div class="info-row">
+            <span class="info-label">Proje:</span>
+            <span class="info-value">${currentProject?.name || '-'}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Müşteri:</span>
+            <span class="info-value">${currentProject?.client || '-'}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Hakediş No:</span>
+            <span class="info-value">${currentPayment.paymentNo}</span>
+          </div>
+        </div>
+        
+        <div class="info-box">
+          <h3>Durum Bilgileri</h3>
+          <div class="info-row">
+            <span class="info-label">Durum:</span>
+            <span class="info-value">${getStatusLabel(currentPayment.status)}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Oluşturma:</span>
+            <span class="info-value">${formatDate(currentPayment.createdAt)}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Rapor Tarihi:</span>
+            <span class="info-value">${new Date().toLocaleDateString('tr-TR')}</span>
+          </div>
+        </div>
+      </div>
+      
+      <h3>Metraj Listesi</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 80px;">Poz No</th>
+            <th>İş Tanımı</th>
+            <th style="width: 60px;" class="text-center">Birim</th>
+            <th style="width: 100px;" class="text-right">Önceki</th>
+            <th style="width: 100px;" class="text-right">Bu Dönem</th>
+            <th style="width: 100px;" class="text-right">Kümülatif</th>
+            <th style="width: 110px;" class="text-right">Birim Fiyat</th>
+            <th style="width: 120px;" class="text-right">Tutar</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${measurementLines.map(line => {
+            const boqItem = boqItems.find(b => b.id === line.boqItemId);
+            return `
+              <tr>
+                <td><strong>${boqItem?.pozNo || '-'}</strong></td>
+                <td>${boqItem?.description || '-'}</td>
+                <td class="text-center">${boqItem?.unit || '-'}</td>
+                <td class="text-right">${formatNumber(line.previousQuantity || 0)}</td>
+                <td class="text-right"><strong>${formatNumber(line.measuredQuantity)}</strong></td>
+                <td class="text-right">${formatNumber(line.cumulativeQuantity)}</td>
+                <td class="text-right">${formatCurrency(line.unitPrice)}</td>
+                <td class="text-right"><strong>${formatCurrency(line.lineTotal)}</strong></td>
+              </tr>
+            `;
+          }).join('')}
+          <tr class="total-row">
+            <td colspan="7" class="text-right">TOPLAM:</td>
+            <td class="text-right">${formatCurrency(currentPayment.grossAmount)}</td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <div class="summary">
+        <h3 style="margin: 0 0 15px 0;">Hakediş Hesabı</h3>
+        <div class="summary-row">
+          <span>Brüt Tutar:</span>
+          <strong>${formatCurrency(currentPayment.grossAmount)}</strong>
+        </div>
+        <div class="summary-row">
+          <span>KDV (%${currentPaymentConfig?.vatRate || 0}):</span>
+          <strong style="color: green;">+${formatCurrency(currentPayment.vatAmount)}</strong>
+        </div>
+        <div class="summary-row">
+          <span>Stopaj (%${currentPaymentConfig?.withholdingRate || 0}):</span>
+          <strong style="color: red;">-${formatCurrency(currentPayment.withholdingAmount)}</strong>
+        </div>
+        <div class="summary-row">
+          <span>Damga Vergisi (%${currentPaymentConfig?.stampTaxRate || 0}):</span>
+          <strong style="color: red;">-${formatCurrency(currentPayment.stampTaxAmount)}</strong>
+        </div>
+        ${currentPayment.advanceDeduction > 0 ? `
+          <div class="summary-row">
+            <span>Avans Kesintisi:</span>
+            <strong style="color: red;">-${formatCurrency(currentPayment.advanceDeduction)}</strong>
+          </div>
+        ` : ''}
+        <div class="summary-row total">
+          <span>NET ÖDENECEK TUTAR:</span>
+          <strong style="color: #d32f2f;">${formatCurrency(currentPayment.netAmount)}</strong>
+        </div>
+      </div>
+      
+      <div class="footer">
+        <div>
+          <p><strong>Hazırlayan</strong></p>
+          <div class="signature">İmza</div>
+        </div>
+        <div>
+          <p><strong>Kontrol Eden</strong></p>
+          <div class="signature">İmza</div>
+        </div>
+        <div>
+          <p><strong>Onaylayan</strong></p>
+          <div class="signature">İmza</div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `);
+  
+  printWindow.document.close();
+  
+  // Auto print after content loads
+  setTimeout(() => {
+    printWindow.print();
+  }, 500);
+};
+
+function getStatusLabel(status) {
+  const labels = {
+    'draft': 'Taslak',
+    'pending_review': 'İncelemede',
+    'pending_approval': 'Onay Bekliyor',
+    'approved': 'Onaylandı',
+    'rejected': 'Reddedildi',
+    'paid': 'Ödendi'
+  };
+  return labels[status] || status;
+}
 
 console.log('✅ Measurement Entry module loaded');
