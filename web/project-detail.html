@@ -55,6 +55,10 @@
           <span class="nav-icon">💼</span>
           <span class="nav-text">Bütçe Yönetimi</span>
         </a>
+        <a href="#" class="nav-item hidden" id="clientsTabBtn" data-tab="clients" onclick="switchProjectTab('clients')">
+          <span class="nav-icon">🏢</span>
+          <span class="nav-text">Müşteri Yetkileri</span>
+        </a>
       </nav>
       
       <div class="sidebar-footer">
@@ -356,6 +360,28 @@
               <button class="btn btn-primary" onclick="openCategoriesView()" style="width: 100%; padding: 1.2rem; font-size: 1.1rem; font-weight: 600;">
                 📁 Bütçe Kategorilerini Yönet
               </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Clients Tab (Admin Only) -->
+        <div id="clients-tab" class="tab-content hidden">
+          <div style="max-width: 1200px; margin: 0 auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+              <div>
+                <h3 style="margin: 0 0 0.5rem 0;">🏢 Müşteri Yetkilendirme</h3>
+                <p style="margin: 0; color: var(--text-secondary);">
+                  Bu projeyi görüntüleyebilecek müşteri hesaplarını yönetin
+                </p>
+              </div>
+            </div>
+
+            <!-- Client List -->
+            <div id="clientsList">
+              <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🔄</div>
+                <p>Yükleniyor...</p>
+              </div>
             </div>
           </div>
         </div>
@@ -812,27 +838,27 @@
   <script type="module" src="js/firebase-config.js"></script>
   
   <!-- API Config -->
-  <script src="js/api-config.js"></script>
+  <script src="js/api-config.js?v=2"></script>
   
   <!-- Auth Module -->
-  <script type="module" src="js/auth.js"></script>
+  <script type="module" src="js/auth.js?v=2"></script>
   
   <!-- Projects Module -->
-  <script type="module" src="js/projects.js"></script>
+  <script type="module" src="js/projects.js?v=2"></script>
   
   <!-- Additional Modules -->
-  <script type="module" src="js/upload.js"></script>
-  <script type="module" src="js/budget.js"></script>
-  <script type="module" src="js/excel.js"></script>
-  <script type="module" src="js/boq.js"></script>
-  <script type="module" src="js/progress-payments.js"></script>
-  <script type="module" src="js/measurement-entry.js"></script>
+  <script type="module" src="js/upload.js?v=2"></script>
+  <script type="module" src="js/budget.js?v=2"></script>
+  <script type="module" src="js/excel.js?v=2"></script>
+  <script type="module" src="js/boq.js?v=2"></script>
+  <script type="module" src="js/progress-payments.js?v=2"></script>
+  <script type="module" src="js/measurement-entry.js?v=2"></script>
   
   <!-- App Initialization -->
-  <script type="module" src="js/app.js"></script>
+  <script type="module" src="js/app.js?v=2"></script>
 
   <!-- Project Detail Specific Scripts -->
-  <script type="module" src="js/project-detail.js"></script>
+  <script type="module" src="js/project-detail.js?v=2"></script>
 
   <script>
     // Close sidebar on mobile helper function
@@ -904,11 +930,14 @@
         window.loadProgressPayments(projectId);
       } else if (tab === 'budget' && window.loadBudgetTabSummary) {
         window.loadBudgetTabSummary();
+      } else if (tab === 'clients' && window.loadProjectClients) {
+        const projectId = new URLSearchParams(window.location.search).get('id');
+        window.loadProjectClients(projectId);
       }
     }
     
     // Restore last active tab on page load
-    function restoreActiveTab() {
+    window.restoreActiveTab = function() {
       const projectId = new URLSearchParams(window.location.search).get('id');
       if (projectId) {
         const savedTab = localStorage.getItem(`project_${projectId}_activeTab`);
@@ -916,7 +945,22 @@
           switchProjectTab(savedTab);
         }
       }
-    }
+    };
+    
+    // Call initProjectDetail when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('📄 project-detail.html DOM ready, waiting for initProjectDetail...');
+      
+      // Wait a bit for modules to load
+      setTimeout(() => {
+        if (window.initProjectDetail) {
+          console.log('✅ Calling initProjectDetail from DOM ready');
+          window.initProjectDetail();
+        } else {
+          console.warn('⚠️ initProjectDetail not available yet, will be called by auth.js');
+        }
+      }, 200);
+    });
     
     // Quick budget view functions
     function openCategoriesView() {

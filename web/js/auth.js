@@ -171,6 +171,9 @@ async function loadUserData() {
   }
 }
 
+// Export loadUserData for use in other scripts
+window.loadUserData = loadUserData;
+
 // Auth state listener - checks if user is logged in
 onAuthStateChanged(auth, async (user) => {
   const isLoginPage = window.location.pathname.includes('login.html');
@@ -200,6 +203,18 @@ onAuthStateChanged(auth, async (user) => {
           restoreActiveSection();
         } else if (typeof loadDashboardOverview === 'function') {
           loadDashboardOverview();
+        }
+      }, 100);
+    }
+    
+    // Initialize project detail page
+    if (isProjectDetailPage) {
+      setTimeout(() => {
+        if (typeof window.initProjectDetail === 'function') {
+          console.log('🚀 Calling initProjectDetail from auth.js');
+          window.initProjectDetail();
+        } else {
+          console.warn('⚠️ window.initProjectDetail function not found!');
         }
       }, 100);
     }

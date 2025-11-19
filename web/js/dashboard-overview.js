@@ -27,10 +27,17 @@ async function loadDashboardOverview() {
 
     // Load different dashboard based on role
     if (userRole === 'super_admin') {
+      console.log('🔑 Super Admin dashboard yüklenecek');
       await loadSuperAdminDashboard();
     } else if (userRole === 'company_admin') {
+      console.log('🏢 Company Admin dashboard yüklenecek, companyId:', companyId);
       await loadCompanyAdminDashboard(companyId);
+    } else if (userRole === 'client') {
+      console.log('👤 Client dashboard yüklenecek, userId:', user.uid);
+      console.log('📋 userData:', userData);
+      await loadClientDashboard(user.uid, userData);
     } else {
+      console.log('👷 User dashboard yüklenecek, role:', userRole);
       await loadUserDashboard(user.uid, companyId);
     }
 
@@ -259,6 +266,53 @@ async function loadUserDashboard(userId, companyId) {
 
   } catch (error) {
     console.error('❌ User Dashboard hata:', error);
+  }
+}
+
+/**
+ * Client Dashboard - Read-only view for authorized projects
+ */
+async function loadClientDashboard(userId, userData) {
+  console.log('🏢 Client Dashboard yükleniyor...');
+
+  try {
+    const authorizedProjects = userData?.authorizedProjects || [];
+    
+    if (authorizedProjects.length === 0) {
+      renderClientDashboard({
+        clientInfo: userData?.clientInfo || {},
+        projects: [],
+        message: 'Henüz size proje yetkisi verilmemiş. Lütfen firma yetkiliniz ile iletişime geçin.'
+      });
+      return;
+    }
+
+    // Load authorized projects
+    const projects = [];
+    for (const projectId of authorizedProjects) {
+      try {
+        const projectDoc = await getDoc(doc(db, 'projects', projectId));
+        if (projectDoc.exists()) {
+          projects.push({ id: projectDoc.id, ...projectDoc.data() });
+        }
+      } catch (err) {
+        console.warn(`⚠️ Proje yüklenemedi: ${projectId}`, err.message);
+      }
+    }
+
+    renderClientDashboard({
+      clientInfo: userData?.clientInfo || {},
+      projects,
+      userName: userData?.fullName || userData?.email
+    });
+
+  } catch (error) {
+    console.error('❌ Client Dashboard hata:', error);
+    renderClientDashboard({
+      clientInfo: {},
+      projects: [],
+      message: 'Dashboard yüklenirken hata oluştu: ' + error.message
+    });
   }
 }
 
@@ -847,5 +901,100 @@ async function handleCompanyLogoUpload(event, companyId) {
 window.openCompanyLogoUpload = openCompanyLogoUpload;
 window.closeCompanyLogoUpload = closeCompanyLogoUpload;
 window.handleCompanyLogoUpload = handleCompanyLogoUpload;
+
+/**
+ * Render Client Dashboard
+ */
+function renderClientDashboard(data) {
+  const container = document.getElementById('overviewSection');
+  if (!container) return;
+
+  const { clientInfo, projects, userName, message } = data;
+
+  container.innerHTML = `
+    <div class="section-header">
+      <h3>🏢 Hoş Geldiniz, ${userName || 'Müşteri'}</h3>
+      <div style="color: var(--text-secondary); font-size: 0.9rem;">
+        ${new Date().toLocaleDateString('tr-TR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+      </div>
+    </div>
+
+    ${clientInfo.companyName ? `
+    <div class="card" style="margin-bottom: 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <div style="font-size: 3rem;">🏢</div>
+        <div style="flex: 1;">
+          <h3 style="margin: 0 0 0.5rem 0;">${clientInfo.companyName}</h3>
+          ${clientInfo.contactPerson ? `<p style="margin: 0; opacity: 0.9;">👤 ${clientInfo.contactPerson}</p>` : ''}
+        </div>
+      </div>
+    </div>
+    ` : ''}
+
+    ${message ? `
+    <div class="card" style="background: #FFF3CD; border-left: 4px solid #FFA500; padding: 1.5rem;">
+      <h4 style="margin: 0 0 0.5rem 0; color: #856404;">ℹ️ Bilgilendirme</h4>
+      <p style="margin: 0; color: #856404;">${message}</p>
+    </div>
+    ` : ''}
+
+    ${projects.length > 0 ? `
+    <div style="margin-bottom: 1.5rem;">
+      <h4 style="margin-bottom: 1rem;">📁 Yetkili Projeleriniz (${projects.length})</h4>
+      <div class="dashboard-grid">
+        ${projects.map(project => {
+          const status = project.status || 'Devam Ediyor';
+          const statusColors = {
+            'Devam Ediyor': '#4CAF50',
+            'Tamamlandı': '#2196F3',
+            'Beklemede': '#FFA500'
+          };
+          
+          return `
+            <div class="project-card" style="
+              padding: 1.5rem;
+              border: 1px solid var(--border-color);
+              border-radius: 8px;
+              background: var(--card-bg);
+              cursor: pointer;
+              transition: box-shadow 0.3s;
+              position: relative;
+            " onclick="window.location.href='project-detail.html?id=${project.id}'">
+              <div style="position: absolute; top: 10px; right: 10px; background: #FF9800; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">
+                👁️ GÖRÜNTÜLEME
+              </div>
+              <h4 style="margin: 0 0 0.5rem 0; color: var(--brand-red);">${project.name || 'İsimsiz Proje'}</h4>
+              <p style="margin: 0.5rem 0; color: var(--text-secondary); font-size: 0.9rem;">
+                📍 ${project.location || 'Konum belirtilmemiş'}
+              </p>
+              ${project.description ? `
+                <p style="margin: 0.5rem 0; color: var(--text-secondary); font-size: 0.85rem;">
+                  ${project.description.substring(0, 100)}${project.description.length > 100 ? '...' : ''}
+                </p>
+              ` : ''}
+              <div style="display: flex; justify-content: space-between; margin-top: 1rem; align-items: center;">
+                <span style="background: ${statusColors[status] || '#999'}; color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">
+                  ${status}
+                </span>
+                <small style="color: var(--text-secondary);">
+                  ${project.createdAt ? new Date(project.createdAt.toDate()).toLocaleDateString('tr-TR') : ''}
+                </small>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="card" style="background: #E3F2FD; border-left: 4px solid #2196F3; padding: 1.5rem;">
+      <h4 style="margin: 0 0 0.5rem 0; color: #1976D2;">💡 İpucu</h4>
+      <p style="margin: 0; color: #1976D2;">
+        Proje detaylarını görüntülemek için proje kartına tıklayın. 
+        Şantiye günlükleri, fotoğraflar ve ilerleme bilgilerini inceleyebilirsiniz.
+      </p>
+    </div>
+    ` : ''}
+  `;
+}
 
 console.log('✅ Dashboard Overview module loaded');

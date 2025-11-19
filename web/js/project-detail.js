@@ -2,8 +2,9 @@
 
 import { auth, db } from "./firebase-config.js";
 import {
-  doc, getDoc, collection, query, orderBy, getDocs, deleteDoc, addDoc, serverTimestamp
+  doc, getDoc, collection, query, orderBy, getDocs, deleteDoc, addDoc, serverTimestamp, updateDoc, where
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 let currentProjectId = null;
 let currentProject = null;
@@ -27,11 +28,44 @@ async function initProjectDetail() {
 
     console.log('📋 Proje detayı yükleniyor:', currentProjectId);
 
+    // Ensure user data is loaded first
+    if (!window.userRole && window.loadUserData) {
+      console.log('⏳ Kullanıcı verileri yükleniyor...');
+      await window.loadUserData();
+    }
+    
+    console.log('👤 Mevcut rol:', window.userRole);
+
     // Load project data
     await loadProjectData();
     
     // Load project stats
     await loadProjectStats();
+    
+    // Show clients tab BEFORE loading tab data (in case tab loading hangs)
+    const userRole = window.userRole;
+    console.log('🔐 Rol kontrolü - userRole:', userRole);
+    console.log('🔍 window nesnesi:', { userRole: window.userRole, userCompanyId: window.userCompanyId });
+    
+    const clientsTabBtn = document.getElementById('clientsTabBtn');
+    console.log('🔍 clientsTabBtn elementi:', clientsTabBtn);
+    
+    if (clientsTabBtn) {
+      console.log('📋 clientsTabBtn mevcut class listesi:', clientsTabBtn.classList.toString());
+      
+      if (userRole === 'super_admin' || userRole === 'company_admin') {
+        console.log('✅ Admin rolü tespit edildi - Müşteri Yetkileri sekmesi gösteriliyor');
+        clientsTabBtn.classList.remove('hidden');
+        clientsTabBtn.style.display = ''; // Force visible
+        console.log('✅ clientsTabBtn güncellendi, yeni class listesi:', clientsTabBtn.classList.toString());
+        console.log('✅ clientsTabBtn display:', clientsTabBtn.style.display);
+      } else {
+        console.log('ℹ️ Rol admin değil (' + userRole + '), Müşteri Yetkileri sekmesi gizli kalacak');
+      }
+    } else {
+      console.error('❌ clientsTabBtn elementi bulunamadı! HTML\'de id="clientsTabBtn" var mı?');
+      console.log('🔍 Tüm nav-item elementleri:', document.querySelectorAll('.nav-item'));
+    }
     
     // Load all tab data
     await loadProjectOverview();
@@ -39,6 +73,8 @@ async function initProjectDetail() {
     await loadProjectStocks();
     // Note: loadProjectPayments() removed - using progress-payments.js module
     await loadBudgetTabSummary();
+    
+    console.log('✅ Tüm sekme verileri yüklendi');
     
     // Restore last active tab after all data loaded
     if (window.restoreActiveTab) {
@@ -983,14 +1019,183 @@ window.handleAddLog = handleAddLog;
 window.handleAddStock = handleAddStock;
 window.handleAddPayment = handleAddPayment;
 
-// Initialize on page load
-auth.onAuthStateChanged((user) => {
-  if (user) {
-    initProjectDetail();
-  } else {
-    window.location.href = 'login.html';
+/**
+ * Load Project Clients Tab
+ */
+async function loadProjectClients(projectId) {
+  try {
+    console.log('🏢 Müşteri yetkileri yükleniyor...');
+    
+    // Get all client users
+    const usersRef = collection(db, 'users');
+    const clientsQuery = query(usersRef, where('role', '==', 'client'));
+    const clientsSnapshot = await getDocs(clientsQuery);
+    
+    // Get current project data
+    const projectRef = doc(db, 'projects', projectId);
+    const projectSnap = await getDoc(projectRef);
+    const projectData = projectSnap.data();
+    const allowedClients = projectData?.allowedClients || [];
+    
+    const clients = [];
+    clientsSnapshot.forEach(doc => {
+      const clientData = doc.data();
+      // Only show clients from same company (or all for super_admin)
+      if (window.userRole === 'super_admin' || clientData.companyId === window.userCompanyId) {
+        clients.push({ id: doc.id, ...clientData });
+      }
+    });
+    
+    renderProjectClients(clients, allowedClients, projectId);
+    
+  } catch (error) {
+    console.error('❌ Müşteri yetkileri yüklenirken hata:', error);
+    const container = document.getElementById('clientsList');
+    if (container) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">❌</div>
+          <p>Hata: ${error.message}</p>
+        </div>
+      `;
+    }
   }
-});
+}
+
+function renderProjectClients(clients, allowedClients, projectId) {
+  const container = document.getElementById('clientsList');
+  if (!container) return;
+  
+  if (clients.length === 0) {
+    container.innerHTML = `
+      <div style="text-align: center; padding: 3rem; background: var(--card-bg); border-radius: 8px; border: 1px dashed var(--border-color);">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">🏢</div>
+        <h4 style="margin-bottom: 0.5rem;">Henüz müşteri kullanıcısı yok</h4>
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+          Önce Dashboard → Kullanıcılar bölümünden müşteri hesabı oluşturun
+        </p>
+        <a href="dashboard.html#users" class="btn btn-primary">
+          👥 Kullanıcılar Sayfasına Git
+        </a>
+      </div>
+    `;
+    return;
+  }
+  
+  container.innerHTML = `
+    <div style="background: var(--card-bg); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
+      <h4 style="margin: 0 0 1rem 0;">✓ Yetkili Müşteriler: ${allowedClients.length} / ${clients.length}</h4>
+      <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">
+        Bu projeyi görüntüleyebilecek müşterileri seçin. Seçilen müşteriler dashboard'larında bu projeyi görebilecekler.
+      </p>
+    </div>
+    
+    <div style="display: grid; gap: 1rem;">
+      ${clients.map(client => {
+        const isAuthorized = allowedClients.includes(client.id);
+        const clientInfo = client.clientInfo || {};
+        
+        return `
+          <div style="
+            background: var(--card-bg);
+            border: 2px solid ${isAuthorized ? '#4CAF50' : 'var(--border-color)'};
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+          ">
+            <div style="display: flex; align-items: start; gap: 1rem;">
+              <input 
+                type="checkbox" 
+                id="client_${client.id}"
+                ${isAuthorized ? 'checked' : ''}
+                onchange="toggleClientAccess('${projectId}', '${client.id}', this.checked)"
+                style="width: 24px; height: 24px; cursor: pointer; margin-top: 4px;"
+              >
+              <label for="client_${client.id}" style="flex: 1; cursor: pointer;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem;">
+                  <span style="font-size: 1.5rem;">🏢</span>
+                  <strong style="font-size: 1.1rem;">${client.fullName || client.email}</strong>
+                  ${isAuthorized ? '<span style="background: #4CAF50; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; margin-left: 8px;">✓ YETKİLİ</span>' : ''}
+                </div>
+                <div style="color: var(--text-secondary); font-size: 0.9rem; margin-left: 38px;">
+                  📧 ${client.email}
+                </div>
+                ${clientInfo.companyName ? `
+                  <div style="margin-top: 0.75rem; padding: 0.75rem; background: var(--input-bg); border-radius: 4px; margin-left: 38px;">
+                    <div style="font-size: 0.9rem;"><strong>Firma:</strong> ${clientInfo.companyName}</div>
+                    ${clientInfo.contactPerson ? `<div style="font-size: 0.85rem; margin-top: 0.25rem;"><strong>Yetkili:</strong> ${clientInfo.contactPerson}</div>` : ''}
+                  </div>
+                ` : ''}
+              </label>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+    
+    <div style="margin-top: 2rem; padding: 1rem; background: #E3F2FD; border-left: 4px solid #2196F3; border-radius: 4px;">
+      <strong style="color: #1976D2;">💡 İpucu:</strong>
+      <p style="margin: 0.5rem 0 0 0; color: #1976D2; font-size: 0.9rem;">
+        Checkbox'ları işaretleyerek/kaldırarak müşteri yetkilerini anında güncelleyebilirsiniz. 
+        Yetkili müşteriler bu projeyi dashboard'larında görüp, detaylarını inceleyebilirler.
+      </p>
+    </div>
+  `;
+}
+
+async function toggleClientAccess(projectId, clientId, isAuthorized) {
+  try {
+    console.log(`${isAuthorized ? '✅ Yetki veriliyor' : '❌ Yetki kaldırılıyor'}:`, clientId);
+    
+    // Get current data
+    const projectRef = doc(db, 'projects', projectId);
+    const projectSnap = await getDoc(projectRef);
+    const currentAllowedClients = projectSnap.data()?.allowedClients || [];
+    
+    const clientRef = doc(db, 'users', clientId);
+    const clientSnap = await getDoc(clientRef);
+    const currentAuthorizedProjects = clientSnap.data()?.authorizedProjects || [];
+    
+    // Update arrays
+    let newAllowedClients, newAuthorizedProjects;
+    
+    if (isAuthorized) {
+      // Add authorization
+      newAllowedClients = [...new Set([...currentAllowedClients, clientId])];
+      newAuthorizedProjects = [...new Set([...currentAuthorizedProjects, projectId])];
+    } else {
+      // Remove authorization
+      newAllowedClients = currentAllowedClients.filter(id => id !== clientId);
+      newAuthorizedProjects = currentAuthorizedProjects.filter(id => id !== projectId);
+    }
+    
+    // Update both documents
+    await updateDoc(projectRef, {
+      allowedClients: newAllowedClients,
+      updatedAt: serverTimestamp()
+    });
+    
+    await updateDoc(clientRef, {
+      authorizedProjects: newAuthorizedProjects,
+      updatedAt: serverTimestamp()
+    });
+    
+    console.log('✅ Yetki güncellendi');
+    
+    // Reload the tab to show updated counts
+    await loadProjectClients(projectId);
+    
+  } catch (error) {
+    console.error('❌ Yetki güncellenirken hata:', error);
+    alert('Hata: ' + error.message);
+    // Reload to revert checkbox state
+    await loadProjectClients(projectId);
+  }
+}
+
+window.loadProjectClients = loadProjectClients;
+window.toggleClientAccess = toggleClientAccess;
+window.initProjectDetail = initProjectDetail;
 
 console.log('✅ Project Detail module loaded');
 
