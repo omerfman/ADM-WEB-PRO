@@ -39,13 +39,15 @@ async function initProjectDetail() {
     // Load project data
     await loadProjectData();
     
+    // Get user role once at the beginning
+    const userRole = window.userRole;
+    
     // Load project stats (skip for clients - they don't have permission)
     if (userRole !== 'client') {
       await loadProjectStats();
     }
     
     // Show clients tab BEFORE loading tab data (in case tab loading hangs)
-    const userRole = window.userRole;
     console.log('🔐 Rol kontrolü - userRole:', userRole);
     console.log('🔍 window nesnesi:', { userRole: window.userRole, userCompanyId: window.userCompanyId });
     

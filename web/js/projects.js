@@ -9,6 +9,7 @@ import { uploadPhotoToImgBB } from "./upload.js";
 let currentProjectId = null;
 let projects = [];
 let filteredProjects = [];
+let isLoadingProjects = false; // Prevent duplicate loading
 
 // Export currentProjectId globally for budget module
 window.currentProjectId = null;
@@ -17,10 +18,19 @@ window.currentProjectId = null;
  * Load projects from Firestore
  */
 async function loadProjects() {
+  // Prevent duplicate simultaneous loads
+  if (isLoadingProjects) {
+    console.log('⚠️ Projeler zaten yükleniyor, bekleyin...');
+    return;
+  }
+  
+  isLoadingProjects = true;
+  
   try {
     const user = auth.currentUser;
     if (!user) {
       console.warn('⚠️ Kullanıcı giriş yapmamış');
+      isLoadingProjects = false;
       return;
     }
 
@@ -77,6 +87,7 @@ async function loadProjects() {
       renderProjectsList();
       console.log(`✅ ${projects.length} yetkili proje yüklendi`);
       initializeProjectFilters();
+      isLoadingProjects = false;
       return;
     } 
     // Regular users only see their company's projects
@@ -105,9 +116,12 @@ async function loadProjects() {
     
     // Initialize filters after projects are loaded
     initializeProjectFilters();
+    
   } catch (error) {
     console.error('❌ Projeler yüklenirken hata:', error);
     showAlert('Projeler yüklenemedi: ' + error.message, 'danger');
+  } finally {
+    isLoadingProjects = false;
   }
 }
 
