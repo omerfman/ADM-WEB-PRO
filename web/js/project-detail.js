@@ -39,8 +39,10 @@ async function initProjectDetail() {
     // Load project data
     await loadProjectData();
     
-    // Load project stats
-    await loadProjectStats();
+    // Load project stats (skip for clients - they don't have permission)
+    if (userRole !== 'client') {
+      await loadProjectStats();
+    }
     
     // Show clients tab BEFORE loading tab data (in case tab loading hangs)
     const userRole = window.userRole;
@@ -67,12 +69,31 @@ async function initProjectDetail() {
       console.log('🔍 Tüm nav-item elementleri:', document.querySelectorAll('.nav-item'));
     }
     
-    // Load all tab data
-    await loadProjectOverview();
-    await loadProjectLogs();
-    await loadProjectStocks();
-    // Note: loadProjectPayments() removed - using progress-payments.js module
-    await loadBudgetTabSummary();
+    // Hide tabs that clients shouldn't access
+    if (userRole === 'client') {
+      const tabsToHide = ['logs', 'stocks', 'boq', 'payments', 'budget'];
+      tabsToHide.forEach(tabName => {
+        const tabBtn = document.querySelector(`[data-tab="${tabName}"]`);
+        if (tabBtn) {
+          tabBtn.classList.add('hidden');
+          tabBtn.style.display = 'none';
+        }
+      });
+      console.log('🔒 Müşteri için erişilemeyen sekmeler gizlendi');
+    }
+    
+    // Load tab data based on user role
+    if (userRole === 'client') {
+      // Clients only see limited read-only overview
+      await loadClientProjectOverview();
+    } else {
+      // Regular users and admins see full data
+      await loadProjectOverview();
+      await loadProjectLogs();
+      await loadProjectStocks();
+      // Note: loadProjectPayments() removed - using progress-payments.js module
+      await loadBudgetTabSummary();
+    }
     
     console.log('✅ Tüm sekme verileri yüklendi');
     
@@ -315,6 +336,80 @@ async function loadProjectStocks() {
  * This function is kept for reference but no longer called
  */
 // async function loadProjectPayments() { ... }
+
+/**
+ * Load Client Project Overview (Read-only, limited data)
+ */
+async function loadClientProjectOverview() {
+  if (!currentProjectId || !currentProject) {
+    console.warn('⚠️ loadClientProjectOverview: currentProjectId or currentProject is null');
+    return;
+  }
+  
+  try {
+    console.log('👁️ Müşteri için basit proje özeti yükleniyor...');
+    
+    // Update project info (basic fields only)
+    document.getElementById('overviewProjectName').textContent = currentProject.name || '-';
+    document.getElementById('overviewCompany').textContent = currentProject.company || '-';
+    
+    // Status with color
+    const statusEl = document.getElementById('overviewStatus');
+    const statusText = currentProject.status || 'Devam Ediyor';
+    const statusColors = {
+      'Devam Ediyor': '#2196F3',
+      'Tamamlandı': '#4caf50',
+      'Beklemede': '#ff9800',
+      'İptal': '#f44336'
+    };
+    statusEl.textContent = statusText;
+    statusEl.style.color = statusColors[statusText] || '#2196F3';
+    
+    // Dates
+    const startDate = currentProject.startDate?.toDate ? currentProject.startDate.toDate().toLocaleDateString('tr-TR') : '-';
+    const endDate = currentProject.endDate?.toDate ? currentProject.endDate.toDate().toLocaleDateString('tr-TR') : '-';
+    document.getElementById('overviewStartDate').textContent = startDate;
+    document.getElementById('overviewEndDate').textContent = endDate;
+    
+    // Location and description
+    document.getElementById('overviewLocation').textContent = currentProject.location || '-';
+    document.getElementById('overviewDescription').textContent = currentProject.description || 'Açıklama eklenmemiş';
+
+    // Hide stats cards for clients (they don't have permission to see subcollections)
+    const statsContainer = document.getElementById('projectStatsCards');
+    if (statsContainer) {
+      statsContainer.innerHTML = `
+        <div class="card" style="grid-column: 1 / -1; background: #E3F2FD; border-left: 4px solid #2196F3; padding: 1.5rem;">
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="font-size: 2rem;">👁️</div>
+            <div>
+              <h4 style="margin: 0 0 0.5rem 0; color: #1976D2;">Sadece Görüntüleme Modu</h4>
+              <p style="margin: 0; color: #1976D2;">
+                Bu projeyi yalnızca görüntüleme yetkisine sahipsiniz. Detaylı bilgiler ve düzenleme yetkisi için firma yetkiliniz ile iletişime geçebilirsiniz.
+              </p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Set overview counts to 0 or hide them
+    const overviewLogsCount = document.getElementById('overviewLogsCount');
+    const overviewStocksCount = document.getElementById('overviewStocksCount');
+    const overviewPaymentsCount = document.getElementById('overviewPaymentsCount');
+    const overviewBudgetUsage = document.getElementById('overviewBudgetUsage');
+    
+    if (overviewLogsCount) overviewLogsCount.textContent = '-';
+    if (overviewStocksCount) overviewStocksCount.textContent = '-';
+    if (overviewPaymentsCount) overviewPaymentsCount.textContent = '-';
+    if (overviewBudgetUsage) overviewBudgetUsage.textContent = '-';
+
+    console.log('✅ Müşteri proje özeti yüklendi');
+
+  } catch (error) {
+    console.error('❌ Müşteri proje özeti yüklenemedi:', error);
+  }
+}
 
 /**
  * Load Project Overview

@@ -73,6 +73,7 @@ async function loadProjects() {
         return dateB - dateA;
       });
       
+      filteredProjects = [...projects]; // Set filtered to avoid duplication
       renderProjectsList();
       console.log(`✅ ${projects.length} yetkili proje yüklendi`);
       initializeProjectFilters();
