@@ -146,6 +146,11 @@ async function loadProjectStats() {
  * Load Project Logs
  */
 async function loadProjectLogs() {
+  if (!currentProjectId) {
+    console.warn('⚠️ loadProjectLogs: currentProjectId is null');
+    return;
+  }
+  
   try {
     const logsRef = collection(db, 'projects', currentProjectId, 'logs');
     const logsQuery = query(logsRef, orderBy('date', 'desc'));
@@ -209,6 +214,11 @@ async function loadProjectLogs() {
  * Load Project Stocks
  */
 async function loadProjectStocks() {
+  if (!currentProjectId) {
+    console.warn('⚠️ loadProjectStocks: currentProjectId is null');
+    return;
+  }
+  
   try {
     const stocksRef = collection(db, 'projects', currentProjectId, 'stocks');
     const stocksQuery = query(stocksRef, orderBy('createdAt', 'desc'));
@@ -269,6 +279,11 @@ async function loadProjectStocks() {
  * Load Project Overview
  */
 async function loadProjectOverview() {
+  if (!currentProjectId || !currentProject) {
+    console.warn('⚠️ loadProjectOverview: currentProjectId or currentProject is null');
+    return;
+  }
+  
   try {
     // Update project info
     document.getElementById('overviewProjectName').textContent = currentProject.name || '-';
@@ -808,7 +823,7 @@ async function deletePayment(paymentId) {
   try {
     await deleteDoc(doc(db, 'projects', currentProjectId, 'payments', paymentId));
     showAlert('Hakediş kaydı silindi', 'success');
-    loadProjectPayments();
+    // Note: Using progress-payments.js module now
     loadProjectStats();
   } catch (error) {
     console.error('❌ Hakediş silinirken hata:', error);
@@ -921,7 +936,7 @@ async function handleAddPayment(event) {
     
     showAlert('Hakediş eklendi', 'success');
     closeAddPaymentModal();
-    await loadProjectPayments();
+    // Note: Using progress-payments.js module now
     await loadProjectStats();
     
   } catch (error) {
@@ -935,7 +950,7 @@ window.getCurrentProjectId = () => currentProjectId;
 window.loadProjectOverview = loadProjectOverview;
 window.loadProjectLogs = loadProjectLogs;
 window.loadProjectStocks = loadProjectStocks;
-window.loadProjectPayments = loadProjectPayments;
+// Note: loadProjectPayments removed - using progress-payments.js module
 window.deleteLog = deleteLog;
 window.deleteStock = deleteStock;
 window.deletePayment = deletePayment;
