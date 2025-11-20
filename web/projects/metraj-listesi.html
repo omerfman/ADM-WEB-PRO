@@ -179,8 +179,8 @@
         <div class="section-header">
           <h3>📋 Metraj Listesi (Bill of Quantities)</h3>
           <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <button class="btn btn-primary" onclick="openAddBoqItemModal()">+ İş Kalemi Ekle</button>
-            <button class="btn" style="background: #27ae60; color: white;" onclick="exportBoqToExcel()">📤 Excel İndir</button>
+            <button class="btn btn-primary" id="addBoqItemBtn">+ İş Kalemi Ekle</button>
+            <button class="btn" style="background: #27ae60; color: white;" id="exportBoqBtn">📤 Excel İndir</button>
           </div>
         </div>
 
@@ -217,7 +217,7 @@
               </select>
             </div>
             <div style="display: flex; align-items: flex-end;">
-              <button class="btn btn-secondary" onclick="clearBoqFilters()" style="width: 100%;">🔄 Temizle</button>
+              <button class="btn btn-secondary" id="clearBoqFiltersBtn" style="width: 100%;">🔄 Temizle</button>
             </div>
           </div>
         </div>
@@ -485,14 +485,44 @@
       if (editBoqQuantity) editBoqQuantity.addEventListener('input', updateEditBoqTotal);
       if (editBoqUnitPrice) editBoqUnitPrice.addEventListener('input', updateEditBoqTotal);
 
-      // Filtreleme event listeners
-      const searchInput = document.getElementById('boqSearchInput');
-      const categoryFilter = document.getElementById('boqCategoryFilter');
-      const sortFilter = document.getElementById('boqSortFilter');
+      // Filtreleme event listeners - wait for module to load
+      setTimeout(() => {
+        const searchInput = document.getElementById('boqSearchInput');
+        const categoryFilter = document.getElementById('boqCategoryFilter');
+        const sortFilter = document.getElementById('boqSortFilter');
 
-      if (searchInput) searchInput.addEventListener('input', applyBoqFilters);
-      if (categoryFilter) categoryFilter.addEventListener('change', applyBoqFilters);
-      if (sortFilter) sortFilter.addEventListener('change', applyBoqFilters);
+        if (searchInput && window.applyBoqFilters) {
+          searchInput.addEventListener('input', () => window.applyBoqFilters());
+        }
+        if (categoryFilter && window.applyBoqFilters) {
+          categoryFilter.addEventListener('change', () => window.applyBoqFilters());
+        }
+        if (sortFilter && window.applyBoqFilters) {
+          sortFilter.addEventListener('change', () => window.applyBoqFilters());
+        }
+      }, 1000);
+    });
+
+    // Setup button event listeners after DOM loads
+    document.addEventListener('DOMContentLoaded', function() {
+      // Wait for module to load then attach button listeners
+      setTimeout(() => {
+        const addBoqBtn = document.getElementById('addBoqItemBtn');
+        const exportBoqBtn = document.getElementById('exportBoqBtn');
+        const clearFiltersBtn = document.getElementById('clearBoqFiltersBtn');
+        
+        if (addBoqBtn && window.openAddBoqItemModal) {
+          addBoqBtn.addEventListener('click', () => window.openAddBoqItemModal());
+        }
+        
+        if (exportBoqBtn && window.exportBoqToExcel) {
+          exportBoqBtn.addEventListener('click', () => window.exportBoqToExcel());
+        }
+        
+        if (clearFiltersBtn && window.clearBoqFilters) {
+          clearFiltersBtn.addEventListener('click', () => window.clearBoqFilters());
+        }
+      }, 1000);
     });
 
     // Close modals when clicking outside
