@@ -472,11 +472,12 @@
         const hakedisQuery = query(
           collection(db, 'progress_payments'),
           where('projectId', '==', projectId),
-          where('isDeleted', '==', false),
           orderBy('periodNo', 'asc')
         );
         const hakedisSnap = await getDocs(hakedisQuery);
         progressPayments = [];
+        
+        console.log(`📊 ${hakedisSnap.size} hakediş kaydı bulundu`);
         
         hakedisSnap.forEach(docSnap => {
           progressPayments.push({ id: docSnap.id, ...docSnap.data() });
@@ -759,24 +760,37 @@
 
     window.syncFromHakedis = async function() {
       try {
+        console.log('🔄 Hakediş senkronizasyonu başlatılıyor...');
+        console.log('📍 Project ID:', currentProjectId);
+        
+        // Try without isDeleted filter first
         const hakedisQuery = query(
           collection(db, 'progress_payments'),
           where('projectId', '==', currentProjectId),
-          where('isDeleted', '==', false)
+          orderBy('periodNo', 'asc')
         );
+        
+        console.log('📊 Sorgu çalıştırılıyor...');
         const hakedisSnap = await getDocs(hakedisQuery);
         
+        console.log('📦 Bulunan hakediş sayısı:', hakedisSnap.size);
+        
         if (hakedisSnap.empty) {
-          alert('❌ Hakediş kaydı bulunamadı. Önce hakediş oluşturun.');
+          alert('❌ Bu proje için hakediş kaydı bulunamadı.\n\nLütfen önce "Hakediş Takibi" sayfasından hakediş oluşturun.');
+          // Navigate to hakedis page
+          const shouldNavigate = confirm('Hakediş sayfasına gitmek ister misiniz?');
+          if (shouldNavigate) {
+            window.location.href = `hakedis-takibi.html?id=${currentProjectId}`;
+          }
           return;
         }
 
-        alert(`✅ ${hakedisSnap.size} hakediş kaydı senkronize edildi!`);
+        alert(`✅ ${hakedisSnap.size} hakediş kaydı bulundu ve senkronize edildi!`);
         loadPayments();
 
       } catch (error) {
         console.error('❌ Error syncing from hakedis:', error);
-        alert('Senkronizasyon hatası: ' + error.message);
+        alert('Senkronizasyon hatası: ' + error.message + '\n\nDetaylar console\'da görülebilir.');
       }
     };
 
