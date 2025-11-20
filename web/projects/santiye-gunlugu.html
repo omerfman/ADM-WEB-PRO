@@ -195,32 +195,6 @@
   <script type="module" src="../js/projects.js?v=7"></script>
   <script type="module" src="../js/upload.js?v=7"></script>
   <script type="module" src="../js/app.js?v=7"></script>
-  <script type="module">
-    import { db } from '../js/firebase-config.js';
-    import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
-
-    // Load project info
-    async function loadProjectInfo() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const projectId = urlParams.get('id');
-      
-      if (!projectId) return;
-
-      try {
-        const projectDoc = await getDoc(doc(db, 'projects', projectId));
-        if (projectDoc.exists()) {
-          const project = projectDoc.data();
-          document.getElementById('projectName').textContent = project.name || 'Proje';
-          document.getElementById('projectNameBreadcrumb').textContent = project.name || 'Proje';
-        }
-      } catch (error) {
-        console.error('❌ Error loading project info:', error);
-      }
-    }
-
-    // Call on page load
-    window.addEventListener('DOMContentLoaded', loadProjectInfo);
-  </script>
 
   <script>
     // Mobile menu toggle
@@ -300,11 +274,16 @@
       
       // Wait for modules to load
       setTimeout(() => {
-        if (window.loadProjectLogs) {
-          console.log('✅ Calling loadProjectLogs with projectId:', projectId);
+        if (window.loadProjectBasicInfo && window.loadProjectLogs) {
+          console.log('✅ Loading project data for projectId:', projectId);
+          
+          // Load project info first
+          window.loadProjectBasicInfo(projectId);
+          
+          // Then load logs
           window.loadProjectLogs(projectId);
         } else {
-          console.warn('⚠️ loadProjectLogs not available yet');
+          console.warn('⚠️ Project functions not available yet');
         }
       }, 300);
     });

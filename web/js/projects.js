@@ -250,6 +250,40 @@ function switchTab(tabName) {
 }
 
 /**
+ * Load project basic info for page header
+ */
+async function loadProjectBasicInfo(projectId) {
+  if (!projectId) {
+    console.error('❌ loadProjectBasicInfo: projectId is required');
+    return;
+  }
+
+  try {
+    const projectDoc = await getDoc(doc(db, 'projects', projectId));
+    if (projectDoc.exists()) {
+      const project = projectDoc.data();
+      const projectName = project.name || 'Proje';
+      
+      // Update page elements if they exist
+      const nameEl = document.getElementById('projectName');
+      const breadcrumbEl = document.getElementById('projectNameBreadcrumb');
+      
+      if (nameEl) nameEl.textContent = projectName;
+      if (breadcrumbEl) breadcrumbEl.textContent = projectName;
+      
+      console.log('✅ Project info loaded:', projectName);
+      return project;
+    } else {
+      console.warn('⚠️ Project not found:', projectId);
+      return null;
+    }
+  } catch (error) {
+    console.error('❌ Error loading project info:', error);
+    return null;
+  }
+}
+
+/**
  * Load project logs (moved to project-detail.js)
  */
 async function loadProjectLogs(projectId) {
@@ -1463,6 +1497,7 @@ window.switchTab = switchTab;
 window.openCreateProjectModal = openCreateProjectModal;
 window.closeCreateProjectModal = closeCreateProjectModal;
 window.handleCreateProject = handleCreateProject;
+window.loadProjectBasicInfo = loadProjectBasicInfo;
 window.loadProjectLogs = loadProjectLogs;
 window.addLog = addLog;
 window.addStock = addStock;
