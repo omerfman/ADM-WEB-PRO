@@ -587,6 +587,14 @@
           if (contractData.paymentTerms) document.getElementById('paymentTerms').value = contractData.paymentTerms;
           if (contractData.clauses) document.getElementById('contractClauses').value = contractData.clauses;
 
+          // Load client and contractor info from contract metadata
+          if (contractData.client && contractData.client.name) {
+            document.getElementById('clientName').textContent = contractData.client.name;
+          }
+          if (contractData.contractor && contractData.contractor.name) {
+            document.getElementById('companyName').textContent = contractData.contractor.name;
+          }
+
           const statusMap = {
             draft: 'Taslak',
             pending: 'Onay Bekliyor',
@@ -674,7 +682,17 @@
           });
         }
 
-        // Create contract metadata
+        // Get project data for client/contractor info
+        const projectDocRef = doc(db, 'projects', currentProjectId);
+        const projectDocSnap = await getDoc(projectDocRef);
+        const projectData = projectDocSnap.exists() ? projectDocSnap.data() : {};
+
+        // Get company data for contractor info
+        const companyDocRef = doc(db, 'companies', projectData.companyId || 'default-company');
+        const companyDocSnap = await getDoc(companyDocRef);
+        const companyData = companyDocSnap.exists() ? companyDocSnap.data() : {};
+
+        // Create contract metadata with client and contractor info
         const contractDocRef = doc(db, 'contracts', currentProjectId);
         await setDoc(contractDocRef, {
           projectId: currentProjectId,
@@ -688,6 +706,26 @@
           advancePayment: 0,
           retentionRate: 10,
           status: 'draft',
+          
+          // Client/Employer info (İşveren)
+          client: {
+            name: projectData.clientName || projectData.name || 'Müşteri Adı',
+            company: projectData.clientCompany || '',
+            email: projectData.clientEmail || '',
+            phone: projectData.clientPhone || '',
+            taxId: projectData.clientTaxId || '',
+            address: projectData.location || projectData.clientAddress || ''
+          },
+          
+          // Contractor info (Yüklenici/Firma)
+          contractor: {
+            name: companyData.name || 'ADM İNŞAAT A.Ş.',
+            taxId: companyData.taxId || '',
+            address: companyData.address ? `${companyData.address.street || ''}, ${companyData.address.city || ''}`.trim() : '',
+            email: companyData.email || '',
+            phone: companyData.phone || ''
+          },
+          
           createdAt: Timestamp.now(),
           createdBy: user.uid
         });

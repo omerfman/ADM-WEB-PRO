@@ -145,6 +145,121 @@
 }
 
 /*
+ * Collection: contracts (Root-level)
+ * Description: Sözleşme meta verileri
+ * Access: Company users can read/write, clients can read if authorized
+ */
+// Example document:
+{
+  id: "proj-001", // Same as projectId
+  projectId: "proj-001",
+  contractNo: "SZL-1732112345678",
+  contractAmount: 500000,
+  contractType: "fixed", // fixed (götürü), unit (birim fiyat), cost_plus (maliyet+kar)
+  
+  // Client/Employer Info (İşveren)
+  client: {
+    name: "Ahmet Yılmaz",
+    company: "Yılmaz Holding A.Ş.",
+    email: "ahmet@yilmazholding.com",
+    phone: "0555 123 4567",
+    taxId: "9876543210",
+    address: "Beşiktaş, İstanbul"
+  },
+  
+  // Contractor Info (Yüklenici/Firma)
+  contractor: {
+    name: "ADM İNŞAAT A.Ş.",
+    taxId: "1234567890",
+    address: "Kadıköy, İstanbul",
+    email: "info@adm-insaat.com",
+    phone: "0212 XXX XXXX"
+  },
+  
+  // Contract Dates
+  contractDate: "2024-01-15", // Sözleşme imza tarihi
+  workStartDate: "2024-02-01", // İşe başlama tarihi
+  durationDays: 365, // Tamamlanma süresi (gün)
+  
+  // Penalty & Acceptance
+  penaltyRate: 0.001, // Gecikme cezası oranı (‰)
+  provisionalAcceptance: 15, // Geçici kabul süresi (gün)
+  finalAcceptance: 365, // Kesin kabul süresi (gün)
+  
+  // Payment Terms
+  paymentType: "progress", // progress (hakediş), milestone (kilometre taşı), advance (peşin)
+  advancePayment: 20, // Avans oranı (%)
+  retentionRate: 10, // Hakediş kesinti oranı (%)
+  paymentTerms: "Aylık hakediş sistemli, %10 kesinti...",
+  
+  // Contract Clauses
+  clauses: "1. Genel Şartlar\n2. Özel Şartlar...",
+  
+  // Status
+  status: "draft", // draft, pending, signed, active, completed, terminated
+  
+  // Signatures
+  clientSignedAt: Timestamp, // İşveren imza tarihi
+  clientSignedBy: "user-uid",
+  contractorSignedAt: Timestamp, // Yüklenici imza tarihi
+  contractorSignedBy: "user-uid",
+  
+  // Activation
+  activatedAt: Timestamp, // Sözleşme aktifleştirilme tarihi
+  activatedBy: "user-uid",
+  
+  createdAt: Timestamp,
+  createdBy: "user-uid",
+  updatedAt: Timestamp,
+  updatedBy: "user-uid"
+}
+
+/*
+ * Collection: contract_items (Root-level)
+ * Description: Sözleşme kalemleri (Locked BOQ)
+ * Access: Company users can read/write, clients can read if authorized
+ */
+// Example document:
+{
+  id: "item-001",
+  projectId: "proj-001",
+  pozNo: 1,
+  name: "Temel Kazısı",
+  category: "Hafriyat",
+  unit: "m³",
+  contractQuantity: 180,
+  unitPrice: 45.50,
+  description: "Temel kazısı ve hafriyat işleri",
+  fromProposalId: "proposal-item-001",
+  isLocked: false, // true when contract is signed
+  isDeleted: false,
+  createdAt: Timestamp,
+  createdBy: "user-uid"
+}
+
+/*
+ * Collection: contract_attachments (Root-level)
+ * Description: Sözleşme ekleri (imzalı belgeler, şartnameler vb.)
+ * Access: Company users can create/delete, clients can read if authorized
+ */
+// Example document:
+{
+  id: "attach-001",
+  projectId: "proj-001",
+  fileName: "sozlesme_imzali_v1.pdf",
+  description: "İmzalı Ana Sözleşme",
+  downloadURL: "https://i.ibb.co/xxxxx/sozlesme.pdf",
+  deleteURL: "https://ibb.co/xxxxx/delete",
+  thumbURL: "https://i.ibb.co/xxxxx/thumb.jpg",
+  size: 2048576, // bytes
+  contentType: "application/pdf",
+  uploadedBy: "user-uid",
+  uploadedByEmail: "admin@adm.com",
+  uploadedAt: Timestamp,
+  provider: "imgbb"
+}
+
+/*
  * Subcollection: projects/{projectId}/uploads
  * Description: Proje fotoğraf ve dosyaları (Cloudinary)
  */
