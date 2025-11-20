@@ -471,8 +471,8 @@
         // Load progress payments (hakedis)
         const hakedisQuery = query(
           collection(db, 'progress_payments'),
-          where('projectId', '==', projectId),
-          orderBy('periodNo', 'asc')
+          where('projectId', '==', projectId)
+          // orderBy removed to avoid index issues
         );
         const hakedisSnap = await getDocs(hakedisQuery);
         progressPayments = [];
@@ -481,6 +481,13 @@
         
         hakedisSnap.forEach(docSnap => {
           progressPayments.push({ id: docSnap.id, ...docSnap.data() });
+        });
+        
+        // Sort in memory by paymentNo or createdAt
+        progressPayments.sort((a, b) => {
+          const aNo = typeof a.paymentNo === 'string' ? parseInt(a.paymentNo.replace(/\D/g, '')) || 0 : (a.paymentNo || 0);
+          const bNo = typeof b.paymentNo === 'string' ? parseInt(b.paymentNo.replace(/\D/g, '')) || 0 : (b.paymentNo || 0);
+          return aNo - bNo;
         });
 
         // Load payment records
@@ -506,7 +513,7 @@
         today.setHours(0, 0, 0, 0);
 
         progressPayments.forEach(hakedis => {
-          const netAmount = hakedis.netPayable || 0;
+          const netAmount = hakedis.netAmount || hakedis.netPayable || 0;
           totalInvoiced += netAmount;
 
           const paidRecords = payments.filter(p => p.progressPaymentId === hakedis.id);
@@ -589,7 +596,7 @@
       today.setHours(0, 0, 0, 0);
 
       progressPayments.forEach(hakedis => {
-        const netAmount = hakedis.netPayable || 0;
+        const netAmount = hakedis.netAmount || hakedis.netPayable || 0;
         totalAmount += netAmount;
 
         const paidRecords = payments.filter(p => p.progressPaymentId === hakedis.id);
@@ -622,11 +629,14 @@
         const expectedDateStr = hakedis.expectedPaymentDate ? 
           (hakedis.expectedPaymentDate.toDate ? hakedis.expectedPaymentDate.toDate() : new Date(hakedis.expectedPaymentDate)).toLocaleDateString('tr-TR') : 
           '-';
+        
+        // Get payment number (can be string like 'HAK-005' or number like 1)
+        const paymentNoDisplay = hakedis.paymentNo || '#' + (progressPayments.indexOf(hakedis) + 1);
 
         html += `
           <tr>
-            <td><strong>HAK-${hakedis.periodNo}</strong></td>
-            <td>${hakedis.periodName || `${hakedis.periodNo}. Dönem`}</td>
+            <td><strong>${paymentNoDisplay}</strong></td>
+            <td>${hakedis.period || hakedis.periodName || 'Dönem belirtilmemiş'}</td>
             <td style="text-align: right;"><strong>${formatCurrency(netAmount)}</strong></td>
             <td style="text-align: right; color: #27ae60;">${formatCurrency(paidAmount)}</td>
             <td style="text-align: right; color: ${remaining > 0 ? '#e67e22' : '#27ae60'};">${formatCurrency(remaining)}</td>
