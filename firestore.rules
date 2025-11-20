@@ -237,7 +237,31 @@ service cloud.firestore {
       allow delete: if isSignedIn() && !isClient() && (isCompanyAdmin() || isSuperAdmin());
     }
 
-    // Proposal Items (Teklif Kalemleri)
+    // Teklif Items (Teklif Kalemleri)
+    match /teklif_items/{itemId} {
+      // Clients can read teklif items if they have project access
+      allow read: if isSignedIn() && (
+        !isClient() ||
+        (exists(/databases/$(database)/documents/projects/$(resource.data.projectId)) &&
+         request.auth.uid in get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.get('allowedClients', []))
+      );
+      allow create, update: if isSignedIn() && !isClient() && (isCompanyAdmin() || isCompanyUser() || isSuperAdmin());
+      allow delete: if isSignedIn() && !isClient() && (isCompanyAdmin() || isSuperAdmin());
+    }
+
+    // Teklif Metadata (Teklif Meta Bilgileri)
+    match /teklif_metadata/{metadataId} {
+      // Clients can read teklif metadata if they have project access
+      allow read: if isSignedIn() && (
+        !isClient() ||
+        (exists(/databases/$(database)/documents/projects/$(metadataId)) &&
+         request.auth.uid in get(/databases/$(database)/documents/projects/$(metadataId)).data.get('allowedClients', []))
+      );
+      allow create, update: if isSignedIn() && !isClient() && (isCompanyAdmin() || isCompanyUser() || isSuperAdmin());
+      allow delete: if isSignedIn() && !isClient() && (isCompanyAdmin() || isSuperAdmin());
+    }
+
+    // Proposal Items (Teklif Kalemleri - Legacy)
     match /proposal_items/{itemId} {
       // Clients can read proposal items if they have project access
       allow read: if isSignedIn() && (
@@ -249,13 +273,92 @@ service cloud.firestore {
       allow delete: if isSignedIn() && !isClient() && (isCompanyAdmin() || isSuperAdmin());
     }
 
-    // Proposals (Teklif Dökümanları)
+    // Proposals (Teklif Dökümanları - Legacy)
     match /proposals/{proposalId} {
       // Clients can read proposals if they have project access
       allow read: if isSignedIn() && (
         !isClient() ||
         (exists(/databases/$(database)/documents/projects/$(resource.data.projectId)) &&
          request.auth.uid in get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.get('allowedClients', []))
+      );
+      allow create, update: if isSignedIn() && !isClient() && (isCompanyAdmin() || isCompanyUser() || isSuperAdmin());
+      allow delete: if isSignedIn() && !isClient() && (isCompanyAdmin() || isSuperAdmin());
+    }
+
+    // Sözleşme Metadata (Sözleşme Bilgileri)
+    match /sozlesme_metadata/{metadataId} {
+      // Clients can read contract metadata if they have project access
+      allow read: if isSignedIn() && (
+        !isClient() ||
+        (exists(/databases/$(database)/documents/projects/$(metadataId)) &&
+         request.auth.uid in get(/databases/$(database)/documents/projects/$(metadataId)).data.get('allowedClients', []))
+      );
+      allow create, update: if isSignedIn() && !isClient() && (isCompanyAdmin() || isCompanyUser() || isSuperAdmin());
+      allow delete: if isSignedIn() && !isClient() && (isCompanyAdmin() || isSuperAdmin());
+    }
+
+    // Ödeme Takibi (Payment Tracking)
+    match /payment_tracking/{trackingId} {
+      // Clients can read payment tracking if they have project access and visibility is enabled
+      allow read: if isSignedIn() && (
+        !isClient() ||
+        (exists(/databases/$(database)/documents/projects/$(resource.data.projectId)) &&
+         request.auth.uid in get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.get('allowedClients', []) &&
+         get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.get('clientVisibility', {}).get('showPayments', false))
+      );
+      allow create, update: if isSignedIn() && !isClient() && (isCompanyAdmin() || isCompanyUser() || isSuperAdmin());
+      allow delete: if isSignedIn() && !isClient() && (isCompanyAdmin() || isSuperAdmin());
+    }
+
+    // Site Logs (Şantiye Günlüğü)
+    match /site_logs/{logId} {
+      // Clients can read site logs if they have project access
+      allow read: if isSignedIn() && (
+        !isClient() ||
+        (exists(/databases/$(database)/documents/projects/$(resource.data.projectId)) &&
+         request.auth.uid in get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.get('allowedClients', []))
+      );
+      allow create, update: if isSignedIn() && !isClient() && (isCompanyAdmin() || isCompanyUser() || isSuperAdmin());
+      allow delete: if isSignedIn() && !isClient() && (isCompanyAdmin() || isSuperAdmin());
+    }
+
+    // Inventory (Stok Yönetimi)
+    match /inventory/{inventoryId} {
+      // Clients cannot see inventory (internal data)
+      allow read: if isSignedIn() && !isClient();
+      allow create, update: if isSignedIn() && !isClient() && (isCompanyAdmin() || isCompanyUser() || isSuperAdmin());
+      allow delete: if isSignedIn() && !isClient() && (isCompanyAdmin() || isSuperAdmin());
+    }
+
+    // Budget (Bütçe Yönetimi)
+    match /budget/{budgetId} {
+      // Clients cannot see budget (internal data)
+      allow read: if isSignedIn() && !isClient();
+      allow create, update: if isSignedIn() && !isClient() && (isCompanyAdmin() || isCompanyUser() || isSuperAdmin());
+      allow delete: if isSignedIn() && !isClient() && (isCompanyAdmin() || isSuperAdmin());
+    }
+
+    // Hakediş Items (Progress Payment Items)
+    match /hakedis_items/{itemId} {
+      // Clients can read hakedis items if they have project access and visibility is enabled
+      allow read: if isSignedIn() && (
+        !isClient() ||
+        (exists(/databases/$(database)/documents/projects/$(resource.data.projectId)) &&
+         request.auth.uid in get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.get('allowedClients', []) &&
+         get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.get('clientVisibility', {}).get('showPayments', false))
+      );
+      allow create, update: if isSignedIn() && !isClient() && (isCompanyAdmin() || isCompanyUser() || isSuperAdmin());
+      allow delete: if isSignedIn() && !isClient() && (isCompanyAdmin() || isSuperAdmin());
+    }
+
+    // Hakediş Metadata (Progress Payment Metadata)
+    match /hakedis_metadata/{metadataId} {
+      // Clients can read hakedis metadata if they have project access and visibility is enabled
+      allow read: if isSignedIn() && (
+        !isClient() ||
+        (exists(/databases/$(database)/documents/projects/$(resource.data.projectId)) &&
+         request.auth.uid in get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.get('allowedClients', []) &&
+         get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.get('clientVisibility', {}).get('showPayments', false))
       );
       allow create, update: if isSignedIn() && !isClient() && (isCompanyAdmin() || isCompanyUser() || isSuperAdmin());
       allow delete: if isSignedIn() && !isClient() && (isCompanyAdmin() || isSuperAdmin());
