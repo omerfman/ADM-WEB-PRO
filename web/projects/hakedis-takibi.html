@@ -364,6 +364,74 @@
     </div>
   </div>
 
+  <!-- Edit Progress Payment Modal -->
+  <div id="editProgressPaymentModal" class="modal">
+    <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header">
+        <h2>Hakediş Düzenle</h2>
+        <button class="modal-close" onclick="closeEditProgressPaymentModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="editProgressPaymentForm" onsubmit="handleEditProgressPayment(event)">
+          <input type="hidden" id="editPaymentId">
+          
+          <!-- Hakediş Bilgileri -->
+          <div class="card" style="margin-bottom: 1.5rem;">
+            <h3 style="margin-bottom: 1rem;">📋 Hakediş Bilgileri</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+              <div class="form-group">
+                <label for="editPaymentNo">Hakediş No *</label>
+                <input type="text" id="editPaymentNo" required readonly style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--bg-tertiary); color: var(--text-primary);">
+              </div>
+              <div class="form-group">
+                <label for="editPaymentPeriod">Dönem *</label>
+                <input type="text" id="editPaymentPeriod" placeholder="Örn: Ocak 2024" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+              </div>
+              <div class="form-group">
+                <label for="editPaymentStartDate">Başlangıç Tarihi *</label>
+                <input type="date" id="editPaymentStartDate" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+              </div>
+              <div class="form-group">
+                <label for="editPaymentEndDate">Bitiş Tarihi *</label>
+                <input type="date" id="editPaymentEndDate" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+              </div>
+            </div>
+          </div>
+
+          <!-- Kesinti Oranları -->
+          <div class="card" style="margin-bottom: 1.5rem;">
+            <h3 style="margin-bottom: 1rem;">📊 Kesinti Oranları</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+              <div class="form-group">
+                <label for="editVatRate">KDV Oranı (%)</label>
+                <input type="number" id="editVatRate" value="20" min="0" max="100" step="0.01" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+              </div>
+              <div class="form-group">
+                <label for="editWithholdingRate">Stopaj Oranı (%)</label>
+                <input type="number" id="editWithholdingRate" value="3" min="0" max="100" step="0.01" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+              </div>
+              <div class="form-group">
+                <label for="editStampTaxRate">Damga Vergisi (%)</label>
+                <input type="number" id="editStampTaxRate" value="0.948" min="0" max="100" step="0.001" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+              </div>
+            </div>
+          </div>
+
+          <!-- Notlar -->
+          <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label for="editPaymentNotes">Notlar</label>
+            <textarea id="editPaymentNotes" rows="3" placeholder="Hakediş ile ilgili notlar..." style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary); resize: vertical;"></textarea>
+          </div>
+
+          <div style="display: flex; gap: 0.75rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">💾 Güncelle</button>
+            <button type="button" class="btn btn-secondary" onclick="closeEditProgressPaymentModal()" style="flex: 1;">❌ İptal</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <!-- Load JS modules -->
   <script type="module" src="../js/auth.js?v=6"></script>
   <script type="module" src="../js/projects.js?v=6"></script>

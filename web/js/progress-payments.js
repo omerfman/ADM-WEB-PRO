@@ -1261,8 +1261,127 @@ function closeViewProgressPaymentModal() {
   if (modal) modal.style.display = 'none';
 }
 
-function editProgressPayment(paymentId) {
-  alert('Hakediş düzenleme özelliği yakında eklenecek');
+async function editProgressPayment(paymentId) {
+  try {
+    // Get payment data
+    const paymentDoc = await getDoc(doc(db, 'progress_payments', paymentId));
+    if (!paymentDoc.exists()) {
+      alert('❌ Hakediş bulunamadı');
+      return;
+    }
+
+    const payment = { id: paymentDoc.id, ...paymentDoc.data() };
+
+    // Populate form
+    document.getElementById('editPaymentId').value = payment.id;
+    document.getElementById('editPaymentNo').value = payment.paymentNo || '';
+    document.getElementById('editPaymentPeriod').value = payment.period || '';
+    
+    // Format dates
+    if (payment.startDate) {
+      const startDate = payment.startDate.toDate ? payment.startDate.toDate() : new Date(payment.startDate);
+      document.getElementById('editPaymentStartDate').value = startDate.toISOString().split('T')[0];
+    }
+    if (payment.endDate) {
+      const endDate = payment.endDate.toDate ? payment.endDate.toDate() : new Date(payment.endDate);
+      document.getElementById('editPaymentEndDate').value = endDate.toISOString().split('T')[0];
+    }
+
+    document.getElementById('editVatRate').value = payment.vatRate || 20;
+    document.getElementById('editWithholdingRate').value = payment.withholdingRate || 3;
+    document.getElementById('editStampTaxRate').value = payment.stampTaxRate || 0.948;
+    document.getElementById('editPaymentNotes').value = payment.notes || '';
+
+    // Show modal
+    openEditProgressPaymentModal();
+
+  } catch (error) {
+    console.error('❌ Error loading payment for edit:', error);
+    alert('Hakediş yüklenirken hata oluştu: ' + error.message);
+  }
+}
+
+function openEditProgressPaymentModal() {
+  const modal = document.getElementById('editProgressPaymentModal');
+  if (modal) {
+    modal.style.display = 'block';
+  }
+}
+
+function closeEditProgressPaymentModal() {
+  const modal = document.getElementById('editProgressPaymentModal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+  const form = document.getElementById('editProgressPaymentForm');
+  if (form) {
+    form.reset();
+  }
+}
+
+async function handleEditProgressPayment(event) {
+  event.preventDefault();
+
+  const paymentId = document.getElementById('editPaymentId').value;
+  if (!paymentId) {
+    alert('❌ Hakediş ID bulunamadı');
+    return;
+  }
+
+  try {
+    const period = document.getElementById('editPaymentPeriod').value.trim();
+    const startDate = new Date(document.getElementById('editPaymentStartDate').value);
+    const endDate = new Date(document.getElementById('editPaymentEndDate').value);
+    const vatRate = parseFloat(document.getElementById('editVatRate').value) || 20;
+    const withholdingRate = parseFloat(document.getElementById('editWithholdingRate').value) || 3;
+    const stampTaxRate = parseFloat(document.getElementById('editStampTaxRate').value) || 0.948;
+    const notes = document.getElementById('editPaymentNotes').value.trim();
+
+    if (!period) {
+      alert('⚠️ Lütfen dönem bilgisini girin');
+      return;
+    }
+
+    // Get current payment data to recalculate
+    const paymentDoc = await getDoc(doc(db, 'progress_payments', paymentId));
+    const currentPayment = paymentDoc.data();
+
+    // Recalculate with new rates
+    const grossAmount = currentPayment.grossAmount || 0;
+    const vatAmount = grossAmount * (vatRate / 100);
+    const withholdingAmount = grossAmount * (withholdingRate / 100);
+    const stampTaxAmount = grossAmount * (stampTaxRate / 100);
+    const netAmount = grossAmount + vatAmount - withholdingAmount - stampTaxAmount;
+
+    // Update in Firestore
+    await updateDoc(doc(db, 'progress_payments', paymentId), {
+      period,
+      startDate: Timestamp.fromDate(startDate),
+      endDate: Timestamp.fromDate(endDate),
+      vatRate,
+      withholdingRate,
+      stampTaxRate,
+      vatAmount,
+      withholdingAmount,
+      stampTaxAmount,
+      netAmount,
+      notes,
+      updatedAt: Timestamp.now(),
+      updatedBy: auth.currentUser?.email || 'unknown'
+    });
+
+    alert('✅ Hakediş başarıyla güncellendi');
+    closeEditProgressPaymentModal();
+
+    // Reload page
+    if (window.loadProgressPaymentsPage) {
+      await loadProgressPaymentsPage();
+    }
+
+  } catch (error) {
+    console.error('❌ Error updating payment:', error);
+    alert('❌ Güncelleme hatası: ' + error.message);
+  }
 }
 
 function deleteProgressPayment(paymentId) {
@@ -1371,6 +1490,9 @@ window.handleCreateProgressPayment = handleCreateProgressPayment;
 window.viewProgressPaymentDetail = viewProgressPaymentDetail;
 window.closeViewProgressPaymentModal = closeViewProgressPaymentModal;
 window.editProgressPayment = editProgressPayment;
+window.openEditProgressPaymentModal = openEditProgressPaymentModal;
+window.closeEditProgressPaymentModal = closeEditProgressPaymentModal;
+window.handleEditProgressPayment = handleEditProgressPayment;
 window.deleteProgressPayment = deleteProgressPayment;
 window.downloadProgressPaymentPDF = downloadProgressPaymentPDF;
 window.exportProgressPaymentsToExcel = exportProgressPaymentsToExcel;
