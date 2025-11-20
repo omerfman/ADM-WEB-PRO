@@ -6,110 +6,48 @@
   <title>Ödeme Takibi - ADM İnşaat Proje Yönetim Sistemi</title>
   <link rel="stylesheet" href="../css/style.css?v=9">
   <style>
-    .payment-header {
-      background: linear-gradient(135deg, #16a085 0%, #138d75 100%);
-      color: white;
-      padding: 2rem;
-      border-radius: 12px;
-      margin-bottom: 2rem;
-    }
-
-    .payment-summary {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin: 1.5rem 0;
-    }
-
-    .summary-box {
-      background: rgba(255,255,255,0.15);
-      padding: 1rem;
-      border-radius: 8px;
-      backdrop-filter: blur(10px);
-    }
-
-    .summary-box h4 {
-      margin: 0 0 0.5rem 0;
-      font-size: 0.85rem;
-      opacity: 0.9;
-    }
-
-    .summary-value {
-      font-size: 1.5rem;
-      font-weight: bold;
-    }
-
-    .payment-cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-    }
-
-    .payment-card {
-      background: white;
-      padding: 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      border-left: 4px solid var(--brand-red);
-    }
-
-    .payment-card h3 {
-      margin: 0 0 1rem 0;
-      font-size: 1rem;
-      color: var(--text-secondary);
-    }
-
-    .payment-card .amount {
-      font-size: 2rem;
-      font-weight: bold;
-      color: var(--brand-red);
-      margin-bottom: 0.5rem;
-    }
-
-    .payment-card .label {
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-    }
-
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .data-table th {
-      background: var(--bg-secondary);
-      padding: 1rem;
-      text-align: left;
-      font-weight: 600;
-      color: var(--text-primary);
-      border-bottom: 2px solid var(--border-color);
-    }
-
-    .data-table td {
-      padding: 1rem;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .data-table tr:hover {
-      background: var(--bg-secondary);
-    }
-
+    /* Payment status badges */
     .status-badge {
       padding: 0.25rem 0.75rem;
       border-radius: 12px;
       font-size: 0.75rem;
       font-weight: 600;
+      display: inline-block;
     }
 
     .status-pending { background: #fff3e0; color: #f57c00; }
     .status-partial { background: #e3f2fd; color: #1976d2; }
     .status-paid { background: #e8f5e9; color: #388e3c; }
     .status-overdue { background: #ffebee; color: #d32f2f; }
+
+    /* Mobile responsive table */
+    @media (max-width: 768px) {
+      table thead {
+        display: none;
+      }
+      
+      table tr {
+        display: block;
+        margin-bottom: 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1rem;
+      }
+      
+      table td {
+        display: block;
+        text-align: right;
+        padding: 0.5rem 0;
+        border-bottom: none;
+      }
+      
+      table td:before {
+        content: attr(data-label);
+        float: left;
+        font-weight: 600;
+        color: var(--text-secondary);
+      }
+    }
   </style>
 </head>
 <body>
@@ -143,54 +81,54 @@
         </div>
 
         <div class="nav-section">
-          <div class="nav-section-title">PROJE</div>
-          <a href="proje-ozeti.html" class="nav-item" id="navOzet">
-            <span class="nav-icon">�</span>
-            <span class="nav-text">Proje Özeti</span>
-          </a>
-        </div>
-
-        <div class="nav-section">
           <div class="nav-section-title">İŞ AKIŞI</div>
           <a href="kesif.html" class="nav-item" id="navKesif">
-            <span class="nav-icon">�</span>
+            <span class="nav-icon">🔍</span>
             <span class="nav-text">1. Keşif</span>
           </a>
           <a href="teklif.html" class="nav-item" id="navTeklif">
-            <span class="nav-icon">�</span>
+            <span class="nav-icon">💼</span>
             <span class="nav-text">2. Teklif</span>
           </a>
           <a href="sozlesme.html" class="nav-item" id="navSozlesme">
-            <span class="nav-icon">�</span>
+            <span class="nav-icon">📄</span>
             <span class="nav-text">3. Sözleşme</span>
           </a>
           <a href="metraj-listesi.html" class="nav-item" id="navMetraj">
-            <span class="nav-icon">�</span>
+            <span class="nav-icon">📐</span>
             <span class="nav-text">4. Metraj</span>
           </a>
           <a href="hakedis-takibi.html" class="nav-item" id="navHakedis">
-            <span class="nav-icon">�</span>
+            <span class="nav-icon">💰</span>
             <span class="nav-text">5. Hakediş</span>
           </a>
-          <a href="#" class="nav-item active">
-            <span class="nav-icon">�</span>
+          <a href="odeme-takibi.html" class="nav-item active" id="navOdeme">
+            <span class="nav-icon">💳</span>
             <span class="nav-text">6. Ödeme</span>
           </a>
         </div>
 
         <div class="nav-section">
-          <div class="nav-section-title">DESTEK</div>
+          <div class="nav-section-title">PROJE & DESTEK</div>
           <a href="proje-ozeti.html" class="nav-item" id="navOzet">
-            <span class="nav-icon">�</span>
+            <span class="nav-icon">📊</span>
             <span class="nav-text">Proje Özeti</span>
           </a>
           <a href="stok-yonetimi.html" class="nav-item" id="navStok">
-            <span class="nav-icon">�</span>
+            <span class="nav-icon">📦</span>
             <span class="nav-text">Stok Yönetimi</span>
           </a>
           <a href="butce-yonetimi.html" class="nav-item" id="navButce">
-            <span class="nav-icon">�</span>
+            <span class="nav-icon">💵</span>
             <span class="nav-text">Bütçe Yönetimi</span>
+          </a>
+          <a href="santiye-gunlugu.html" class="nav-item" id="navGunluk">
+            <span class="nav-icon">📔</span>
+            <span class="nav-text">Şantiye Günlüğü</span>
+          </a>
+          <a href="musteri-yetkileri.html" class="nav-item" id="navMusteri">
+            <span class="nav-icon">👤</span>
+            <span class="nav-text">Müşteri Yetkileri</span>
           </a>
         </div>
       </nav>
@@ -221,132 +159,141 @@
 
     <!-- Main Content -->
     <main class="main-content">
-      <div class="top-bar">
-        <button class="menu-toggle" id="menuToggle">
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
-        <div class="breadcrumb">
-          <a href="../projeler.html">Projeler</a>
-          <span class="separator">/</span>
-          <span id="projectNameBreadcrumb">Proje</span>
-          <span class="separator">/</span>
-          <span>Ödeme Takibi</span>
+      <!-- Top Bar -->
+      <div class="topbar">
+        <div style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+          <button class="menu-toggle" id="menuToggle">☰</button>
+          <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">
+            <a href="../anasayfa.html" style="color: var(--text-secondary); text-decoration: none;">Anasayfa</a>
+            <span>›</span>
+            <a href="../projeler.html" style="color: var(--text-secondary); text-decoration: none;">Projeler</a>
+            <span>›</span>
+            <span id="projectNameBreadcrumb" style="color: var(--brand-red); font-weight: 600;">Yükleniyor...</span>
+          </div>
         </div>
-        <div class="top-bar-actions">
-          <button class="btn" onclick="exportPayments()">
-            � Excel İndir
-          </button>
-          <button class="btn btn-primary" onclick="openRecordPaymentModal()">
-            � Ödeme Kaydet
-          </button>
+        <div class="topbar-actions">
+          <span id="userNameDisplay" class="topbar-user"></span>
         </div>
       </div>
 
-      <div class="content-wrapper">
-        <!-- Header -->
-        <div class="payment-header">
-          <h1 style="margin: 0 0 0.5rem 0;">💳 Ödeme Takibi</h1>
-          <p style="margin: 0; opacity: 0.9;" id="projectName">Hakediş tahsilat ve ödeme yönetimi</p>
-          <div class="payment-summary">
-            <div class="summary-box">
-              <h4>Toplam Hakediş</h4>
-              <div class="summary-value" id="totalInvoiced">₺0.00</div>
+      <div id="alertContainer"></div>
+
+      <!-- Project Header -->
+      <section class="content-section">
+        <div style="background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-red-dark) 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+            <div style="flex: 1;">
+              <h2 id="projectName" style="margin: 0; font-size: 1.5rem;">Yükleniyor...</h2>
+              <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">Hakediş tahsilat ve ödeme yönetimi</p>
             </div>
-            <div class="summary-box">
-              <h4>Tahsil Edilen</h4>
-              <div class="summary-value" id="totalCollected">₺0.00</div>
-            </div>
-            <div class="summary-box">
-              <h4>Bekleyen</h4>
-              <div class="summary-value" id="totalPending">₺0.00</div>
-            </div>
-            <div class="summary-box">
-              <h4>Vadesi Geçen</h4>
-              <div class="summary-value" style="color: #e74c3c;" id="totalOverdue">₺0.00</div>
-            </div>
-            <div class="summary-box">
-              <h4>Tahsilat Oranı</h4>
-              <div class="summary-value" id="collectionRate">%0</div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn btn-primary" onclick="openRecordPaymentModal()" style="background: white; color: var(--brand-red);">
+                ➕ Ödeme Kaydet
+              </button>
+              <button class="btn" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white; padding: 0.5rem 1rem;" onclick="window.location.href='../projeler.html'">
+                ← Projelere Dön
+              </button>
             </div>
           </div>
         </div>
 
-        <!-- Payment Cards -->
-        <div class="payment-cards">
-          <div class="payment-card">
-            <h3>💰 Toplam Alacak</h3>
-            <div class="amount" id="receivableAmount">₺0.00</div>
-            <div class="label">Müşteriden tahsil edilecek</div>
+        <!-- Summary Cards - Modern Responsive Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+          <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem;">
+            <div style="font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.9;">💰 Toplam Hakediş</div>
+            <div id="totalInvoiced" style="font-size: 1.8rem; font-weight: bold; margin-bottom: 0.25rem;">₺0.00</div>
+            <div style="font-size: 0.8rem; opacity: 0.8;">Faturalanan tutar</div>
           </div>
-          
-          <div class="payment-card" style="border-left-color: #27ae60;">
-            <h3>✅ Tahsil Edilen</h3>
-            <div class="amount" style="color: #27ae60;" id="collectedAmount">₺0.00</div>
-            <div class="label">Bankaya giren ödemeler</div>
+
+          <div class="card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; padding: 1.5rem;">
+            <div style="font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.9;">✅ Tahsil Edilen</div>
+            <div id="totalCollected" style="font-size: 1.8rem; font-weight: bold; margin-bottom: 0.25rem;">₺0.00</div>
+            <div style="font-size: 0.8rem; opacity: 0.8;">Gelen ödemeler</div>
           </div>
-          
-          <div class="payment-card" style="border-left-color: #e67e22;">
-            <h3>⏳ Bekleyen Tahsilat</h3>
-            <div class="amount" style="color: #e67e22;" id="pendingAmount">₺0.00</div>
-            <div class="label">Ödeme beklenen tutarlar</div>
+
+          <div class="card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 1.5rem;">
+            <div style="font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.9;">⏳ Bekleyen</div>
+            <div id="totalPending" style="font-size: 1.8rem; font-weight: bold; margin-bottom: 0.25rem;">₺0.00</div>
+            <div style="font-size: 0.8rem; opacity: 0.8;">Ödeme bekleniyor</div>
           </div>
-          
-          <div class="payment-card" style="border-left-color: #e74c3c;">
-            <h3>⚠️ Gecikmiş</h3>
-            <div class="amount" style="color: #e74c3c;" id="overdueAmount">₺0.00</div>
-            <div class="label">Vadesi geçmiş tahsilatlar</div>
+
+          <div class="card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 1.5rem;">
+            <div style="font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.9;">⚠️ Vadesi Geçen</div>
+            <div id="totalOverdue" style="font-size: 1.8rem; font-weight: bold; margin-bottom: 0.25rem;">₺0.00</div>
+            <div style="font-size: 0.8rem; opacity: 0.8;">Gecikmiş tahsilat</div>
+          </div>
+
+          <div class="card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 1.5rem;">
+            <div style="font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.9;">📊 Tahsilat Oranı</div>
+            <div id="collectionRate" style="font-size: 1.8rem; font-weight: bold; margin-bottom: 0.25rem;">%0</div>
+            <div style="font-size: 0.8rem; opacity: 0.8;">Gerçekleşme oranı</div>
+          </div>
+        </div>
+
+        <!-- Filters - Modern Card -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600;">🔍 Arama</label>
+              <input type="text" id="searchPayment" placeholder="Hakediş ara..." style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--input-bg); color: var(--text-primary);">
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600;">📌 Durum</label>
+              <select id="statusFilter" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--input-bg); color: var(--text-primary);">
+                <option value="">Tüm Durumlar</option>
+                <option value="pending">⏳ Bekleyen</option>
+                <option value="partial">📊 Kısmi Ödendi</option>
+                <option value="paid">✅ Ödendi</option>
+                <option value="overdue">⚠️ Vadesi Geçti</option>
+              </select>
+            </div>
+            <div style="display: flex; align-items: flex-end;">
+              <button class="btn" onclick="syncFromHakedis()" style="width: 100%;">
+                🔄 Hakediş Senkronize Et
+              </button>
+            </div>
           </div>
         </div>
 
         <!-- Payments Table -->
         <div class="card">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h2 style="margin: 0;">📋 Ödeme Kayıtları</h2>
-            <div style="display: flex; gap: 1rem;">
-              <select id="statusFilter" style="padding: 0.5rem 1rem; border: 1px solid var(--border-color); border-radius: 6px;">
-                <option value="">Tüm Durumlar</option>
-                <option value="pending">Bekleyen</option>
-                <option value="partial">Kısmi Ödendi</option>
-                <option value="paid">Ödendi</option>
-                <option value="overdue">Vadesi Geçti</option>
-              </select>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 2px solid var(--border-color);">
+            <h3 style="margin: 0;">📋 Hakediş ve Tahsilat Listesi</h3>
+            <div style="font-size: 0.9rem; color: var(--text-secondary);">
+              <span id="paymentCount">0</span> kayıt
             </div>
           </div>
 
           <div style="overflow-x: auto;">
-            <table class="data-table" id="paymentsTable">
+            <table style="width: 100%; border-collapse: collapse; min-width: 900px;" id="paymentsTable">
               <thead>
-                <tr>
-                  <th>Hakediş No</th>
-                  <th>Dönem</th>
-                  <th style="text-align: right;">Hakediş Tutarı</th>
-                  <th style="text-align: right;">Ödenen</th>
-                  <th style="text-align: right;">Kalan</th>
-                  <th>Beklenen Tarih</th>
-                  <th>Ödeme Tarihi</th>
-                  <th>Durum</th>
-                  <th style="width: 150px;">İşlemler</th>
+                <tr style="background: var(--bg-secondary); border-bottom: 2px solid var(--border-color);">
+                  <th style="padding: 1rem; text-align: left; font-weight: 600;">Hakediş No</th>
+                  <th style="padding: 1rem; text-align: left; font-weight: 600;">Dönem</th>
+                  <th style="padding: 1rem; text-align: right; font-weight: 600;">Hakediş Tutarı</th>
+                  <th style="padding: 1rem; text-align: right; font-weight: 600;">Ödenen</th>
+                  <th style="padding: 1rem; text-align: right; font-weight: 600;">Kalan</th>
+                  <th style="padding: 1rem; text-align: left; font-weight: 600;">Beklenen Tarih</th>
+                  <th style="padding: 1rem; text-align: left; font-weight: 600;">Ödeme Tarihi</th>
+                  <th style="padding: 1rem; text-align: center; font-weight: 600;">Durum</th>
+                  <th style="padding: 1rem; text-align: center; font-weight: 600; width: 150px;">İşlemler</th>
                 </tr>
               </thead>
               <tbody id="paymentsTableBody">
                 <tr>
                   <td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
                     <div style="font-size: 3rem; margin-bottom: 1rem;">💳</div>
-                    <p>Henüz ödeme kaydı yok</p>
-                    <button class="btn btn-primary" onclick="syncFromHakedis()" style="margin-top: 1rem;">
-                      🔄 Hakediş Verilerini Senkronize Et
-                    </button>
+                    <p style="margin: 0; font-size: 1.1rem;">Henüz ödeme kaydı yok</p>
+                    <p style="margin: 0.5rem 0 0 0;">Hakediş verilerini senkronize edin</p>
                   </td>
                 </tr>
               </tbody>
               <tfoot id="paymentsTableFooter" style="display: none;">
-                <tr style="background: var(--bg-secondary); font-weight: bold;">
+                <tr style="background: var(--bg-secondary); font-weight: bold; border-top: 2px solid var(--border-color);">
                   <td colspan="2" style="text-align: right; padding: 1rem;">TOPLAM:</td>
-                  <td style="text-align: right; color: var(--brand-red);" id="footerTotal">₺0.00</td>
-                  <td style="text-align: right; color: #27ae60;" id="footerPaid">₺0.00</td>
-                  <td style="text-align: right; color: #e67e22;" id="footerRemaining">₺0.00</td>
+                  <td style="text-align: right; color: var(--brand-red); padding: 1rem;" id="footerTotal">₺0.00</td>
+                  <td style="text-align: right; color: #27ae60; padding: 1rem;" id="footerPaid">₺0.00</td>
+                  <td style="text-align: right; color: #e67e22; padding: 1rem;" id="footerRemaining">₺0.00</td>
                   <td colspan="4"></td>
                 </tr>
               </tfoot>
@@ -356,14 +303,15 @@
 
         <!-- Payment History -->
         <div class="card" style="margin-top: 1.5rem;">
-          <h3 style="margin: 0 0 1rem 0;">📜 Tahsilat Geçmişi</h3>
+          <h3 style="margin: 0 0 1rem 0; padding-bottom: 1rem; border-bottom: 2px solid var(--border-color);">📜 Tahsilat Geçmişi</h3>
           <div id="paymentHistory" style="max-height: 400px; overflow-y: auto;">
             <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
-              Tahsilat kaydı bulunamadı
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">📝</div>
+              <p style="margin: 0;">Tahsilat kaydı bulunamadı</p>
             </div>
           </div>
         </div>
-      </div>
+      </section>
     </main>
   </div>
 
@@ -372,42 +320,44 @@
     <div class="modal-content" style="max-width: 600px;">
       <div class="modal-header">
         <h2>💰 Ödeme Kaydet</h2>
-        <button class="close-modal" onclick="closeRecordPaymentModal()">&times;</button>
+        <button class="modal-close" onclick="closeRecordPaymentModal()">&times;</button>
       </div>
-      <form id="recordPaymentForm" onsubmit="handleRecordPayment(event)">
-        <div class="form-group">
-          <label>Hakediş Seçin *</label>
-          <select id="hakedisSelect" required>
-            <option value="">Seçin</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Ödeme Tutarı (₺) *</label>
-          <input type="number" id="paymentAmount" required min="0" step="0.01" placeholder="0.00">
-        </div>
-        <div class="form-group">
-          <label>Ödeme Tarihi *</label>
-          <input type="date" id="paymentDate" required>
-        </div>
-        <div class="form-group">
-          <label>Ödeme Yöntemi</label>
-          <select id="paymentMethod">
-            <option value="bank_transfer">Banka Havalesi</option>
-            <option value="check">Çek</option>
-            <option value="cash">Nakit</option>
-            <option value="credit_card">Kredi Kartı</option>
-            <option value="promissory_note">Senet</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Açıklama</label>
-          <textarea id="paymentNotes" rows="3" placeholder="Ek notlar..."></textarea>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" onclick="closeRecordPaymentModal()">İptal</button>
-          <button type="submit" class="btn btn-primary">💾 Kaydet</button>
-        </div>
-      </form>
+      <div class="modal-body">
+        <form id="recordPaymentForm" onsubmit="handleRecordPayment(event)">
+          <div class="form-group">
+            <label>Hakediş Seçin *</label>
+            <select id="hakedisSelect" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--input-bg); color: var(--text-primary);">
+              <option value="">Seçin</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Ödeme Tutarı (₺) *</label>
+            <input type="number" id="paymentAmount" required min="0" step="0.01" placeholder="0.00" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--input-bg); color: var(--text-primary);">
+          </div>
+          <div class="form-group">
+            <label>Ödeme Tarihi *</label>
+            <input type="date" id="paymentDate" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--input-bg); color: var(--text-primary);">
+          </div>
+          <div class="form-group">
+            <label>Ödeme Yöntemi</label>
+            <select id="paymentMethod" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--input-bg); color: var(--text-primary);">
+              <option value="bank_transfer">🏦 Banka Havalesi</option>
+              <option value="check">📝 Çek</option>
+              <option value="cash">💵 Nakit</option>
+              <option value="credit_card">💳 Kredi Kartı</option>
+              <option value="promissory_note">📄 Senet</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Açıklama</label>
+            <textarea id="paymentNotes" rows="3" placeholder="Ek notlar..." style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--input-bg); color: var(--text-primary); resize: vertical;"></textarea>
+          </div>
+          <div style="display: flex; gap: 0.75rem; justify-content: flex-end; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+            <button type="button" class="btn btn-secondary" onclick="closeRecordPaymentModal()">❌ İptal</button>
+            <button type="submit" class="btn btn-primary">💾 Kaydet</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 
