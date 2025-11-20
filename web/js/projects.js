@@ -402,8 +402,119 @@ async function loadProjectLogs(projectId) {
  * Load project stocks (moved to project-detail.js)
  */
 async function loadProjectStocks(projectId) {
-  console.log('loadProjectStocks called - now handled in project-detail.js');
-  return Promise.resolve();
+  if (!projectId) {
+    projectId = window.currentProjectId;
+  }
+  
+  if (!projectId) {
+    console.error('❌ loadProjectStocks: projectId is required');
+    return;
+  }
+
+  const stocksListDiv = document.getElementById('stocksList');
+  if (!stocksListDiv) {
+    console.warn('⚠️ stocksList element not found');
+    return;
+  }
+
+  try {
+    stocksListDiv.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-secondary);">⏳ Stoklar yükleniyor...</div>';
+
+    const stocksRef = collection(db, 'projects', projectId, 'stocks');
+    const stocksQuery = query(stocksRef, orderBy('createdAt', 'desc'));
+    const stocksSnap = await getDocs(stocksQuery);
+
+    if (stocksSnap.empty) {
+      stocksListDiv.innerHTML = `
+        <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">📦</div>
+          <p style="font-size: 1.1rem; margin: 0;">Henüz stok kaydı bulunmuyor</p>
+          <p style="font-size: 0.9rem; margin-top: 0.5rem; opacity: 0.7;">Yukarıdaki "Stok Ekle" butonunu kullanarak yeni ürün ekleyebilirsiniz</p>
+        </div>
+      `;
+      return;
+    }
+
+    let stocksHTML = '<div style="display: grid; gap: 1rem;">';
+    
+    stocksSnap.forEach((docSnap) => {
+      const stock = docSnap.data();
+      const stockId = docSnap.id;
+      
+      const name = stock.name || 'Ürün';
+      const unit = stock.unit || 'Adet';
+      const quantity = stock.quantity || 0;
+      const usedQuantity = stock.usedQuantity || 0;
+      const remaining = quantity - usedQuantity;
+      const unitPrice = stock.unitPrice || 0;
+      const totalValue = remaining * unitPrice;
+      
+      const statusColor = remaining > 0 ? 'var(--success)' : 'var(--danger)';
+      const statusText = remaining > 0 ? 'Stokta' : 'Tükendi';
+
+      stocksHTML += `
+        <div class="card" style="padding: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; align-items: start; gap: 1rem; margin-bottom: 1rem;">
+            <div style="flex: 1;">
+              <h4 style="margin: 0 0 0.5rem 0; color: var(--brand-red);">
+                📦 ${name}
+              </h4>
+              <div style="display: grid; gap: 0.5rem; font-size: 0.9rem;">
+                <div style="display: flex; gap: 2rem;">
+                  <span>📊 Toplam: <strong>${quantity} ${unit}</strong></span>
+                  <span>✅ Kullanılan: <strong>${usedQuantity} ${unit}</strong></span>
+                  <span style="color: ${statusColor};">📦 Kalan: <strong>${remaining} ${unit}</strong></span>
+                </div>
+                <div>
+                  💰 Birim Fiyat: <strong>${unitPrice.toLocaleString('tr-TR')} ₺</strong>
+                  | Toplam Değer: <strong>${totalValue.toLocaleString('tr-TR')} ₺</strong>
+                </div>
+                <div style="color: ${statusColor}; font-weight: 600;">
+                  Durum: ${statusText}
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              ${remaining > 0 ? `
+                <button 
+                  class="btn btn-primary" 
+                  style="padding: 0.5rem 1rem; font-size: 0.85rem;"
+                  onclick="openUseStockModal('${stockId}', ${JSON.stringify(stock).replace(/"/g, '&quot;')})">
+                  ✏️ Kullan
+                </button>
+              ` : ''}
+              <button 
+                class="btn btn-secondary" 
+                style="padding: 0.5rem 1rem; font-size: 0.85rem;"
+                onclick="openStockUsageHistoryModal('${stockId}', ${JSON.stringify(stock).replace(/"/g, '&quot;')})">
+                📋 Geçmiş
+              </button>
+              <button 
+                class="btn btn-danger" 
+                style="padding: 0.5rem 1rem; font-size: 0.85rem;"
+                onclick="deleteStock('${projectId}', '${stockId}')">
+                🗑️ Sil
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    stocksHTML += '</div>';
+    stocksListDiv.innerHTML = stocksHTML;
+
+    console.log(`✅ Loaded ${stocksSnap.size} stocks for project ${projectId}`);
+
+  } catch (error) {
+    console.error('❌ Error loading stocks:', error);
+    stocksListDiv.innerHTML = `
+      <div style="text-align: center; padding: 2rem; color: var(--danger);">
+        <p>❌ Stoklar yüklenirken hata oluştu</p>
+        <p style="font-size: 0.9rem; opacity: 0.7;">${error.message}</p>
+      </div>
+    `;
+  }
 }
 
 /**
@@ -637,13 +748,21 @@ async function handleAddStock(event) {
 
   try {
     const user = auth.currentUser;
-    if (!user || !currentProjectId) {
-      showAlert('Hata: Proje seçilmemiş', 'danger');
+    const projectId = window.currentProjectId;
+    
+    if (!user) {
+      showAlert('❌ Hata: Kullanıcı oturumu bulunamadı', 'danger');
+      return;
+    }
+    
+    if (!projectId) {
+      showAlert('❌ Hata: Proje ID\'si bulunamadı. Lütfen sayfayı yenileyin.', 'danger');
+      console.error('currentProjectId not found. window.currentProjectId:', window.currentProjectId);
       return;
     }
 
     // Create stock entry
-    const stocksRef = collection(db, 'projects', currentProjectId, 'stocks');
+    const stocksRef = collection(db, 'projects', projectId, 'stocks');
     await addDoc(stocksRef, {
       name,
       unit,
@@ -651,17 +770,18 @@ async function handleAddStock(event) {
       unitPrice,
       usedQuantity: 0, // Track used quantity
       createdBy: user.uid,
+      userEmail: user.email,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       status: 'in_stock'
     });
 
-    showAlert('Ürün kaydı eklendi!', 'success');
+    showAlert('✅ Stok kaydı başarıyla eklendi!', 'success');
     closeAddStockModal();
-    await loadProjectStocks(currentProjectId);
+    await loadProjectStocks(projectId);
   } catch (error) {
     console.error('❌ Stok eklenemedi:', error);
-    showAlert('Ürün eklenirken hata: ' + error.message, 'danger');
+    showAlert('❌ Stok eklenirken hata: ' + error.message, 'danger');
   }
 }
 
@@ -1514,6 +1634,7 @@ window.openAddLogModal = openAddLogModal;
 window.closeAddLogModal = closeAddLogModal;
 window.handleAddLog = handleAddLog;
 window.deleteLog = deleteLog;
+window.loadProjectStocks = loadProjectStocks;
 window.openAddStockModal = openAddStockModal;
 window.closeAddStockModal = closeAddStockModal;
 window.handleAddStock = handleAddStock;

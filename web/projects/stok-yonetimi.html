@@ -450,21 +450,43 @@
       if (unitFilter) unitFilter.addEventListener('change', applyStockFilters);
       if (sortFilter) sortFilter.addEventListener('change', applyStockFilters);
       
+      // Get projectId from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectId = urlParams.get('id');
+      
+      if (!projectId) {
+        console.error('❌ Project ID not found in URL');
+        const stocksListDiv = document.getElementById('stocksList');
+        if (stocksListDiv) {
+          stocksListDiv.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--danger);">❌ Proje ID\'si bulunamadı. Lütfen projeler sayfasından bir proje seçin.</div>';
+        }
+        return;
+      }
+      
+      // Store projectId globally
+      window.currentProjectId = projectId;
+      
       // Wait for modules to load
       setTimeout(() => {
-        if (window.loadProjectStocks) {
-          console.log('✅ Calling loadProjectStocks');
-          window.loadProjectStocks();
+        if (window.loadProjectBasicInfo && window.loadProjectStocks) {
+          console.log('✅ Loading project data for projectId:', projectId);
+          
+          // Load project info first
+          window.loadProjectBasicInfo(projectId);
+          
+          // Then load stocks
+          window.loadProjectStocks(projectId);
         } else {
-          console.warn('⚠️ loadProjectStocks not available yet');
+          console.warn('⚠️ Project functions not available yet');
         }
-      }, 200);
+      }, 300);
     });
 
     // Filtreleme fonksiyonları
     function applyStockFilters() {
-      if (window.loadProjectStocks) {
-        window.loadProjectStocks();
+      const projectId = window.currentProjectId;
+      if (window.loadProjectStocks && projectId) {
+        window.loadProjectStocks(projectId);
       }
     }
 
