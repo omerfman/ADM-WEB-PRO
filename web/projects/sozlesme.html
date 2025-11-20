@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sözleşme - ADM Proje Takip</title>
+  <link rel="stylesheet" href="../css/style.css?v=6">
+  <style>
+    .contract-header {
+      background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+      color: white;
+      padding: 2rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+    }
+
+    .contract-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+
+    .summary-box {
+      background: rgba(255,255,255,0.15);
+      padding: 1rem;
+      border-radius: 8px;
+      backdrop-filter: blur(10px);
+    }
+
+    .summary-box h4 {
+      margin: 0 0 0.5rem 0;
+      font-size: 0.85rem;
+      opacity: 0.9;
+    }
+
+    .summary-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .contract-details {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 1.5rem;
+    }
+
+    .detail-row {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+
+    .detail-label {
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .detail-value {
+      color: var(--text-primary);
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .data-table th {
+      background: var(--bg-secondary);
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-primary);
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .data-table td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .data-table tr:hover {
+      background: var(--bg-secondary);
+    }
+
+    .status-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .status-draft { background: #e3f2fd; color: #1976d2; }
+    .status-pending { background: #fff3e0; color: #f57c00; }
+    .status-signed { background: #e8f5e9; color: #388e3c; }
+    .status-active { background: #e1f5fe; color: #0277bd; }
+    .status-completed { background: #f3e5f5; color: #7b1fa2; }
+    .status-terminated { background: #ffebee; color: #d32f2f; }
+
+    .signature-section {
+      background: #f8f9fa;
+      padding: 2rem;
+      border-radius: 8px;
+      margin: 2rem 0;
+    }
+
+    .signature-box {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+      margin-top: 1rem;
+    }
+
+    .signature-item {
+      text-align: center;
+      padding: 1.5rem;
+      background: white;
+      border-radius: 8px;
+      border: 2px dashed var(--border-color);
+    }
+
+    .signature-item h4 {
+      margin: 0 0 1rem 0;
+      color: var(--text-secondary);
+    }
+
+    .signature-placeholder {
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <span class="logo-icon">🏗️</span>
+          <span class="logo-text">ADM Proje</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title">MENÜ</div>
+          <a href="../anasayfa.html" class="nav-item">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-text">Ana Sayfa</span>
+          </a>
+          <a href="../projeler.html" class="nav-item">
+            <span class="nav-icon">📊</span>
+            <span class="nav-text">Projeler</span>
+          </a>
+          <a href="../sirketler.html" class="nav-item">
+            <span class="nav-icon">🏢</span>
+            <span class="nav-text">Şirketler</span>
+          </a>
+          <a href="../kullanicilar.html" class="nav-item">
+            <span class="nav-icon">👥</span>
+            <span class="nav-text">Kullanıcılar</span>
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">PROJE</div>
+          <a href="proje-ozeti.html" class="nav-item" id="navOzet">
+            <span class="nav-icon">📋</span>
+            <span class="nav-text">Proje Özeti</span>
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">İŞ AKIŞI</div>
+          <a href="kesif.html" class="nav-item" id="navKesif">
+            <span class="nav-icon">🔍</span>
+            <span class="nav-text">1. Keşif</span>
+          </a>
+          <a href="teklif.html" class="nav-item" id="navTeklif">
+            <span class="nav-icon">💼</span>
+            <span class="nav-text">2. Teklif</span>
+          </a>
+          <a href="#" class="nav-item active">
+            <span class="nav-icon">📝</span>
+            <span class="nav-text">3. Sözleşme</span>
+          </a>
+          <a href="metraj-listesi.html" class="nav-item" id="navMetraj">
+            <span class="nav-icon">📐</span>
+            <span class="nav-text">4. Metraj</span>
+          </a>
+          <a href="hakedis-takibi.html" class="nav-item" id="navHakedis">
+            <span class="nav-icon">💰</span>
+            <span class="nav-text">5. Hakediş</span>
+          </a>
+          <a href="odeme-takibi.html" class="nav-item" id="navOdeme">
+            <span class="nav-icon">💳</span>
+            <span class="nav-text">6. Ödeme</span>
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">DESTEK</div>
+          <a href="proje-ozeti.html" class="nav-item" id="navOzet">
+            <span class="nav-icon">📋</span>
+            <span class="nav-text">Proje Özeti</span>
+          </a>
+          <a href="stok-yonetimi.html" class="nav-item" id="navStok">
+            <span class="nav-icon">📦</span>
+            <span class="nav-text">Stok Yönetimi</span>
+          </a>
+          <a href="butce-yonetimi.html" class="nav-item" id="navButce">
+            <span class="nav-icon">💼</span>
+            <span class="nav-text">Bütçe Yönetimi</span>
+          </a>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-avatar">A</div>
+          <div class="user-info">
+            <div class="user-name" id="sidebarUserName">Admin</div>
+            <div class="user-role" id="sidebarUserRole">Yönetici</div>
+          </div>
+        </div>
+        <button class="btn btn-secondary" style="width: 100%; margin-top: 1rem;" onclick="handleLogout()">
+          🚪 Çıkış Yap
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="top-bar">
+        <button class="menu-toggle" id="menuToggle">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <div class="breadcrumb">
+          <a href="../projeler.html">Projeler</a>
+          <span class="separator">/</span>
+          <span id="projectNameBreadcrumb">Proje</span>
+          <span class="separator">/</span>
+          <span>Sözleşme</span>
+        </div>
+        <div class="top-bar-actions">
+          <button class="btn" onclick="exportContractPDF()">
+            📄 PDF İndir
+          </button>
+          <button class="btn" onclick="signContract()" id="signBtn">
+            ✍️ İmzala
+          </button>
+          <button class="btn btn-primary" onclick="activateContract()" id="activateBtn" style="display: none;">
+            ✅ Sözleşmeyi Aktifleştir
+          </button>
+        </div>
+      </div>
+
+      <div class="content-wrapper">
+        <!-- Header -->
+        <div class="contract-header">
+          <h1 style="margin: 0 0 0.5rem 0;">📝 Sözleşme</h1>
+          <p style="margin: 0; opacity: 0.9;" id="projectName">Resmi proje sözleşmesi</p>
+          <div class="contract-summary">
+            <div class="summary-box">
+              <h4>Sözleşme No</h4>
+              <div class="summary-value" id="contractNo">-</div>
+            </div>
+            <div class="summary-box">
+              <h4>Sözleşme Tutarı</h4>
+              <div class="summary-value" id="contractAmount">₺0.00</div>
+            </div>
+            <div class="summary-box">
+              <h4>Başlangıç</h4>
+              <div class="summary-value" id="startDate">-</div>
+            </div>
+            <div class="summary-box">
+              <h4>Bitiş</h4>
+              <div class="summary-value" id="endDate">-</div>
+            </div>
+            <div class="summary-box">
+              <h4>Durum</h4>
+              <div class="summary-value" id="contractStatus">Taslak</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contract Details -->
+        <div class="contract-details">
+          <h2 style="margin: 0 0 1.5rem 0;">📋 Sözleşme Bilgileri</h2>
+          
+          <div class="detail-row">
+            <div class="detail-label">Sözleşme Türü:</div>
+            <div class="detail-value">
+              <select id="contractType" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px;">
+                <option value="fixed">Götürü Bedel</option>
+                <option value="unit">Birim Fiyat</option>
+                <option value="cost_plus">Maliyet + Kâr</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-label">İşveren (Müşteri):</div>
+            <div class="detail-value" id="clientName">-</div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-label">Yüklenici (Firma):</div>
+            <div class="detail-value" id="companyName">-</div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-label">Sözleşme Tarihi:</div>
+            <div class="detail-value">
+              <input type="date" id="contractDate" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px;">
+            </div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-label">İşe Başlama Tarihi:</div>
+            <div class="detail-value">
+              <input type="date" id="workStartDate" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px;">
+            </div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-label">Tamamlanma Süresi:</div>
+            <div class="detail-value">
+              <input type="number" id="durationDays" placeholder="Gün sayısı" min="1" style="width: 150px; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px;">
+              <span style="margin-left: 0.5rem;">gün</span>
+            </div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-label">Gecikme Cezası:</div>
+            <div class="detail-value">
+              <input type="number" id="penaltyRate" value="0.001" step="0.0001" min="0" max="0.01" style="width: 150px; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px;">
+              <span style="margin-left: 0.5rem;">günlük oran (‰)</span>
+            </div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-label">Geçici Kabul Süresi:</div>
+            <div class="detail-value">
+              <input type="number" id="provisionalAcceptance" value="15" min="1" style="width: 150px; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px;">
+              <span style="margin-left: 0.5rem;">gün</span>
+            </div>
+          </div>
+
+          <div class="detail-row">
+            <div class="detail-label">Kesin Kabul Süresi:</div>
+            <div class="detail-value">
+              <input type="number" id="finalAcceptance" value="365" min="1" style="width: 150px; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px;">
+              <span style="margin-left: 0.5rem;">gün</span>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" onclick="saveContractDetails()" style="margin-top: 1.5rem;">
+            💾 Bilgileri Kaydet
+          </button>
+        </div>
+
+        <!-- Contract Items -->
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="margin: 0;">📋 Sözleşme Kalemleri (Locked BOQ)</h2>
+            <div style="color: var(--text-secondary); font-size: 0.9rem;">
+              ℹ️ Bu kalemler sözleşme imzalandıktan sonra kilitlenir
+            </div>
+          </div>
+
+          <div style="overflow-x: auto;">
+            <table class="data-table" id="contractTable">
+              <thead>
+                <tr>
+                  <th style="width: 60px;">Poz</th>
+                  <th>İş Kalemi</th>
+                  <th>Birim</th>
+                  <th style="text-align: right;">Sözleşme Miktarı</th>
+                  <th style="text-align: right;">Birim Fiyat</th>
+                  <th style="text-align: right;">Toplam</th>
+                </tr>
+              </thead>
+              <tbody id="contractTableBody">
+                <tr>
+                  <td colspan="6" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📝</div>
+                    <p>Henüz sözleşme kalemi yüklenmemiş</p>
+                    <button class="btn btn-primary" onclick="importFromProposal()" style="margin-top: 1rem;">
+                      📥 Tekliften İçe Aktar
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot id="contractTableFooter" style="display: none;">
+                <tr style="background: var(--bg-secondary); font-weight: bold;">
+                  <td colspan="5" style="text-align: right; padding: 1rem;">TOPLAM SÖZLEŞME BEDELİ:</td>
+                  <td style="text-align: right; color: var(--brand-red); font-size: 1.2rem;" id="footerTotal">₺0.00</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- Payment Terms -->
+        <div class="card" style="margin-top: 1.5rem;">
+          <h3 style="margin: 0 0 1rem 0;">💰 Ödeme Şartları</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Ödeme Tipi</label>
+              <select id="paymentType" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px;">
+                <option value="progress">Hakediş Sistemli</option>
+                <option value="milestone">Kilometre Taşı</option>
+                <option value="advance">Peşin Ödeme</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Avans Oranı (%)</label>
+              <input type="number" id="advancePayment" value="0" min="0" max="100" step="1" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px;">
+            </div>
+            <div class="form-group">
+              <label>Hakediş Kesinti Oranı (%)</label>
+              <input type="number" id="retentionRate" value="10" min="0" max="100" step="1" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px;">
+            </div>
+          </div>
+          <div class="form-group" style="margin-top: 1rem;">
+            <label>Ödeme Şartları Detayı</label>
+            <textarea id="paymentTerms" rows="4" style="width: 100%; padding: 1rem; border: 1px solid var(--border-color); border-radius: 6px;" placeholder="Ödeme dönemleri, şartlar, bankalar vb..."></textarea>
+          </div>
+        </div>
+
+        <!-- Contract Clauses -->
+        <div class="card" style="margin-top: 1.5rem;">
+          <h3 style="margin: 0 0 1rem 0;">📜 Sözleşme Maddeleri</h3>
+          <textarea id="contractClauses" rows="10" style="width: 100%; padding: 1rem; border: 1px solid var(--border-color); border-radius: 6px; font-family: inherit;" placeholder="Sözleşme maddeleri, özel şartlar, sorumluluklar..."></textarea>
+          <button class="btn btn-primary" onclick="saveContractClauses()" style="margin-top: 1rem;">
+            💾 Maddeleri Kaydet
+          </button>
+        </div>
+
+        <!-- Signatures -->
+        <div class="signature-section">
+          <h3 style="margin: 0 0 1rem 0;">✍️ İmzalar</h3>
+          <div class="signature-box">
+            <div class="signature-item">
+              <h4>İŞVEREN</h4>
+              <div class="signature-placeholder" id="clientSignature">İmza Bekleniyor</div>
+              <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-secondary);" id="clientSignDate">-</div>
+            </div>
+            <div class="signature-item">
+              <h4>YÜKLENİCİ</h4>
+              <div class="signature-placeholder" id="contractorSignature">İmza Bekleniyor</div>
+              <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-secondary);" id="contractorSignDate">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="../js/auth.js?v=6"></script>
+  <script type="module" src="../js/projects.js?v=6"></script>
+  <script type="module" src="../js/app.js?v=6"></script>
+
+  <script>
+    document.getElementById('menuToggle')?.addEventListener('click', function() {
+      document.querySelector('.sidebar').classList.toggle('sidebar-open');
+    });
+
+    function updateNavLinks() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectId = urlParams.get('id');
+      if (projectId) {
+        // İş Akışı Linkleri
+        const navKesif = document.getElementById('navKesif');
+        const navTeklif = document.getElementById('navTeklif');
+        const navSozlesme = document.getElementById('navSozlesme');
+        const navMetraj = document.getElementById('navMetraj');
+        const navHakedis = document.getElementById('navHakedis');
+        const navOdeme = document.getElementById('navOdeme');
+        // Proje & Destek Linkleri
+        const navOzet = document.getElementById('navOzet');
+        const navStok = document.getElementById('navStok');
+        const navButce = document.getElementById('navButce');
+        const navGunluk = document.getElementById('navGunluk');
+        const navMusteri = document.getElementById('navMusteri');
+        
+        if (navKesif) navKesif.href = `kesif.html?id=${projectId}`;
+        if (navTeklif) navTeklif.href = `teklif.html?id=${projectId}`;
+        if (navSozlesme) navSozlesme.href = `sozlesme.html?id=${projectId}`;
+        if (navMetraj) navMetraj.href = `metraj-listesi.html?id=${projectId}`;
+        if (navHakedis) navHakedis.href = `hakedis-takibi.html?id=${projectId}`;
+        if (navOdeme) navOdeme.href = `odeme-takibi.html?id=${projectId}`;
+        if (navOzet) navOzet.href = `proje-ozeti.html?id=${projectId}`;
+        if (navStok) navStok.href = `stok-yonetimi.html?id=${projectId}`;
+        if (navButce) navButce.href = `butce-yonetimi.html?id=${projectId}`;
+        if (navGunluk) navGunluk.href = `santiye-gunlugu.html?id=${projectId}`;
+        if (navMusteri) navMusteri.href = `musteri-yetkileri.html?id=${projectId}`;
+      }
+    }
+
+    function importFromProposal() {
+      if (window.loadFromProposal) {
+        window.loadFromProposal();
+      }
+    }
+
+    function saveContractDetails() {
+      if (window.updateContractDetails) {
+        window.updateContractDetails();
+      }
+    }
+
+    function saveContractClauses() {
+      const clauses = document.getElementById('contractClauses').value;
+      if (window.updateContractClauses) {
+        window.updateContractClauses(clauses);
+      }
+    }
+
+    function signContract() {
+      if (confirm('Sözleşmeyi imzalamak istediğinize emin misiniz?')) {
+        if (window.markContractSigned) {
+          window.markContractSigned();
+        }
+      }
+    }
+
+    function activateContract() {
+      if (confirm('Sözleşmeyi aktifleştirmek istediğinize emin misiniz? Bu işlem geri alınamaz.')) {
+        if (window.activateContractStatus) {
+          window.activateContractStatus();
+        }
+      }
+    }
+
+    function exportContractPDF() {
+      if (window.generateContractPDF) {
+        window.generateContractPDF();
+      } else {
+        alert('PDF export özelliği yakında eklenecek');
+      }
+    }
+
+    updateNavLinks();
+  </script>
+
+  <script type="module">
+    import { db, auth } from '../js/firebase-config.js';
+    import { doc, getDoc, collection, query, where, getDocs, addDoc, updateDoc, setDoc, orderBy, Timestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    let currentProjectId = null;
+    let contractItems = [];
+    let contractData = {};
+
+    async function loadContract() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectId = urlParams.get('id');
+      const fromProposal = urlParams.get('from');
+      
+      if (!projectId) {
+        window.location.href = '../projeler.html';
+        return;
+      }
+
+      currentProjectId = projectId;
+
+      try {
+        const projectDoc = await getDoc(doc(db, 'projects', projectId));
+        if (!projectDoc.exists()) {
+          alert('❌ Proje bulunamadı');
+          window.location.href = '../projeler.html';
+          return;
+        }
+
+        const project = { id: projectDoc.id, ...projectDoc.data() };
+        document.getElementById('projectName').textContent = project.name || 'Proje';
+        document.getElementById('projectNameBreadcrumb').textContent = project.name || 'Proje';
+        document.getElementById('clientName').textContent = project.clientName || '-';
+        document.getElementById('companyName').textContent = project.companyName || '-';
+
+        // Check if coming from proposal
+        if (fromProposal === 'proposal') {
+          const proposalData = sessionStorage.getItem('proposalToContract');
+          if (proposalData) {
+            await importProposalData(JSON.parse(proposalData));
+            sessionStorage.removeItem('proposalToContract');
+          }
+        }
+
+        // Load contract metadata
+        const contractDocRef = doc(db, 'contracts', projectId);
+        const contractDoc = await getDoc(contractDocRef);
+        
+        if (contractDoc.exists()) {
+          contractData = contractDoc.data();
+          
+          document.getElementById('contractNo').textContent = contractData.contractNo || '-';
+          document.getElementById('contractAmount').textContent = formatCurrency(contractData.contractAmount || 0);
+          
+          if (contractData.contractDate) {
+            document.getElementById('contractDate').value = contractData.contractDate;
+            document.getElementById('startDate').textContent = new Date(contractData.contractDate).toLocaleDateString('tr-TR');
+          }
+          
+          if (contractData.workStartDate) {
+            document.getElementById('workStartDate').value = contractData.workStartDate;
+          }
+          
+          if (contractData.durationDays) {
+            document.getElementById('durationDays').value = contractData.durationDays;
+            const endDate = new Date(contractData.workStartDate);
+            endDate.setDate(endDate.getDate() + contractData.durationDays);
+            document.getElementById('endDate').textContent = endDate.toLocaleDateString('tr-TR');
+          }
+
+          if (contractData.contractType) document.getElementById('contractType').value = contractData.contractType;
+          if (contractData.penaltyRate !== undefined) document.getElementById('penaltyRate').value = contractData.penaltyRate;
+          if (contractData.provisionalAcceptance) document.getElementById('provisionalAcceptance').value = contractData.provisionalAcceptance;
+          if (contractData.finalAcceptance) document.getElementById('finalAcceptance').value = contractData.finalAcceptance;
+          if (contractData.paymentType) document.getElementById('paymentType').value = contractData.paymentType;
+          if (contractData.advancePayment !== undefined) document.getElementById('advancePayment').value = contractData.advancePayment;
+          if (contractData.retentionRate !== undefined) document.getElementById('retentionRate').value = contractData.retentionRate;
+          if (contractData.paymentTerms) document.getElementById('paymentTerms').value = contractData.paymentTerms;
+          if (contractData.clauses) document.getElementById('contractClauses').value = contractData.clauses;
+
+          const statusMap = {
+            draft: 'Taslak',
+            pending: 'Onay Bekliyor',
+            signed: 'İmzalandı',
+            active: 'Aktif',
+            completed: 'Tamamlandı',
+            terminated: 'Feshedildi'
+          };
+          document.getElementById('contractStatus').textContent = statusMap[contractData.status] || 'Taslak';
+
+          // Show activate button if signed
+          if (contractData.status === 'signed') {
+            document.getElementById('activateBtn').style.display = 'inline-block';
+          }
+
+          // Show signatures
+          if (contractData.clientSignedAt) {
+            document.getElementById('clientSignature').innerHTML = '<strong>✅ İmzalandı</strong>';
+            document.getElementById('clientSignDate').textContent = contractData.clientSignedAt.toDate().toLocaleString('tr-TR');
+          }
+          if (contractData.contractorSignedAt) {
+            document.getElementById('contractorSignature').innerHTML = '<strong>✅ İmzalandı</strong>';
+            document.getElementById('contractorSignDate').textContent = contractData.contractorSignedAt.toDate().toLocaleString('tr-TR');
+          }
+        }
+
+        // Load contract items
+        const itemsQuery = query(
+          collection(db, 'contract_items'),
+          where('projectId', '==', projectId),
+          where('isDeleted', '==', false),
+          orderBy('pozNo', 'asc')
+        );
+        const itemsSnap = await getDocs(itemsQuery);
+        contractItems = [];
+        
+        itemsSnap.forEach(docSnap => {
+          contractItems.push({ id: docSnap.id, ...docSnap.data() });
+        });
+
+        renderContractTable();
+
+      } catch (error) {
+        console.error('❌ Error loading contract:', error);
+        alert('Sözleşme verileri yüklenirken hata: ' + error.message);
+      }
+    }
+
+    async function importProposalData(proposalData) {
+      try {
+        const user = auth.currentUser;
+        let totalAmount = 0;
+
+        // Import items
+        for (let i = 0; i < proposalData.items.length; i++) {
+          const item = proposalData.items[i];
+          const itemTotal = (item.quantity || 0) * (item.unitPrice || 0);
+          totalAmount += itemTotal;
+
+          await addDoc(collection(db, 'contract_items'), {
+            projectId: currentProjectId,
+            pozNo: i + 1,
+            name: item.name,
+            category: item.category,
+            unit: item.unit,
+            contractQuantity: item.quantity,
+            unitPrice: item.unitPrice,
+            description: item.description,
+            fromProposalId: proposalData.proposalId,
+            isLocked: false,
+            isDeleted: false,
+            createdAt: Timestamp.now(),
+            createdBy: user.uid
+          });
+        }
+
+        // Create contract metadata
+        const contractDocRef = doc(db, 'contracts', currentProjectId);
+        await setDoc(contractDocRef, {
+          projectId: currentProjectId,
+          contractNo: `SZL-${Date.now()}`,
+          contractAmount: totalAmount,
+          contractType: 'fixed',
+          penaltyRate: 0.001,
+          provisionalAcceptance: 15,
+          finalAcceptance: 365,
+          paymentType: 'progress',
+          advancePayment: 0,
+          retentionRate: 10,
+          status: 'draft',
+          createdAt: Timestamp.now(),
+          createdBy: user.uid
+        });
+
+        alert('✅ Teklif verileri başarıyla aktarıldı!');
+
+      } catch (error) {
+        console.error('❌ Error importing proposal:', error);
+        alert('Teklif verileri aktarılırken hata: ' + error.message);
+      }
+    }
+
+    function renderContractTable() {
+      const tbody = document.getElementById('contractTableBody');
+      const footer = document.getElementById('contractTableFooter');
+
+      if (contractItems.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+              <div style="font-size: 3rem; margin-bottom: 1rem;">📝</div>
+              <p>Henüz sözleşme kalemi yüklenmemiş</p>
+              <button class="btn btn-primary" onclick="importFromProposal()" style="margin-top: 1rem;">
+                📥 Tekliften İçe Aktar
+              </button>
+            </td>
+          </tr>
+        `;
+        footer.style.display = 'none';
+        return;
+      }
+
+      let html = '';
+      let totalAmount = 0;
+
+      contractItems.forEach(item => {
+        const total = (item.contractQuantity || 0) * (item.unitPrice || 0);
+        totalAmount += total;
+
+        html += `
+          <tr>
+            <td>${item.pozNo}</td>
+            <td>
+              <strong>${item.name}</strong>
+              ${item.description ? `<br><small style="color: var(--text-secondary);">${item.description}</small>` : ''}
+            </td>
+            <td>${item.unit}</td>
+            <td style="text-align: right;">${formatNumber(item.contractQuantity)}</td>
+            <td style="text-align: right;">${formatCurrency(item.unitPrice)}</td>
+            <td style="text-align: right;"><strong>${formatCurrency(total)}</strong></td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+      footer.style.display = 'table-footer-group';
+      document.getElementById('footerTotal').textContent = formatCurrency(totalAmount);
+    }
+
+    window.updateContractDetails = async function() {
+      try {
+        const contractDate = document.getElementById('contractDate').value;
+        const workStartDate = document.getElementById('workStartDate').value;
+        const durationDays = parseInt(document.getElementById('durationDays').value) || 0;
+
+        const contractDocRef = doc(db, 'contracts', currentProjectId);
+        await updateDoc(contractDocRef, {
+          contractType: document.getElementById('contractType').value,
+          contractDate,
+          workStartDate,
+          durationDays,
+          penaltyRate: parseFloat(document.getElementById('penaltyRate').value),
+          provisionalAcceptance: parseInt(document.getElementById('provisionalAcceptance').value),
+          finalAcceptance: parseInt(document.getElementById('finalAcceptance').value),
+          paymentType: document.getElementById('paymentType').value,
+          advancePayment: parseFloat(document.getElementById('advancePayment').value),
+          retentionRate: parseFloat(document.getElementById('retentionRate').value),
+          paymentTerms: document.getElementById('paymentTerms').value
+        });
+
+        alert('✅ Sözleşme bilgileri kaydedildi');
+        loadContract();
+
+      } catch (error) {
+        console.error('❌ Error saving contract details:', error);
+        alert('Bilgiler kaydedilirken hata: ' + error.message);
+      }
+    };
+
+    window.updateContractClauses = async function(clauses) {
+      try {
+        const contractDocRef = doc(db, 'contracts', currentProjectId);
+        await updateDoc(contractDocRef, { clauses });
+        alert('✅ Sözleşme maddeleri kaydedildi');
+      } catch (error) {
+        console.error('❌ Error saving clauses:', error);
+        alert('Maddeler kaydedilirken hata: ' + error.message);
+      }
+    };
+
+    window.markContractSigned = async function() {
+      try {
+        const contractDocRef = doc(db, 'contracts', currentProjectId);
+        await updateDoc(contractDocRef, {
+          status: 'signed',
+          contractorSignedAt: Timestamp.now(),
+          clientSignedAt: Timestamp.now()
+        });
+
+        // Lock all contract items
+        for (const item of contractItems) {
+          await updateDoc(doc(db, 'contract_items', item.id), {
+            isLocked: true
+          });
+        }
+
+        alert('✅ Sözleşme imzalandı ve kalemler kilitlendi');
+        loadContract();
+
+      } catch (error) {
+        console.error('❌ Error signing contract:', error);
+        alert('İmzalama hatası: ' + error.message);
+      }
+    };
+
+    window.activateContractStatus = async function() {
+      try {
+        const contractDocRef = doc(db, 'contracts', currentProjectId);
+        await updateDoc(contractDocRef, {
+          status: 'active',
+          activatedAt: Timestamp.now()
+        });
+
+        // Export to BOQ (metraj)
+        for (const item of contractItems) {
+          await addDoc(collection(db, 'boq_items'), {
+            projectId: currentProjectId,
+            pozNo: item.pozNo,
+            name: item.name,
+            category: item.category,
+            unit: item.unit,
+            contractQuantity: item.contractQuantity,
+            unitPrice: item.unitPrice,
+            description: item.description,
+            fromContractId: item.id,
+            completedQuantity: 0,
+            isDeleted: false,
+            createdAt: Timestamp.now(),
+            createdBy: auth.currentUser.uid
+          });
+        }
+
+        alert('✅ Sözleşme aktifleştirildi ve metraj listesine aktarıldı!');
+        
+        // Redirect to metraj page
+        window.location.href = `metraj-listesi.html?id=${currentProjectId}&from=contract`;
+
+      } catch (error) {
+        console.error('❌ Error activating contract:', error);
+        alert('Aktifleştirme hatası: ' + error.message);
+      }
+    };
+
+    window.loadFromProposal = async function() {
+      try {
+        const proposalQuery = query(
+          collection(db, 'proposal_items'),
+          where('projectId', '==', currentProjectId),
+          where('isDeleted', '==', false)
+        );
+        const proposalSnap = await getDocs(proposalQuery);
+        
+        if (proposalSnap.empty) {
+          alert('❌ Teklif kalemleri bulunamadı');
+          return;
+        }
+
+        const proposalItems = [];
+        proposalSnap.forEach(doc => {
+          proposalItems.push({ id: doc.id, ...doc.data() });
+        });
+
+        const proposalDocSnap = await getDoc(doc(db, 'proposals', currentProjectId));
+        const proposalMetadata = proposalDocSnap.exists() ? proposalDocSnap.data() : {};
+
+        await importProposalData({
+          projectId: currentProjectId,
+          proposalId: currentProjectId,
+          items: proposalItems,
+          metadata: proposalMetadata
+        });
+
+        loadContract();
+
+      } catch (error) {
+        console.error('❌ Error loading from proposal:', error);
+        alert('Tekliften yükleme hatası: ' + error.message);
+      }
+    };
+
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('tr-TR', {
+        style: 'currency',
+        currency: 'TRY',
+        minimumFractionDigits: 2
+      }).format(amount || 0);
+    }
+
+    function formatNumber(num) {
+      return new Intl.NumberFormat('tr-TR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(num || 0);
+    }
+
+    setTimeout(() => {
+      loadContract();
+    }, 200);
+  </script>
+</body>
+</html>

@@ -292,6 +292,18 @@ async function loadProjectStocks() {
     
     if (stocksSnap.empty) {
       stocksList.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 2rem;">Henüz stok kaydı yok</p>';
+      
+      // Reset summary cards
+      const totalItems = document.getElementById('totalStockItems');
+      const totalValue = document.getElementById('totalStockValue');
+      const totalUsed = document.getElementById('totalUsedValue');
+      const remainingValue = document.getElementById('remainingStockValue');
+      
+      if (totalItems) totalItems.textContent = '0';
+      if (totalValue) totalValue.textContent = '₺0';
+      if (totalUsed) totalUsed.textContent = '₺0';
+      if (remainingValue) remainingValue.textContent = '₺0';
+      
       return;
     }
 
@@ -300,28 +312,169 @@ async function loadProjectStocks() {
       stocks.push({ id: doc.id, ...doc.data() });
     });
 
-    let totalStockValue = 0;
+    // Apply filters if on stock management page
+    const searchInput = document.getElementById('stockSearchInput');
+    const unitFilter = document.getElementById('stockUnitFilter');
+    const sortFilter = document.getElementById('stockSortFilter');
+    
+    let filteredStocks = [...stocks];
+    
+    if (searchInput?.value) {
+      const searchTerm = searchInput.value.toLowerCase();
+      filteredStocks = filteredStocks.filter(stock => 
+        stock.name?.toLowerCase().includes(searchTerm)
+      );
+    }
+    
+    if (unitFilter?.value) {
+      filteredStocks = filteredStocks.filter(stock => stock.unit === unitFilter.value);
+    }
+    
+    if (sortFilter?.value) {
+      switch (sortFilter.value) {
+        case 'name-asc':
+          filteredStocks.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+          break;
+        case 'name-desc':
+          filteredStocks.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
+          break;
+        case 'value-asc':
+          filteredStocks.sort((a, b) => {
+            const aRemaining = (a.quantity - (a.usedQuantity || 0)) * (a.unitPrice || 0);
+            const bRemaining = (b.quantity - (b.usedQuantity || 0)) * (b.unitPrice || 0);
+            return aRemaining - bRemaining;
+          });
+          break;
+        case 'value-desc':
+          filteredStocks.sort((a, b) => {
+            const aRemaining = (a.quantity - (a.usedQuantity || 0)) * (a.unitPrice || 0);
+            const bRemaining = (b.quantity - (b.usedQuantity || 0)) * (b.unitPrice || 0);
+            return bRemaining - aRemaining;
+          });
+          break;
+        case 'date-asc':
+          filteredStocks.sort((a, b) => {
+            const dateA = a.createdAt?.toDate?.() || new Date(0);
+            const dateB = b.createdAt?.toDate?.() || new Date(0);
+            return dateA - dateB;
+          });
+          break;
+        default: // date-desc
+          filteredStocks.sort((a, b) => {
+            const dateA = a.createdAt?.toDate?.() || new Date(0);
+            const dateB = b.createdAt?.toDate?.() || new Date(0);
+            return dateB - dateA;
+          });
+      }
+    }
 
-    stocksList.innerHTML = stocks.map(stock => {
+    // Calculate totals
+    let totalStockValue = 0;
+    let totalUsedValue = 0;
+    let remainingStockValue = 0;
+
+    stocks.forEach(stock => {
+      const totalValue = (stock.quantity || 0) * (stock.unitPrice || 0);
+      const usedValue = (stock.usedQuantity || 0) * (stock.unitPrice || 0);
+      const remainingValue = totalValue - usedValue;
+      
+      totalStockValue += totalValue;
+      totalUsedValue += usedValue;
+      remainingStockValue += remainingValue;
+    });
+
+    // Update summary cards
+    const totalItems = document.getElementById('totalStockItems');
+    const totalValue = document.getElementById('totalStockValue');
+    const totalUsed = document.getElementById('totalUsedValue');
+    const remainingValue = document.getElementById('remainingStockValue');
+    
+    if (totalItems) totalItems.textContent = stocks.length;
+    if (totalValue) totalValue.textContent = formatCurrency(totalStockValue);
+    if (totalUsed) totalUsed.textContent = formatCurrency(totalUsedValue);
+    if (remainingValue) remainingValue.textContent = formatCurrency(remainingStockValue);
+
+    // Render stocks
+    stocksList.innerHTML = filteredStocks.map(stock => {
       const totalPrice = (stock.quantity || 0) * (stock.unitPrice || 0);
-      totalStockValue += totalPrice;
+      const usedQuantity = stock.usedQuantity || 0;
+      const remainingQuantity = stock.quantity - usedQuantity;
+      const usedValue = usedQuantity * (stock.unitPrice || 0);
+      const remainingValue = remainingQuantity * (stock.unitPrice || 0);
+      const usagePercent = stock.quantity > 0 ? ((usedQuantity / stock.quantity) * 100).toFixed(1) : 0;
+
+      // Determine status color
+      let statusColor = '#27ae60'; // Green for good stock
+      let statusIcon = '✅';
+      if (usagePercent >= 90) {
+        statusColor = '#e74c3c'; // Red for critical
+        statusIcon = '⚠️';
+      } else if (usagePercent >= 70) {
+        statusColor = '#f39c12'; // Orange for low
+        statusIcon = '⚡';
+      }
 
       return `
-        <div class="card" style="margin-bottom: 1rem;">
-          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
+        <div class="card" style="margin-bottom: 1rem; border-left: 4px solid ${statusColor};">
+          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem; gap: 1rem; flex-wrap: wrap;">
             <div style="flex: 1;">
-              <div style="font-weight: 600; color: var(--brand-red); font-size: 1.1rem; margin-bottom: 0.5rem;">
-                ${stock.name || 'Ürün'}
+              <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <span style="font-size: 1.2rem;">${statusIcon}</span>
+                <div style="font-weight: 600; color: var(--brand-red); font-size: 1.1rem;">
+                  ${stock.name || 'Ürün'}
+                </div>
               </div>
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">
-                <div>📦 Miktar: <strong>${stock.quantity || 0} ${stock.unit || ''}</strong></div>
-                <div>💰 Birim: <strong>${formatCurrency(stock.unitPrice || 0)}</strong></div>
-                <div>📊 Toplam: <strong style="color: var(--brand-red);">${formatCurrency(totalPrice)}</strong></div>
+              
+              <!-- Progress Bar -->
+              <div style="margin: 0.75rem 0;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                  <span>Kullanım Oranı</span>
+                  <span>${usagePercent}%</span>
+                </div>
+                <div style="width: 100%; height: 8px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden;">
+                  <div style="height: 100%; background: ${statusColor}; width: ${usagePercent}%; transition: width 0.3s;"></div>
+                </div>
+              </div>
+
+              <!-- Stock Details Grid -->
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin-top: 1rem;">
+                <div style="background: var(--bg-tertiary); padding: 0.5rem; border-radius: 4px;">
+                  <div style="font-size: 0.75rem; color: var(--text-secondary);">Toplam Giriş</div>
+                  <div style="font-weight: 600; color: var(--brand-red);">${stock.quantity || 0} ${stock.unit || ''}</div>
+                  <div style="font-size: 0.75rem; color: var(--text-secondary);">${formatCurrency(totalPrice)}</div>
+                </div>
+                <div style="background: var(--bg-tertiary); padding: 0.5rem; border-radius: 4px;">
+                  <div style="font-size: 0.75rem; color: var(--text-secondary);">Kullanılan</div>
+                  <div style="font-weight: 600; color: #e74c3c;">${usedQuantity} ${stock.unit || ''}</div>
+                  <div style="font-size: 0.75rem; color: var(--text-secondary);">${formatCurrency(usedValue)}</div>
+                </div>
+                <div style="background: var(--bg-tertiary); padding: 0.5rem; border-radius: 4px;">
+                  <div style="font-size: 0.75rem; color: var(--text-secondary);">Kalan</div>
+                  <div style="font-weight: 600; color: #27ae60;">${remainingQuantity} ${stock.unit || ''}</div>
+                  <div style="font-size: 0.75rem; color: var(--text-secondary);">${formatCurrency(remainingValue)}</div>
+                </div>
+                <div style="background: var(--bg-tertiary); padding: 0.5rem; border-radius: 4px;">
+                  <div style="font-size: 0.75rem; color: var(--text-secondary);">Birim Fiyat</div>
+                  <div style="font-weight: 600;">${formatCurrency(stock.unitPrice || 0)}</div>
+                </div>
               </div>
             </div>
-            <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem;" onclick="deleteStock('${stock.id}')">
-              🗑️ Sil
-            </button>
+            
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 0.5rem; flex-direction: column;">
+              <button class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem; white-space: nowrap;" 
+                      onclick="window.openUseStockModal('${stock.id}', ${JSON.stringify(stock).replace(/"/g, '&quot;')})">
+                📤 Kullan
+              </button>
+              <button class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #3498db; color: white; white-space: nowrap;" 
+                      onclick="window.openStockUsageHistoryModal('${stock.id}', ${JSON.stringify(stock).replace(/"/g, '&quot;')})">
+                📋 Geçmiş
+              </button>
+              <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem;" 
+                      onclick="deleteStock('${currentProjectId}', '${stock.id}')">
+                🗑️ Sil
+              </button>
+            </div>
           </div>
         </div>
       `;

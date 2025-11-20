@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stok Yönetimi - ADM İnşaat Proje Yönetim Sistemi</title>
+  <link rel="stylesheet" href="../css/style.css?v=6">
+</head>
+<body>
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="../assets/adm_logo.png" alt="ADM Studio" class="sidebar-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+        <h1 style="display: none;">🏗️ ADM İnşaat</h1>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="../anasayfa.html" class="nav-item">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Anasayfa</span>
+        </a>
+        <a href="../projeler.html" class="nav-item">
+          <span class="nav-icon">🏗️</span>
+          <span class="nav-text">Projeler</span>
+        </a>
+        
+        <!-- Project Navigation -->
+        <div style="margin-top: 1.5rem; padding: 0 1rem; color: var(--text-secondary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+          Proje Dashboard
+        </div>
+        <a href="proje-ozeti.html" class="nav-item" id="navOzet">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Proje Özeti</span>
+        </a>
+        
+        <div style="margin-top: 1.5rem; padding: 0 1rem; color: var(--text-secondary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+          İş Akış Süreci
+        </div>
+        <a href="kesif.html" class="nav-item" id="navKesif">
+          <span class="nav-icon">🔍</span>
+          <span class="nav-text">1. Keşif</span>
+        </a>
+        <a href="teklif.html" class="nav-item" id="navTeklif">
+          <span class="nav-icon">💼</span>
+          <span class="nav-text">2. Teklif</span>
+        </a>
+        <a href="sozlesme.html" class="nav-item" id="navSozlesme">
+          <span class="nav-icon">📝</span>
+          <span class="nav-text">3. Sözleşme</span>
+        </a>
+        <a href="metraj-listesi.html" class="nav-item" id="navMetraj">
+          <span class="nav-icon">📐</span>
+          <span class="nav-text">4. Metraj (BOQ)</span>
+        </a>
+        <a href="hakedis-takibi.html" class="nav-item" id="navHakedis">
+          <span class="nav-icon">💰</span>
+          <span class="nav-text">5. Hakediş</span>
+        </a>
+        <a href="odeme-takibi.html" class="nav-item" id="navOdeme">
+          <span class="nav-icon">💳</span>
+          <span class="nav-text">6. Ödeme</span>
+        </a>
+        
+        <div style="margin-top: 1.5rem; padding: 0 1rem; color: var(--text-secondary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+          Destek Modüller
+        </div>
+        <a href="santiye-gunlugu.html" class="nav-item" id="navGunluk">
+          <span class="nav-icon">📔</span>
+          <span class="nav-text">Şantiye Günlüğü</span>
+        </a>
+        <a href="stok-yonetimi.html" class="nav-item active" id="navStok">
+          <span class="nav-icon">📦</span>
+          <span class="nav-text">Stok Yönetimi</span>
+        </a>
+        <a href="butce-yonetimi.html" class="nav-item" id="navButce">
+          <span class="nav-icon">💵</span>
+          <span class="nav-text">Bütçe Yönetimi</span>
+        </a>
+        <a href="musteri-yetkileri.html" class="nav-item hidden" id="navMusteri">
+          <span class="nav-icon">👥</span>
+          <span class="nav-text">Müşteri Yetkileri</span>
+        </a>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">👤</div>
+          <div class="user-details">
+            <div class="user-name" id="sidebarUserName">Yükleniyor...</div>
+            <div class="user-role" id="sidebarUserRole">...</div>
+          </div>
+        </div>
+        <div class="sidebar-actions">
+          <button id="sidebarThemeToggle" class="theme-toggle-btn" onclick="toggleTheme()">
+            <span class="theme-option light-option">
+              <span class="theme-circle">⚪</span>
+              <span class="theme-label">Light</span>
+            </span>
+            <span class="theme-option dark-option active">
+              <span class="theme-circle">⚫</span>
+              <span class="theme-label">Dark</span>
+            </span>
+          </button>
+          <button id="logoutBtn" class="logout-btn" onclick="handleLogout()">Çıkış Yap</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <div class="topbar">
+        <div style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+          <button class="menu-toggle" id="menuToggle">☰</button>
+          <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">
+            <a href="../anasayfa.html" style="color: var(--text-secondary); text-decoration: none;">Anasayfa</a>
+            <span>›</span>
+            <a href="../projeler.html" style="color: var(--text-secondary); text-decoration: none;">Projeler</a>
+            <span>›</span>
+            <span id="projectNameBreadcrumb" style="color: var(--brand-red); font-weight: 600;">Yükleniyor...</span>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <span id="userNameDisplay" class="topbar-user"></span>
+        </div>
+      </div>
+
+      <div id="alertContainer"></div>
+
+      <!-- Project Header -->
+      <section class="content-section">
+        <div style="background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-red-dark) 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+            <div style="flex: 1;">
+              <h2 id="projectName" style="margin: 0; font-size: 1.5rem;">Yükleniyor...</h2>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white; padding: 0.5rem 1rem; font-size: 0.9rem;" onclick="window.location.href='../projeler.html'">
+                ← Projelere Dön
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stok Özet Kartları -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+          <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <div style="font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.9;">Toplam Stok Kalemi</div>
+            <div id="totalStockItems" style="font-size: 2rem; font-weight: bold;">0</div>
+          </div>
+          <div class="card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white;">
+            <div style="font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.9;">Toplam Giriş Değeri</div>
+            <div id="totalStockValue" style="font-size: 2rem; font-weight: bold;">₺0</div>
+          </div>
+          <div class="card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white;">
+            <div style="font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.9;">Kullanılan Değer</div>
+            <div id="totalUsedValue" style="font-size: 2rem; font-weight: bold;">₺0</div>
+          </div>
+          <div class="card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+            <div style="font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.9;">Kalan Stok Değeri</div>
+            <div id="remainingStockValue" style="font-size: 2rem; font-weight: bold;">₺0</div>
+          </div>
+        </div>
+
+        <!-- Stok Yönetimi Content -->
+        <div class="section-header">
+          <h3>📦 Stok Yönetimi</h3>
+          <button class="btn btn-primary" onclick="openAddStockModal()">+ Stok Ekle</button>
+        </div>
+
+        <!-- Filtreleme ve Arama -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600;">🔍 Arama</label>
+              <input type="text" id="stockSearchInput" placeholder="Ürün adı ile ara..." style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--input-bg); color: var(--text-primary);">
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600;">📏 Birim Filtrele</label>
+              <select id="stockUnitFilter" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--input-bg); color: var(--text-primary);">
+                <option value="">Tümü</option>
+                <option value="Adet">Adet</option>
+                <option value="Kg">Kilogram (Kg)</option>
+                <option value="Ton">Ton</option>
+                <option value="M">Metre (M)</option>
+                <option value="M2">Metrekare (M²)</option>
+                <option value="M3">Metreküp (M³)</option>
+                <option value="Lt">Litre (Lt)</option>
+                <option value="Paket">Paket</option>
+                <option value="Koli">Koli</option>
+              </select>
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600;">🔢 Sıralama</label>
+              <select id="stockSortFilter" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--input-bg); color: var(--text-primary);">
+                <option value="date-desc">Tarih (Yeni → Eski)</option>
+                <option value="date-asc">Tarih (Eski → Yeni)</option>
+                <option value="name-asc">İsim (A → Z)</option>
+                <option value="name-desc">İsim (Z → A)</option>
+                <option value="value-desc">Değer (Yüksek → Düşük)</option>
+                <option value="value-asc">Değer (Düşük → Yüksek)</option>
+              </select>
+            </div>
+            <div style="display: flex; align-items: flex-end;">
+              <button class="btn btn-secondary" onclick="clearStockFilters()" style="width: 100%;">🔄 Filtreleri Temizle</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="stocksList" style="margin-top: 1rem;">
+          <!-- Stocks will be loaded here -->
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Add Stock Modal -->
+  <div id="addStockModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Stok Ekle</h2>
+        <button class="modal-close" onclick="closeAddStockModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="addStockForm" onsubmit="handleAddStock(event)">
+          <div class="form-group">
+            <label for="stockName">Ürün Adı *</label>
+            <input type="text" id="stockName" placeholder="Örn: Çimento, Demir, Kum..." required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+          </div>
+          <div class="form-group">
+            <label for="stockUnit">Birim *</label>
+            <select id="stockUnit" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+              <option value="">Seçiniz</option>
+              <option value="Adet">Adet</option>
+              <option value="Kg">Kilogram (Kg)</option>
+              <option value="Ton">Ton</option>
+              <option value="M">Metre (M)</option>
+              <option value="M2">Metrekare (M²)</option>
+              <option value="M3">Metreküp (M³)</option>
+              <option value="Lt">Litre (Lt)</option>
+              <option value="Paket">Paket</option>
+              <option value="Koli">Koli</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="stockQuantity">Miktar *</label>
+            <input type="number" id="stockQuantity" placeholder="0" min="0" step="0.01" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+          </div>
+          <div class="form-group">
+            <label for="stockUnitPrice">Birim Fiyat (₺) *</label>
+            <input type="number" id="stockUnitPrice" placeholder="0.00" min="0" step="0.01" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+          </div>
+          <div style="background: var(--bg-tertiary); padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: var(--text-secondary);">Toplam Tutar:</span>
+              <strong id="stockTotalPrice" style="color: var(--brand-red); font-size: 1.25rem;">₺0.00</strong>
+            </div>
+          </div>
+          <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">💾 Kaydet</button>
+            <button type="button" class="btn btn-secondary" onclick="closeAddStockModal()" style="flex: 1;">❌ İptal</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Use Stock Modal -->
+  <div id="useStockModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Stok Kullanımı Ekle</h2>
+        <button class="modal-close" onclick="closeUseStockModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="useStockForm" onsubmit="handleUseStock(event)">
+          <input type="hidden" id="useStockId">
+          <div style="background: var(--bg-tertiary); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Ürün:</div>
+            <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 0.75rem;" id="useStockName">-</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+              <div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Toplam Giriş</div>
+                <div style="font-weight: 600; color: var(--brand-red);" id="useStockTotal">0</div>
+              </div>
+              <div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Kullanılan</div>
+                <div style="font-weight: 600; color: #e74c3c;" id="useStockUsed">0</div>
+              </div>
+              <div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Kalan</div>
+                <div style="font-weight: 600; color: #27ae60;" id="useStockRemaining">0</div>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="useStockQuantity">Kullanılacak Miktar *</label>
+            <input type="number" id="useStockQuantity" placeholder="0" min="0.01" step="0.01" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;" id="useStockUnit">Birim: -</div>
+          </div>
+          <div class="form-group">
+            <label for="useStockDate">Kullanım Tarihi *</label>
+            <input type="date" id="useStockDate" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+          </div>
+          <div class="form-group">
+            <label for="useStockUsedBy">Kullanan Kişi *</label>
+            <input type="text" id="useStockUsedBy" placeholder="Örn: Ali Yılmaz" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+          </div>
+          <div class="form-group">
+            <label for="useStockLocation">Kullanım Yeri</label>
+            <input type="text" id="useStockLocation" placeholder="Örn: Blok A - 3. Kat" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+          </div>
+          <div class="form-group">
+            <label for="useStockNotes">Açıklama</label>
+            <textarea id="useStockNotes" rows="3" placeholder="Kullanım detayları..." style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary); resize: vertical;"></textarea>
+          </div>
+          <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">✅ Kullanımı Kaydet</button>
+            <button type="button" class="btn btn-secondary" onclick="closeUseStockModal()" style="flex: 1;">❌ İptal</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stock Usage History Modal -->
+  <div id="stockUsageHistoryModal" class="modal">
+    <div class="modal-content" style="max-width: 900px;">
+      <div class="modal-header">
+        <h2>Kullanım Geçmişi</h2>
+        <button class="modal-close" onclick="closeStockUsageHistoryModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="background: var(--bg-tertiary); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+          <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 0.75rem;" id="historyStockName">-</div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+            <div>
+              <div style="font-size: 0.75rem; color: var(--text-secondary);">Toplam Giriş</div>
+              <div style="font-weight: 600; color: var(--brand-red); font-size: 1.1rem;" id="historyStockTotal">0</div>
+            </div>
+            <div>
+              <div style="font-size: 0.75rem; color: var(--text-secondary);">Toplam Kullanım</div>
+              <div style="font-weight: 600; color: #e74c3c; font-size: 1.1rem;" id="historyStockUsed">0</div>
+            </div>
+            <div>
+              <div style="font-size: 0.75rem; color: var(--text-secondary);">Kalan Miktar</div>
+              <div style="font-weight: 600; color: #27ae60; font-size: 1.1rem;" id="historyStockRemaining">0</div>
+            </div>
+            <div>
+              <div style="font-size: 0.75rem; color: var(--text-secondary);">Birim Fiyat</div>
+              <div style="font-weight: 600; font-size: 1.1rem;" id="historyStockUnitPrice">₺0</div>
+            </div>
+          </div>
+        </div>
+        <div id="stockUsageHistoryList" style="max-height: 400px; overflow-y: auto;">
+          <!-- Usage history will be loaded here -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load JS modules -->
+  <script type="module" src="../js/auth.js?v=6"></script>
+  <script type="module" src="../js/projects.js?v=6"></script>
+  <script type="module" src="../js/app.js?v=6"></script>
+
+  <script>
+    // Mobile menu toggle
+    document.getElementById('menuToggle')?.addEventListener('click', function() {
+      document.querySelector('.sidebar').classList.toggle('sidebar-open');
+    });
+
+    // Close sidebar on mobile when clicking outside
+    document.addEventListener('click', function(event) {
+      const sidebar = document.querySelector('.sidebar');
+      const menuToggle = document.getElementById('menuToggle');
+      
+      if (window.innerWidth <= 768 && 
+          sidebar.classList.contains('sidebar-open') && 
+          !sidebar.contains(event.target) && 
+          event.target !== menuToggle) {
+        sidebar.classList.remove('sidebar-open');
+      }
+    });
+
+    // Update navigation links with project ID
+    function updateNavLinks() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectId = urlParams.get('id');
+      if (projectId) {
+        // İş Akışı Linkleri
+        const navKesif = document.getElementById('navKesif');
+        const navTeklif = document.getElementById('navTeklif');
+        const navSozlesme = document.getElementById('navSozlesme');
+        const navMetraj = document.getElementById('navMetraj');
+        const navHakedis = document.getElementById('navHakedis');
+        const navOdeme = document.getElementById('navOdeme');
+        // Proje & Destek Linkleri
+        const navOzet = document.getElementById('navOzet');
+        const navStok = document.getElementById('navStok');
+        const navButce = document.getElementById('navButce');
+        const navGunluk = document.getElementById('navGunluk');
+        const navMusteri = document.getElementById('navMusteri');
+        
+        if (navKesif) navKesif.href = `kesif.html?id=${projectId}`;
+        if (navTeklif) navTeklif.href = `teklif.html?id=${projectId}`;
+        if (navSozlesme) navSozlesme.href = `sozlesme.html?id=${projectId}`;
+        if (navMetraj) navMetraj.href = `metraj-listesi.html?id=${projectId}`;
+        if (navHakedis) navHakedis.href = `hakedis-takibi.html?id=${projectId}`;
+        if (navOdeme) navOdeme.href = `odeme-takibi.html?id=${projectId}`;
+        if (navOzet) navOzet.href = `proje-ozeti.html?id=${projectId}`;
+        if (navStok) navStok.href = `stok-yonetimi.html?id=${projectId}`;
+        if (navButce) navButce.href = `butce-yonetimi.html?id=${projectId}`;
+        if (navGunluk) navGunluk.href = `santiye-gunlugu.html?id=${projectId}`;
+        if (navMusteri) navMusteri.href = `musteri-yetkileri.html?id=${projectId}`;
+      }
+    }
+
+    // Auto-calculate total price for stock form
+    document.addEventListener('DOMContentLoaded', function() {
+      updateNavLinks();
+      const stockQuantity = document.getElementById('stockQuantity');
+      const stockUnitPrice = document.getElementById('stockUnitPrice');
+      const stockTotalPrice = document.getElementById('stockTotalPrice');
+      
+      function updateStockTotal() {
+        const quantity = parseFloat(stockQuantity?.value) || 0;
+        const unitPrice = parseFloat(stockUnitPrice?.value) || 0;
+        const total = quantity * unitPrice;
+        if (stockTotalPrice) {
+          stockTotalPrice.textContent = '₺' + total.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+      }
+      
+      if (stockQuantity) stockQuantity.addEventListener('input', updateStockTotal);
+      if (stockUnitPrice) stockUnitPrice.addEventListener('input', updateStockTotal);
+
+      // Set default date to today for use stock modal
+      const today = new Date().toISOString().split('T')[0];
+      const useStockDate = document.getElementById('useStockDate');
+      if (useStockDate) useStockDate.value = today;
+
+      // Filtreleme event listeners
+      const searchInput = document.getElementById('stockSearchInput');
+      const unitFilter = document.getElementById('stockUnitFilter');
+      const sortFilter = document.getElementById('stockSortFilter');
+
+      if (searchInput) searchInput.addEventListener('input', applyStockFilters);
+      if (unitFilter) unitFilter.addEventListener('change', applyStockFilters);
+      if (sortFilter) sortFilter.addEventListener('change', applyStockFilters);
+      
+      // Wait for modules to load
+      setTimeout(() => {
+        if (window.loadProjectStocks) {
+          console.log('✅ Calling loadProjectStocks');
+          window.loadProjectStocks();
+        } else {
+          console.warn('⚠️ loadProjectStocks not available yet');
+        }
+      }, 200);
+    });
+
+    // Filtreleme fonksiyonları
+    function applyStockFilters() {
+      if (window.loadProjectStocks) {
+        window.loadProjectStocks();
+      }
+    }
+
+    function clearStockFilters() {
+      document.getElementById('stockSearchInput').value = '';
+      document.getElementById('stockUnitFilter').value = '';
+      document.getElementById('stockSortFilter').value = 'date-desc';
+      applyStockFilters();
+    }
+
+    // Modal functions
+    function openUseStockModal(stockId, stockData) {
+      document.getElementById('useStockId').value = stockId;
+      document.getElementById('useStockName').textContent = stockData.name;
+      document.getElementById('useStockTotal').textContent = `${stockData.quantity} ${stockData.unit}`;
+      
+      const usedQuantity = stockData.usedQuantity || 0;
+      const remaining = stockData.quantity - usedQuantity;
+      
+      document.getElementById('useStockUsed').textContent = `${usedQuantity} ${stockData.unit}`;
+      document.getElementById('useStockRemaining').textContent = `${remaining} ${stockData.unit}`;
+      document.getElementById('useStockUnit').textContent = `Birim: ${stockData.unit}`;
+      document.getElementById('useStockQuantity').max = remaining;
+      
+      document.getElementById('useStockModal').style.display = 'block';
+    }
+
+    function closeUseStockModal() {
+      document.getElementById('useStockModal').style.display = 'none';
+      document.getElementById('useStockForm').reset();
+    }
+
+    function openStockUsageHistoryModal(stockId, stockData) {
+      document.getElementById('historyStockName').textContent = stockData.name;
+      document.getElementById('historyStockTotal').textContent = `${stockData.quantity} ${stockData.unit}`;
+      
+      const usedQuantity = stockData.usedQuantity || 0;
+      const remaining = stockData.quantity - usedQuantity;
+      
+      document.getElementById('historyStockUsed').textContent = `${usedQuantity} ${stockData.unit}`;
+      document.getElementById('historyStockRemaining').textContent = `${remaining} ${stockData.unit}`;
+      document.getElementById('historyStockUnitPrice').textContent = `₺${stockData.unitPrice?.toLocaleString('tr-TR', {minimumFractionDigits: 2})}`;
+      
+      if (window.loadStockUsageHistory) {
+        window.loadStockUsageHistory(stockId);
+      }
+      
+      document.getElementById('stockUsageHistoryModal').style.display = 'block';
+    }
+
+    function closeStockUsageHistoryModal() {
+      document.getElementById('stockUsageHistoryModal').style.display = 'none';
+    }
+
+    // Close modals when clicking outside
+    window.addEventListener('click', function(event) {
+      if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+      }
+    });
+
+    // Export functions to window
+    window.applyStockFilters = applyStockFilters;
+    window.clearStockFilters = clearStockFilters;
+    window.openUseStockModal = openUseStockModal;
+    window.closeUseStockModal = closeUseStockModal;
+    window.openStockUsageHistoryModal = openStockUsageHistoryModal;
+    window.closeStockUsageHistoryModal = closeStockUsageHistoryModal;
+  </script>
+</body>
+</html>

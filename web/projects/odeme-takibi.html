@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ödeme Takibi - ADM Proje Takip</title>
+  <link rel="stylesheet" href="../css/style.css?v=6">
+  <style>
+    .payment-header {
+      background: linear-gradient(135deg, #16a085 0%, #138d75 100%);
+      color: white;
+      padding: 2rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+    }
+
+    .payment-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+
+    .summary-box {
+      background: rgba(255,255,255,0.15);
+      padding: 1rem;
+      border-radius: 8px;
+      backdrop-filter: blur(10px);
+    }
+
+    .summary-box h4 {
+      margin: 0 0 0.5rem 0;
+      font-size: 0.85rem;
+      opacity: 0.9;
+    }
+
+    .summary-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .payment-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .payment-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-left: 4px solid var(--brand-red);
+    }
+
+    .payment-card h3 {
+      margin: 0 0 1rem 0;
+      font-size: 1rem;
+      color: var(--text-secondary);
+    }
+
+    .payment-card .amount {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--brand-red);
+      margin-bottom: 0.5rem;
+    }
+
+    .payment-card .label {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .data-table th {
+      background: var(--bg-secondary);
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-primary);
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .data-table td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .data-table tr:hover {
+      background: var(--bg-secondary);
+    }
+
+    .status-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .status-pending { background: #fff3e0; color: #f57c00; }
+    .status-partial { background: #e3f2fd; color: #1976d2; }
+    .status-paid { background: #e8f5e9; color: #388e3c; }
+    .status-overdue { background: #ffebee; color: #d32f2f; }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <span class="logo-icon">🏗️</span>
+          <span class="logo-text">ADM Proje</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title">MENÜ</div>
+          <a href="../anasayfa.html" class="nav-item">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-text">Ana Sayfa</span>
+          </a>
+          <a href="../projeler.html" class="nav-item">
+            <span class="nav-icon">📊</span>
+            <span class="nav-text">Projeler</span>
+          </a>
+          <a href="../sirketler.html" class="nav-item">
+            <span class="nav-icon">🏢</span>
+            <span class="nav-text">Şirketler</span>
+          </a>
+          <a href="../kullanicilar.html" class="nav-item">
+            <span class="nav-icon">👥</span>
+            <span class="nav-text">Kullanıcılar</span>
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">PROJE</div>
+          <a href="proje-ozeti.html" class="nav-item" id="navOzet">
+            <span class="nav-icon">📋</span>
+            <span class="nav-text">Proje Özeti</span>
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">İŞ AKIŞI</div>
+          <a href="kesif.html" class="nav-item" id="navKesif">
+            <span class="nav-icon">🔍</span>
+            <span class="nav-text">1. Keşif</span>
+          </a>
+          <a href="teklif.html" class="nav-item" id="navTeklif">
+            <span class="nav-icon">💼</span>
+            <span class="nav-text">2. Teklif</span>
+          </a>
+          <a href="sozlesme.html" class="nav-item" id="navSozlesme">
+            <span class="nav-icon">📝</span>
+            <span class="nav-text">3. Sözleşme</span>
+          </a>
+          <a href="metraj-listesi.html" class="nav-item" id="navMetraj">
+            <span class="nav-icon">📐</span>
+            <span class="nav-text">4. Metraj</span>
+          </a>
+          <a href="hakedis-takibi.html" class="nav-item" id="navHakedis">
+            <span class="nav-icon">💰</span>
+            <span class="nav-text">5. Hakediş</span>
+          </a>
+          <a href="#" class="nav-item active">
+            <span class="nav-icon">💳</span>
+            <span class="nav-text">6. Ödeme</span>
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">DESTEK</div>
+          <a href="proje-ozeti.html" class="nav-item" id="navOzet">
+            <span class="nav-icon">📋</span>
+            <span class="nav-text">Proje Özeti</span>
+          </a>
+          <a href="stok-yonetimi.html" class="nav-item" id="navStok">
+            <span class="nav-icon">📦</span>
+            <span class="nav-text">Stok Yönetimi</span>
+          </a>
+          <a href="butce-yonetimi.html" class="nav-item" id="navButce">
+            <span class="nav-icon">💼</span>
+            <span class="nav-text">Bütçe Yönetimi</span>
+          </a>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-avatar">A</div>
+          <div class="user-info">
+            <div class="user-name" id="sidebarUserName">Admin</div>
+            <div class="user-role" id="sidebarUserRole">Yönetici</div>
+          </div>
+        </div>
+        <button class="btn btn-secondary" style="width: 100%; margin-top: 1rem;" onclick="handleLogout()">
+          🚪 Çıkış Yap
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="top-bar">
+        <button class="menu-toggle" id="menuToggle">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <div class="breadcrumb">
+          <a href="../projeler.html">Projeler</a>
+          <span class="separator">/</span>
+          <span id="projectNameBreadcrumb">Proje</span>
+          <span class="separator">/</span>
+          <span>Ödeme Takibi</span>
+        </div>
+        <div class="top-bar-actions">
+          <button class="btn" onclick="exportPayments()">
+            📊 Excel İndir
+          </button>
+          <button class="btn btn-primary" onclick="openRecordPaymentModal()">
+            💰 Ödeme Kaydet
+          </button>
+        </div>
+      </div>
+
+      <div class="content-wrapper">
+        <!-- Header -->
+        <div class="payment-header">
+          <h1 style="margin: 0 0 0.5rem 0;">💳 Ödeme Takibi</h1>
+          <p style="margin: 0; opacity: 0.9;" id="projectName">Hakediş tahsilat ve ödeme yönetimi</p>
+          <div class="payment-summary">
+            <div class="summary-box">
+              <h4>Toplam Hakediş</h4>
+              <div class="summary-value" id="totalInvoiced">₺0.00</div>
+            </div>
+            <div class="summary-box">
+              <h4>Tahsil Edilen</h4>
+              <div class="summary-value" id="totalCollected">₺0.00</div>
+            </div>
+            <div class="summary-box">
+              <h4>Bekleyen</h4>
+              <div class="summary-value" id="totalPending">₺0.00</div>
+            </div>
+            <div class="summary-box">
+              <h4>Vadesi Geçen</h4>
+              <div class="summary-value" style="color: #e74c3c;" id="totalOverdue">₺0.00</div>
+            </div>
+            <div class="summary-box">
+              <h4>Tahsilat Oranı</h4>
+              <div class="summary-value" id="collectionRate">%0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Cards -->
+        <div class="payment-cards">
+          <div class="payment-card">
+            <h3>💰 Toplam Alacak</h3>
+            <div class="amount" id="receivableAmount">₺0.00</div>
+            <div class="label">Müşteriden tahsil edilecek</div>
+          </div>
+          
+          <div class="payment-card" style="border-left-color: #27ae60;">
+            <h3>✅ Tahsil Edilen</h3>
+            <div class="amount" style="color: #27ae60;" id="collectedAmount">₺0.00</div>
+            <div class="label">Bankaya giren ödemeler</div>
+          </div>
+          
+          <div class="payment-card" style="border-left-color: #e67e22;">
+            <h3>⏳ Bekleyen Tahsilat</h3>
+            <div class="amount" style="color: #e67e22;" id="pendingAmount">₺0.00</div>
+            <div class="label">Ödeme beklenen tutarlar</div>
+          </div>
+          
+          <div class="payment-card" style="border-left-color: #e74c3c;">
+            <h3>⚠️ Gecikmiş</h3>
+            <div class="amount" style="color: #e74c3c;" id="overdueAmount">₺0.00</div>
+            <div class="label">Vadesi geçmiş tahsilatlar</div>
+          </div>
+        </div>
+
+        <!-- Payments Table -->
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="margin: 0;">📋 Ödeme Kayıtları</h2>
+            <div style="display: flex; gap: 1rem;">
+              <select id="statusFilter" style="padding: 0.5rem 1rem; border: 1px solid var(--border-color); border-radius: 6px;">
+                <option value="">Tüm Durumlar</option>
+                <option value="pending">Bekleyen</option>
+                <option value="partial">Kısmi Ödendi</option>
+                <option value="paid">Ödendi</option>
+                <option value="overdue">Vadesi Geçti</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="overflow-x: auto;">
+            <table class="data-table" id="paymentsTable">
+              <thead>
+                <tr>
+                  <th>Hakediş No</th>
+                  <th>Dönem</th>
+                  <th style="text-align: right;">Hakediş Tutarı</th>
+                  <th style="text-align: right;">Ödenen</th>
+                  <th style="text-align: right;">Kalan</th>
+                  <th>Beklenen Tarih</th>
+                  <th>Ödeme Tarihi</th>
+                  <th>Durum</th>
+                  <th style="width: 150px;">İşlemler</th>
+                </tr>
+              </thead>
+              <tbody id="paymentsTableBody">
+                <tr>
+                  <td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">💳</div>
+                    <p>Henüz ödeme kaydı yok</p>
+                    <button class="btn btn-primary" onclick="syncFromHakedis()" style="margin-top: 1rem;">
+                      🔄 Hakediş Verilerini Senkronize Et
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot id="paymentsTableFooter" style="display: none;">
+                <tr style="background: var(--bg-secondary); font-weight: bold;">
+                  <td colspan="2" style="text-align: right; padding: 1rem;">TOPLAM:</td>
+                  <td style="text-align: right; color: var(--brand-red);" id="footerTotal">₺0.00</td>
+                  <td style="text-align: right; color: #27ae60;" id="footerPaid">₺0.00</td>
+                  <td style="text-align: right; color: #e67e22;" id="footerRemaining">₺0.00</td>
+                  <td colspan="4"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- Payment History -->
+        <div class="card" style="margin-top: 1.5rem;">
+          <h3 style="margin: 0 0 1rem 0;">📜 Tahsilat Geçmişi</h3>
+          <div id="paymentHistory" style="max-height: 400px; overflow-y: auto;">
+            <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+              Tahsilat kaydı bulunamadı
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Record Payment Modal -->
+  <div id="recordPaymentModal" class="modal">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <h2>💰 Ödeme Kaydet</h2>
+        <button class="close-modal" onclick="closeRecordPaymentModal()">&times;</button>
+      </div>
+      <form id="recordPaymentForm" onsubmit="handleRecordPayment(event)">
+        <div class="form-group">
+          <label>Hakediş Seçin *</label>
+          <select id="hakedisSelect" required>
+            <option value="">Seçin</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Ödeme Tutarı (₺) *</label>
+          <input type="number" id="paymentAmount" required min="0" step="0.01" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label>Ödeme Tarihi *</label>
+          <input type="date" id="paymentDate" required>
+        </div>
+        <div class="form-group">
+          <label>Ödeme Yöntemi</label>
+          <select id="paymentMethod">
+            <option value="bank_transfer">Banka Havalesi</option>
+            <option value="check">Çek</option>
+            <option value="cash">Nakit</option>
+            <option value="credit_card">Kredi Kartı</option>
+            <option value="promissory_note">Senet</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Açıklama</label>
+          <textarea id="paymentNotes" rows="3" placeholder="Ek notlar..."></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeRecordPaymentModal()">İptal</button>
+          <button type="submit" class="btn btn-primary">💾 Kaydet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="../js/auth.js?v=6"></script>
+  <script type="module" src="../js/projects.js?v=6"></script>
+  <script type="module" src="../js/app.js?v=6"></script>
+
+  <script>
+    document.getElementById('menuToggle')?.addEventListener('click', function() {
+      document.querySelector('.sidebar').classList.toggle('sidebar-open');
+    });
+
+    function updateNavLinks() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectId = urlParams.get('id');
+      if (projectId) {
+        // İş Akışı Linkleri
+        const navKesif = document.getElementById('navKesif');
+        const navTeklif = document.getElementById('navTeklif');
+        const navSozlesme = document.getElementById('navSozlesme');
+        const navMetraj = document.getElementById('navMetraj');
+        const navHakedis = document.getElementById('navHakedis');
+        const navOdeme = document.getElementById('navOdeme');
+        // Proje & Destek Linkleri
+        const navOzet = document.getElementById('navOzet');
+        const navStok = document.getElementById('navStok');
+        const navButce = document.getElementById('navButce');
+        const navGunluk = document.getElementById('navGunluk');
+        const navMusteri = document.getElementById('navMusteri');
+        
+        if (navKesif) navKesif.href = `kesif.html?id=${projectId}`;
+        if (navTeklif) navTeklif.href = `teklif.html?id=${projectId}`;
+        if (navSozlesme) navSozlesme.href = `sozlesme.html?id=${projectId}`;
+        if (navMetraj) navMetraj.href = `metraj-listesi.html?id=${projectId}`;
+        if (navHakedis) navHakedis.href = `hakedis-takibi.html?id=${projectId}`;
+        if (navOdeme) navOdeme.href = `odeme-takibi.html?id=${projectId}`;
+        if (navOzet) navOzet.href = `proje-ozeti.html?id=${projectId}`;
+        if (navStok) navStok.href = `stok-yonetimi.html?id=${projectId}`;
+        if (navButce) navButce.href = `butce-yonetimi.html?id=${projectId}`;
+        if (navGunluk) navGunluk.href = `santiye-gunlugu.html?id=${projectId}`;
+        if (navMusteri) navMusteri.href = `musteri-yetkileri.html?id=${projectId}`;
+      }
+    }
+
+    function openRecordPaymentModal() {
+      document.getElementById('recordPaymentModal').style.display = 'block';
+      // Set default date to today
+      document.getElementById('paymentDate').valueAsDate = new Date();
+    }
+
+    function closeRecordPaymentModal() {
+      document.getElementById('recordPaymentModal').style.display = 'none';
+      document.getElementById('recordPaymentForm').reset();
+    }
+
+    function syncFromHakedis() {
+      if (window.synchronizeFromHakedis) {
+        window.synchronizeFromHakedis();
+      }
+    }
+
+    function exportPayments() {
+      if (window.exportPaymentsToExcel) {
+        window.exportPaymentsToExcel();
+      } else {
+        alert('Excel export özelliği yakında eklenecek');
+      }
+    }
+
+    window.addEventListener('click', function(event) {
+      if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+      }
+    });
+
+    updateNavLinks();
+  </script>
+
+  <script type="module">
+    import { db, auth } from '../js/firebase-config.js';
+    import { doc, getDoc, collection, query, where, getDocs, addDoc, updateDoc, orderBy, Timestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    let currentProjectId = null;
+    let payments = [];
+    let progressPayments = [];
+
+    async function loadPayments() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectId = urlParams.get('id');
+      
+      if (!projectId) {
+        window.location.href = '../projeler.html';
+        return;
+      }
+
+      currentProjectId = projectId;
+
+      try {
+        const projectDoc = await getDoc(doc(db, 'projects', projectId));
+        if (!projectDoc.exists()) {
+          alert('❌ Proje bulunamadı');
+          window.location.href = '../projeler.html';
+          return;
+        }
+
+        const project = { id: projectDoc.id, ...projectDoc.data() };
+        document.getElementById('projectName').textContent = project.name || 'Proje';
+        document.getElementById('projectNameBreadcrumb').textContent = project.name || 'Proje';
+
+        // Load progress payments (hakedis)
+        const hakedisQuery = query(
+          collection(db, 'progress_payments'),
+          where('projectId', '==', projectId),
+          where('isDeleted', '==', false),
+          orderBy('periodNo', 'asc')
+        );
+        const hakedisSnap = await getDocs(hakedisQuery);
+        progressPayments = [];
+        
+        hakedisSnap.forEach(docSnap => {
+          progressPayments.push({ id: docSnap.id, ...docSnap.data() });
+        });
+
+        // Load payment records
+        const paymentsQuery = query(
+          collection(db, 'payment_records'),
+          where('projectId', '==', projectId),
+          orderBy('createdAt', 'desc')
+        );
+        const paymentsSnap = await getDocs(paymentsQuery);
+        payments = [];
+        
+        paymentsSnap.forEach(docSnap => {
+          payments.push({ id: docSnap.id, ...docSnap.data() });
+        });
+
+        // Calculate totals
+        let totalInvoiced = 0;
+        let totalCollected = 0;
+        let totalPending = 0;
+        let totalOverdue = 0;
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        progressPayments.forEach(hakedis => {
+          const netAmount = hakedis.netPayable || 0;
+          totalInvoiced += netAmount;
+
+          const paidRecords = payments.filter(p => p.progressPaymentId === hakedis.id);
+          const paidAmount = paidRecords.reduce((sum, p) => sum + (p.amount || 0), 0);
+          const remaining = netAmount - paidAmount;
+
+          if (paidAmount >= netAmount) {
+            // Fully paid
+            totalCollected += netAmount;
+          } else {
+            const expectedDate = hakedis.expectedPaymentDate ? 
+              (hakedis.expectedPaymentDate.toDate ? hakedis.expectedPaymentDate.toDate() : new Date(hakedis.expectedPaymentDate)) : 
+              null;
+            
+            if (expectedDate && expectedDate < today) {
+              totalOverdue += remaining;
+            } else {
+              totalPending += remaining;
+            }
+            
+            totalCollected += paidAmount;
+          }
+        });
+
+        document.getElementById('totalInvoiced').textContent = formatCurrency(totalInvoiced);
+        document.getElementById('totalCollected').textContent = formatCurrency(totalCollected);
+        document.getElementById('totalPending').textContent = formatCurrency(totalPending);
+        document.getElementById('totalOverdue').textContent = formatCurrency(totalOverdue);
+        
+        const collectionRate = totalInvoiced > 0 ? (totalCollected / totalInvoiced * 100) : 0;
+        document.getElementById('collectionRate').textContent = `%${collectionRate.toFixed(1)}`;
+
+        document.getElementById('receivableAmount').textContent = formatCurrency(totalInvoiced);
+        document.getElementById('collectedAmount').textContent = formatCurrency(totalCollected);
+        document.getElementById('pendingAmount').textContent = formatCurrency(totalPending);
+        document.getElementById('overdueAmount').textContent = formatCurrency(totalOverdue);
+
+        renderPaymentsTable();
+        renderPaymentHistory();
+        loadHakedisOptions();
+
+      } catch (error) {
+        console.error('❌ Error loading payments:', error);
+        alert('Ödeme verileri yüklenirken hata: ' + error.message);
+      }
+    }
+
+    function renderPaymentsTable() {
+      const tbody = document.getElementById('paymentsTableBody');
+      const footer = document.getElementById('paymentsTableFooter');
+
+      if (progressPayments.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+              <div style="font-size: 3rem; margin-bottom: 1rem;">💳</div>
+              <p>Henüz ödeme kaydı yok</p>
+              <button class="btn btn-primary" onclick="syncFromHakedis()" style="margin-top: 1rem;">
+                🔄 Hakediş Verilerini Senkronize Et
+              </button>
+            </td>
+          </tr>
+        `;
+        footer.style.display = 'none';
+        return;
+      }
+
+      const statusBadges = {
+        pending: { class: 'status-pending', text: '⏳ Bekleyen' },
+        partial: { class: 'status-partial', text: '🔵 Kısmi' },
+        paid: { class: 'status-paid', text: '✅ Ödendi' },
+        overdue: { class: 'status-overdue', text: '⚠️ Gecikmiş' }
+      };
+
+      let html = '';
+      let totalAmount = 0;
+      let totalPaid = 0;
+      let totalRemaining = 0;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      progressPayments.forEach(hakedis => {
+        const netAmount = hakedis.netPayable || 0;
+        totalAmount += netAmount;
+
+        const paidRecords = payments.filter(p => p.progressPaymentId === hakedis.id);
+        const paidAmount = paidRecords.reduce((sum, p) => sum + (p.amount || 0), 0);
+        const remaining = netAmount - paidAmount;
+        totalPaid += paidAmount;
+        totalRemaining += remaining;
+
+        let status = 'pending';
+        if (paidAmount >= netAmount) {
+          status = 'paid';
+        } else if (paidAmount > 0) {
+          status = 'partial';
+        } else {
+          const expectedDate = hakedis.expectedPaymentDate ? 
+            (hakedis.expectedPaymentDate.toDate ? hakedis.expectedPaymentDate.toDate() : new Date(hakedis.expectedPaymentDate)) : 
+            null;
+          if (expectedDate && expectedDate < today) {
+            status = 'overdue';
+          }
+        }
+
+        const statusBadge = statusBadges[status];
+
+        const lastPayment = paidRecords.length > 0 ? paidRecords[paidRecords.length - 1] : null;
+        const paymentDateStr = lastPayment && lastPayment.paymentDate ? 
+          (lastPayment.paymentDate.toDate ? lastPayment.paymentDate.toDate() : new Date(lastPayment.paymentDate)).toLocaleDateString('tr-TR') : 
+          '-';
+
+        const expectedDateStr = hakedis.expectedPaymentDate ? 
+          (hakedis.expectedPaymentDate.toDate ? hakedis.expectedPaymentDate.toDate() : new Date(hakedis.expectedPaymentDate)).toLocaleDateString('tr-TR') : 
+          '-';
+
+        html += `
+          <tr>
+            <td><strong>HAK-${hakedis.periodNo}</strong></td>
+            <td>${hakedis.periodName || `${hakedis.periodNo}. Dönem`}</td>
+            <td style="text-align: right;"><strong>${formatCurrency(netAmount)}</strong></td>
+            <td style="text-align: right; color: #27ae60;">${formatCurrency(paidAmount)}</td>
+            <td style="text-align: right; color: ${remaining > 0 ? '#e67e22' : '#27ae60'};">${formatCurrency(remaining)}</td>
+            <td>${expectedDateStr}</td>
+            <td>${paymentDateStr}</td>
+            <td><span class="status-badge ${statusBadge.class}">${statusBadge.text}</span></td>
+            <td>
+              <button class="btn btn-primary" style="padding: 0.5rem;" onclick="recordPaymentFor('${hakedis.id}')">💰</button>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+      footer.style.display = 'table-footer-group';
+      document.getElementById('footerTotal').textContent = formatCurrency(totalAmount);
+      document.getElementById('footerPaid').textContent = formatCurrency(totalPaid);
+      document.getElementById('footerRemaining').textContent = formatCurrency(totalRemaining);
+    }
+
+    function renderPaymentHistory() {
+      const historyDiv = document.getElementById('paymentHistory');
+      
+      if (payments.length === 0) {
+        historyDiv.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-secondary);">Tahsilat kaydı bulunamadı</div>';
+        return;
+      }
+
+      const methodNames = {
+        bank_transfer: '🏦 Banka Havalesi',
+        check: '📝 Çek',
+        cash: '💵 Nakit',
+        credit_card: '💳 Kredi Kartı',
+        promissory_note: '📜 Senet'
+      };
+
+      let html = '<div style="display: flex; flex-direction: column; gap: 1rem;">';
+      
+      payments.forEach(payment => {
+        const hakedis = progressPayments.find(h => h.id === payment.progressPaymentId);
+        const paymentDate = payment.paymentDate ? 
+          (payment.paymentDate.toDate ? payment.paymentDate.toDate() : new Date(payment.paymentDate)).toLocaleDateString('tr-TR') : 
+          '-';
+
+        html += `
+          <div style="padding: 1rem; background: white; border-radius: 8px; border-left: 4px solid #27ae60;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+              <strong>${hakedis ? `HAK-${hakedis.periodNo}` : 'Hakediş Bilinmiyor'}</strong>
+              <span style="color: #27ae60; font-weight: bold;">${formatCurrency(payment.amount)}</span>
+            </div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary);">
+              📅 ${paymentDate} • ${methodNames[payment.method] || payment.method}
+              ${payment.notes ? `<br>💬 ${payment.notes}` : ''}
+            </div>
+          </div>
+        `;
+      });
+
+      html += '</div>';
+      historyDiv.innerHTML = html;
+    }
+
+    function loadHakedisOptions() {
+      const select = document.getElementById('hakedisSelect');
+      select.innerHTML = '<option value="">Seçin</option>';
+      
+      progressPayments.forEach(hakedis => {
+        const netAmount = hakedis.netPayable || 0;
+        const paidRecords = payments.filter(p => p.progressPaymentId === hakedis.id);
+        const paidAmount = paidRecords.reduce((sum, p) => sum + (p.amount || 0), 0);
+        const remaining = netAmount - paidAmount;
+
+        if (remaining > 0) {
+          select.innerHTML += `
+            <option value="${hakedis.id}">
+              HAK-${hakedis.periodNo} - ${hakedis.periodName || `${hakedis.periodNo}. Dönem`} 
+              (Kalan: ${formatCurrency(remaining)})
+            </option>
+          `;
+        }
+      });
+    }
+
+    window.recordPaymentFor = function(hakedisId) {
+      const hakedis = progressPayments.find(h => h.id === hakedisId);
+      if (!hakedis) return;
+
+      document.getElementById('hakedisSelect').value = hakedisId;
+      
+      const paidRecords = payments.filter(p => p.progressPaymentId === hakedisId);
+      const paidAmount = paidRecords.reduce((sum, p) => sum + (p.amount || 0), 0);
+      const remaining = (hakedis.netPayable || 0) - paidAmount;
+      
+      document.getElementById('paymentAmount').value = remaining.toFixed(2);
+      
+      openRecordPaymentModal();
+    };
+
+    async function handleRecordPayment(event) {
+      event.preventDefault();
+
+      const hakedisId = document.getElementById('hakedisSelect').value;
+      const amount = parseFloat(document.getElementById('paymentAmount').value);
+      const paymentDate = document.getElementById('paymentDate').value;
+      const method = document.getElementById('paymentMethod').value;
+      const notes = document.getElementById('paymentNotes').value;
+
+      try {
+        const user = auth.currentUser;
+
+        await addDoc(collection(db, 'payment_records'), {
+          projectId: currentProjectId,
+          progressPaymentId: hakedisId,
+          amount,
+          paymentDate: Timestamp.fromDate(new Date(paymentDate)),
+          method,
+          notes,
+          createdAt: Timestamp.now(),
+          createdBy: user.uid
+        });
+
+        alert('✅ Ödeme kaydedildi!');
+        closeRecordPaymentModal();
+        loadPayments();
+
+      } catch (error) {
+        console.error('❌ Error recording payment:', error);
+        alert('Ödeme kaydedilirken hata: ' + error.message);
+      }
+    }
+
+    window.synchronizeFromHakedis = async function() {
+      try {
+        const hakedisQuery = query(
+          collection(db, 'progress_payments'),
+          where('projectId', '==', currentProjectId),
+          where('isDeleted', '==', false)
+        );
+        const hakedisSnap = await getDocs(hakedisQuery);
+        
+        if (hakedisSnap.empty) {
+          alert('❌ Hakediş kaydı bulunamadı');
+          return;
+        }
+
+        alert('✅ Hakediş verileri senkronize edildi!');
+        loadPayments();
+
+      } catch (error) {
+        console.error('❌ Error syncing from hakedis:', error);
+        alert('Senkronizasyon hatası: ' + error.message);
+      }
+    };
+
+    window.handleRecordPayment = handleRecordPayment;
+
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('tr-TR', {
+        style: 'currency',
+        currency: 'TRY',
+        minimumFractionDigits: 2
+      }).format(amount || 0);
+    }
+
+    setTimeout(() => {
+      loadPayments();
+    }, 200);
+
+    // Filter
+    document.getElementById('statusFilter')?.addEventListener('change', () => loadPayments());
+  </script>
+</body>
+</html>

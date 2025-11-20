@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Müşteri Yetkileri - ADM Proje Takip</title>
+  <link rel="stylesheet" href="../css/style.css?v=6">
+  <style>
+    .permissions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .permission-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-left: 4px solid var(--brand-red);
+    }
+
+    .permission-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .permission-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .permission-info h3 {
+      margin: 0 0 0.25rem 0;
+      font-size: 1.1rem;
+    }
+
+    .permission-info p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .permission-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .permission-toggle:last-child {
+      border-bottom: none;
+    }
+
+    .permission-label {
+      flex: 1;
+    }
+
+    .permission-name {
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+
+    .permission-desc {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 26px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .3s;
+      border-radius: 26px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--brand-red);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(24px);
+    }
+
+    .client-list {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 1.5rem;
+    }
+
+    .client-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      transition: background 0.2s;
+    }
+
+    .client-item:hover {
+      background: var(--bg-secondary);
+    }
+
+    .client-item:last-child {
+      border-bottom: none;
+    }
+
+    .client-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .client-info {
+      flex: 1;
+    }
+
+    .client-name {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .client-email {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .client-status {
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .status-active {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .status-inactive {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .access-log {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .log-item {
+      display: flex;
+      gap: 1rem;
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .log-item:last-child {
+      border-bottom: none;
+    }
+
+    .log-time {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      min-width: 150px;
+    }
+
+    .log-content {
+      flex: 1;
+    }
+
+    .log-action {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .log-details {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    @media (max-width: 768px) {
+      .permissions-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .client-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <span class="logo-icon">🏗️</span>
+          <span class="logo-text">ADM Proje</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title">MENÜ</div>
+          <a href="../anasayfa.html" class="nav-item">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-text">Ana Sayfa</span>
+          </a>
+          <a href="../projeler.html" class="nav-item">
+            <span class="nav-icon">📊</span>
+            <span class="nav-text">Projeler</span>
+          </a>
+          <a href="../sirketler.html" class="nav-item">
+            <span class="nav-icon">🏢</span>
+            <span class="nav-text">Şirketler</span>
+          </a>
+          <a href="../kullanicilar.html" class="nav-item">
+            <span class="nav-icon">👥</span>
+            <span class="nav-text">Kullanıcılar</span>
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">PROJE</div>
+          <a href="proje-ozeti.html" class="nav-item" id="navOzet">
+            <span class="nav-icon">📋</span>
+            <span class="nav-text">Proje Özeti</span>
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">İŞ AKIŞI</div>
+          <a href="kesif.html" class="nav-item" id="navKesif">
+            <span class="nav-icon">🔍</span>
+            <span class="nav-text">1. Keşif</span>
+          </a>
+          <a href="teklif.html" class="nav-item" id="navTeklif">
+            <span class="nav-icon">💼</span>
+            <span class="nav-text">2. Teklif</span>
+          </a>
+          <a href="sozlesme.html" class="nav-item" id="navSozlesme">
+            <span class="nav-icon">📝</span>
+            <span class="nav-text">3. Sözleşme</span>
+          </a>
+          <a href="metraj-listesi.html" class="nav-item" id="navMetraj">
+            <span class="nav-icon">📐</span>
+            <span class="nav-text">4. Metraj</span>
+          </a>
+          <a href="hakedis-takibi.html" class="nav-item" id="navHakedis">
+            <span class="nav-icon">💰</span>
+            <span class="nav-text">5. Hakediş</span>
+          </a>
+          <a href="odeme-takibi.html" class="nav-item" id="navOdeme">
+            <span class="nav-icon">💳</span>
+            <span class="nav-text">6. Ödeme</span>
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">DESTEK</div>
+          <a href="butce-yonetimi.html" class="nav-item" id="navButce">
+            <span class="nav-icon">💵</span>
+            <span class="nav-text">Bütçe Yönetimi</span>
+          </a>
+          <a href="stok-yonetimi.html" class="nav-item" id="navStok">
+            <span class="nav-icon">📦</span>
+            <span class="nav-text">Stok Yönetimi</span>
+          </a>
+          <a href="santiye-gunlugu.html" class="nav-item" id="navGunluk">
+            <span class="nav-icon">📔</span>
+            <span class="nav-text">Şantiye Günlüğü</span>
+          </a>
+          <a href="musteri-yetkileri.html" class="nav-item active" id="navMusteri">
+            <span class="nav-icon">👥</span>
+            <span class="nav-text">Müşteri Yetkileri</span>
+          </a>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-avatar">A</div>
+          <div class="user-info">
+            <div class="user-name" id="sidebarUserName">Admin</div>
+            <div class="user-role" id="sidebarUserRole">Yönetici</div>
+          </div>
+        </div>
+        <button class="btn btn-secondary" style="width: 100%; margin-top: 1rem;" onclick="handleLogout()">
+          🚪 Çıkış Yap
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="top-bar">
+        <button class="menu-toggle" id="menuToggle">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <div class="breadcrumb">
+          <a href="../projeler.html">Projeler</a>
+          <span class="separator">/</span>
+          <span id="projectNameBreadcrumb">Proje</span>
+          <span class="separator">/</span>
+          <span>Müşteri Yetkileri</span>
+        </div>
+        <div class="top-bar-actions">
+          <button class="btn btn-primary" onclick="openInviteClientModal()">
+            ✉️ Müşteri Davet Et
+          </button>
+        </div>
+      </div>
+
+      <div class="content-wrapper">
+        <div class="page-header">
+          <div>
+            <h1 id="projectName">Müşteri Yetkileri</h1>
+            <p class="page-subtitle">Müşteri erişim yetkilerini yönetin</p>
+          </div>
+        </div>
+
+        <!-- Permission Categories -->
+        <div class="permissions-grid">
+          <div class="permission-card">
+            <div class="permission-header">
+              <div class="permission-icon">📊</div>
+              <div class="permission-info">
+                <h3>Genel Görüntüleme</h3>
+                <p>Temel proje bilgileri</p>
+              </div>
+            </div>
+            <div class="permission-toggle">
+              <div class="permission-label">
+                <div class="permission-name">Proje Özeti</div>
+                <div class="permission-desc">Genel proje durumu ve ilerleme</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="perm_view_summary" onchange="updatePermissions()">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="permission-toggle">
+              <div class="permission-label">
+                <div class="permission-name">Şantiye Günlüğü</div>
+                <div class="permission-desc">Günlük raporları görüntüleme</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="perm_view_daily" onchange="updatePermissions()">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="permission-card" style="border-left-color: #27ae60;">
+            <div class="permission-header">
+              <div class="permission-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">📐</div>
+              <div class="permission-info">
+                <h3>Metraj ve Hakediş</h3>
+                <p>İş kalemleri ve ödemeler</p>
+              </div>
+            </div>
+            <div class="permission-toggle">
+              <div class="permission-label">
+                <div class="permission-name">Metraj Listesi (BOQ)</div>
+                <div class="permission-desc">İş kalemleri ve miktarlar</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="perm_view_boq" onchange="updatePermissions()">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="permission-toggle">
+              <div class="permission-label">
+                <div class="permission-name">Hakediş Bilgileri</div>
+                <div class="permission-desc">Ödeme dönemleri ve tutarlar</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="perm_view_payments" onchange="updatePermissions()">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="permission-toggle">
+              <div class="permission-label">
+                <div class="permission-name">Hakediş Onaylama</div>
+                <div class="permission-desc">Hakediş onay yetkisi</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="perm_approve_payments" onchange="updatePermissions()">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="permission-card" style="border-left-color: #3498db;">
+            <div class="permission-header">
+              <div class="permission-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">💰</div>
+              <div class="permission-info">
+                <h3>Mali Bilgiler</h3>
+                <p>Bütçe ve giderler</p>
+              </div>
+            </div>
+            <div class="permission-toggle">
+              <div class="permission-label">
+                <div class="permission-name">Bütçe Görüntüleme</div>
+                <div class="permission-desc">Proje bütçesi ve harcamalar</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="perm_view_budget" onchange="updatePermissions()">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="permission-toggle">
+              <div class="permission-label">
+                <div class="permission-name">Detaylı Giderler</div>
+                <div class="permission-desc">Gider detaylarını görme</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="perm_view_expenses" onchange="updatePermissions()">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="permission-card" style="border-left-color: #f39c12;">
+            <div class="permission-header">
+              <div class="permission-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">📦</div>
+              <div class="permission-info">
+                <h3>Stok ve Malzeme</h3>
+                <p>Envanter bilgileri</p>
+              </div>
+            </div>
+            <div class="permission-toggle">
+              <div class="permission-label">
+                <div class="permission-name">Stok Durumu</div>
+                <div class="permission-desc">Malzeme ve stok listesi</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="perm_view_stock" onchange="updatePermissions()">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="permission-toggle">
+              <div class="permission-label">
+                <div class="permission-name">Stok Detayları</div>
+                <div class="permission-desc">Fiyat ve kullanım bilgileri</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="perm_view_stock_details" onchange="updatePermissions()">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Client Users List -->
+        <div class="client-list">
+          <h2 style="margin: 0 0 1.5rem 0;">👥 Müşteri Kullanıcıları</h2>
+          <div id="clientsList">
+            <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+              <div style="font-size: 3rem; margin-bottom: 1rem;">👤</div>
+              <p style="margin: 0; font-size: 1.1rem;">Henüz müşteri kullanıcısı eklenmemiş</p>
+              <p style="margin: 0.5rem 0 0 0;">Müşteri davet ederek başlayın</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Access Log -->
+        <div class="access-log">
+          <h2 style="margin: 0 0 1.5rem 0;">📋 Erişim Günlüğü</h2>
+          <div id="accessLog">
+            <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">📝</div>
+              <p>Henüz erişim kaydı bulunmuyor</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Invite Client Modal -->
+  <div id="inviteClientModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>✉️ Müşteri Davet Et</h2>
+        <button class="close-modal" onclick="closeInviteClientModal()">&times;</button>
+      </div>
+      <form id="inviteClientForm" onsubmit="handleInviteClient(event)">
+        <div class="form-group">
+          <label>Ad Soyad *</label>
+          <input type="text" id="clientName" required placeholder="Müşteri adı">
+        </div>
+        <div class="form-group">
+          <label>E-posta *</label>
+          <input type="email" id="clientEmail" required placeholder="ornek@email.com">
+        </div>
+        <div class="form-group">
+          <label>Telefon</label>
+          <input type="tel" id="clientPhone" placeholder="05XX XXX XX XX">
+        </div>
+        <div class="form-group">
+          <label>Şirket</label>
+          <input type="text" id="clientCompany" placeholder="Şirket adı">
+        </div>
+        <div class="form-group">
+          <label>Mesaj (İsteğe Bağlı)</label>
+          <textarea id="inviteMessage" rows="3" placeholder="Davet mesajı..."></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeInviteClientModal()">İptal</button>
+          <button type="submit" class="btn btn-primary">📧 Davet Gönder</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Load JS modules -->
+  <script type="module" src="../js/auth.js?v=6"></script>
+  <script type="module" src="../js/projects.js?v=6"></script>
+  <script type="module" src="../js/app.js?v=6"></script>
+
+  <script>
+    // Mobile menu toggle
+    document.getElementById('menuToggle')?.addEventListener('click', function() {
+      document.querySelector('.sidebar').classList.toggle('sidebar-open');
+    });
+
+    // Close sidebar on mobile when clicking outside
+    document.addEventListener('click', function(event) {
+      const sidebar = document.querySelector('.sidebar');
+      const menuToggle = document.getElementById('menuToggle');
+      
+      if (window.innerWidth <= 768 && 
+          sidebar.classList.contains('sidebar-open') && 
+          !sidebar.contains(event.target) && 
+          event.target !== menuToggle) {
+        sidebar.classList.remove('sidebar-open');
+      }
+    });
+
+    // Update navigation links with project ID
+    function updateNavLinks() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectId = urlParams.get('id');
+      if (projectId) {
+        // İş Akışı Linkleri
+        const navKesif = document.getElementById('navKesif');
+        const navTeklif = document.getElementById('navTeklif');
+        const navSozlesme = document.getElementById('navSozlesme');
+        const navMetraj = document.getElementById('navMetraj');
+        const navHakedis = document.getElementById('navHakedis');
+        const navOdeme = document.getElementById('navOdeme');
+        // Proje & Destek Linkleri
+        const navOzet = document.getElementById('navOzet');
+        const navStok = document.getElementById('navStok');
+        const navButce = document.getElementById('navButce');
+        const navGunluk = document.getElementById('navGunluk');
+        const navMusteri = document.getElementById('navMusteri');
+        
+        if (navKesif) navKesif.href = `kesif.html?id=${projectId}`;
+        if (navTeklif) navTeklif.href = `teklif.html?id=${projectId}`;
+        if (navSozlesme) navSozlesme.href = `sozlesme.html?id=${projectId}`;
+        if (navMetraj) navMetraj.href = `metraj-listesi.html?id=${projectId}`;
+        if (navHakedis) navHakedis.href = `hakedis-takibi.html?id=${projectId}`;
+        if (navOdeme) navOdeme.href = `odeme-takibi.html?id=${projectId}`;
+        if (navOzet) navOzet.href = `proje-ozeti.html?id=${projectId}`;
+        if (navStok) navStok.href = `stok-yonetimi.html?id=${projectId}`;
+        if (navButce) navButce.href = `butce-yonetimi.html?id=${projectId}`;
+        if (navGunluk) navGunluk.href = `santiye-gunlugu.html?id=${projectId}`;
+        if (navMusteri) navMusteri.href = `musteri-yetkileri.html?id=${projectId}`;
+      }
+    }
+
+    // Modal functions
+    function openInviteClientModal() {
+      document.getElementById('inviteClientModal').style.display = 'block';
+    }
+
+    function closeInviteClientModal() {
+      document.getElementById('inviteClientModal').style.display = 'none';
+      document.getElementById('inviteClientForm').reset();
+    }
+
+    function updatePermissions() {
+      console.log('Permissions updated');
+      // Save permissions logic will be added here
+    }
+
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+      if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+      }
+    });
+
+    updateNavLinks();
+  </script>
+
+  <script type="module">
+    import { db, auth } from '../js/firebase-config.js';
+    import { doc, getDoc, collection, query, where, getDocs, addDoc, Timestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    let currentProjectId = null;
+    let currentPermissions = {};
+
+    // Load client permissions
+    async function loadClientPermissions() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectId = urlParams.get('id');
+      
+      if (!projectId) {
+        console.error('❌ Project ID not found');
+        window.location.href = '../projeler.html';
+        return;
+      }
+
+      currentProjectId = projectId;
+
+      try {
+        // Get project details
+        const projectDoc = await getDoc(doc(db, 'projects', projectId));
+        if (!projectDoc.exists()) {
+          alert('❌ Proje bulunamadı');
+          window.location.href = '../projeler.html';
+          return;
+        }
+
+        const project = { id: projectDoc.id, ...projectDoc.data() };
+        
+        document.getElementById('projectName').textContent = project.name || 'Proje';
+        document.getElementById('projectNameBreadcrumb').textContent = project.name || 'Proje';
+
+        // Load default permissions
+        currentPermissions = project.clientPermissions || {
+          view_summary: true,
+          view_daily: true,
+          view_boq: true,
+          view_payments: true,
+          approve_payments: false,
+          view_budget: false,
+          view_expenses: false,
+          view_stock: true,
+          view_stock_details: false
+        };
+
+        // Set checkboxes
+        Object.keys(currentPermissions).forEach(key => {
+          const checkbox = document.getElementById(`perm_${key}`);
+          if (checkbox) {
+            checkbox.checked = currentPermissions[key];
+          }
+        });
+
+        // Load client users (from users collection with role=client and this project)
+        const usersQuery = query(
+          collection(db, 'users'),
+          where('role', '==', 'client'),
+          where('projectIds', 'array-contains', projectId)
+        );
+        const usersSnap = await getDocs(usersQuery);
+        
+        renderClientsList(usersSnap);
+
+        console.log('✅ Client permissions loaded');
+
+      } catch (error) {
+        console.error('❌ Error loading client permissions:', error);
+        alert('Müşteri yetkileri yüklenirken hata: ' + error.message);
+      }
+    }
+
+    function renderClientsList(usersSnap) {
+      const container = document.getElementById('clientsList');
+      
+      if (usersSnap.empty) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">👤</div>
+            <p style="margin: 0; font-size: 1.1rem;">Henüz müşteri kullanıcısı eklenmemiş</p>
+            <p style="margin: 0.5rem 0 0 0;">Müşteri davet ederek başlayın</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      usersSnap.forEach(docSnap => {
+        const user = { id: docSnap.id, ...docSnap.data() };
+        const initials = (user.name || 'U').substring(0, 2).toUpperCase();
+        
+        const statusClass = user.status === 'active' ? 'status-active' : 
+                           user.status === 'pending' ? 'status-pending' : 'status-inactive';
+        const statusText = user.status === 'active' ? '✅ Aktif' : 
+                          user.status === 'pending' ? '⏳ Bekliyor' : '❌ Pasif';
+
+        html += `
+          <div class="client-item">
+            <div class="client-avatar">${initials}</div>
+            <div class="client-info">
+              <div class="client-name">${user.name || 'İsimsiz Kullanıcı'}</div>
+              <div class="client-email">${user.email || '-'}</div>
+              ${user.company ? `<div class="client-email">${user.company}</div>` : ''}
+            </div>
+            <div class="client-status ${statusClass}">${statusText}</div>
+            <div>
+              <button class="btn btn-secondary" style="padding: 0.5rem 1rem;" onclick="editClientPermissions('${user.id}')">
+                ⚙️ Yetkilendir
+              </button>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    async function handleInviteClient(event) {
+      event.preventDefault();
+
+      const name = document.getElementById('clientName').value;
+      const email = document.getElementById('clientEmail').value;
+      const phone = document.getElementById('clientPhone').value;
+      const company = document.getElementById('clientCompany').value;
+      const message = document.getElementById('inviteMessage').value;
+
+      try {
+        const user = auth.currentUser;
+
+        // Create invitation record
+        await addDoc(collection(db, 'client_invitations'), {
+          projectId: currentProjectId,
+          name: name,
+          email: email,
+          phone: phone,
+          company: company,
+          message: message,
+          status: 'pending',
+          createdAt: Timestamp.now(),
+          createdBy: user.uid
+        });
+
+        alert('✅ Davet başarıyla gönderildi!\n\nMüşteriye e-posta gönderildi.');
+        closeInviteClientModal();
+        loadClientPermissions();
+
+      } catch (error) {
+        console.error('❌ Error inviting client:', error);
+        alert('Davet gönderilirken hata: ' + error.message);
+      }
+    }
+
+    window.editClientPermissions = function(userId) {
+      alert('Müşteri bazlı yetkilendirme özelliği yakında eklenecek');
+    };
+
+    // Export functions
+    window.loadClientPermissions = loadClientPermissions;
+    window.handleInviteClient = handleInviteClient;
+
+    // Load on page ready
+    setTimeout(() => {
+      loadClientPermissions();
+    }, 200);
+  </script>
+</body>
+</html>

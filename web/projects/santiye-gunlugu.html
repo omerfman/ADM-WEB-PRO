@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Şantiye Günlüğü - ADM İnşaat Proje Yönetim Sistemi</title>
+  <link rel="stylesheet" href="../css/style.css?v=6">
+</head>
+<body>
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="../assets/adm_logo.png" alt="ADM Studio" class="sidebar-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+        <h1 style="display: none;">🏗️ ADM İnşaat</h1>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="../anasayfa.html" class="nav-item">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Anasayfa</span>
+        </a>
+        <a href="../projeler.html" class="nav-item">
+          <span class="nav-icon">🏗️</span>
+          <span class="nav-text">Projeler</span>
+        </a>
+        
+        <!-- Project Navigation -->
+        <div style="margin-top: 1.5rem; padding: 0 1rem; color: var(--text-secondary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+          Proje Dashboard
+        </div>
+        <a href="proje-ozeti.html" class="nav-item" id="navOzet">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Proje Özeti</span>
+        </a>
+        
+        <div style="margin-top: 1.5rem; padding: 0 1rem; color: var(--text-secondary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+          İş Akış Süreci
+        </div>
+        <a href="kesif.html" class="nav-item" id="navKesif">
+          <span class="nav-icon">🔍</span>
+          <span class="nav-text">1. Keşif</span>
+        </a>
+        <a href="teklif.html" class="nav-item" id="navTeklif">
+          <span class="nav-icon">💼</span>
+          <span class="nav-text">2. Teklif</span>
+        </a>
+        <a href="sozlesme.html" class="nav-item" id="navSozlesme">
+          <span class="nav-icon">📝</span>
+          <span class="nav-text">3. Sözleşme</span>
+        </a>
+        <a href="metraj-listesi.html" class="nav-item" id="navMetraj">
+          <span class="nav-icon">📐</span>
+          <span class="nav-text">4. Metraj (BOQ)</span>
+        </a>
+        <a href="hakedis-takibi.html" class="nav-item" id="navHakedis">
+          <span class="nav-icon">💰</span>
+          <span class="nav-text">5. Hakediş</span>
+        </a>
+        <a href="odeme-takibi.html" class="nav-item" id="navOdeme">
+          <span class="nav-icon">💳</span>
+          <span class="nav-text">6. Ödeme</span>
+        </a>
+        
+        <div style="margin-top: 1.5rem; padding: 0 1rem; color: var(--text-secondary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+          Destek Modüller
+        </div>
+        <a href="santiye-gunlugu.html" class="nav-item active" id="navGunluk">
+          <span class="nav-icon">📔</span>
+          <span class="nav-text">Şantiye Günlüğü</span>
+        </a>
+        <a href="stok-yonetimi.html" class="nav-item" id="navStok">
+          <span class="nav-icon">📦</span>
+          <span class="nav-text">Stok Yönetimi</span>
+        </a>
+        <a href="butce-yonetimi.html" class="nav-item" id="navButce">
+          <span class="nav-icon">💵</span>
+          <span class="nav-text">Bütçe Yönetimi</span>
+        </a>
+        <a href="musteri-yetkileri.html" class="nav-item hidden" id="navMusteri">
+          <span class="nav-icon">👥</span>
+          <span class="nav-text">Müşteri Yetkileri</span>
+        </a>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">👤</div>
+          <div class="user-details">
+            <div class="user-name" id="sidebarUserName">Yükleniyor...</div>
+            <div class="user-role" id="sidebarUserRole">...</div>
+          </div>
+        </div>
+        <div class="sidebar-actions">
+          <button id="sidebarThemeToggle" class="theme-toggle-btn" onclick="toggleTheme()">
+            <span class="theme-option light-option">
+              <span class="theme-circle">⚪</span>
+              <span class="theme-label">Light</span>
+            </span>
+            <span class="theme-option dark-option active">
+              <span class="theme-circle">⚫</span>
+              <span class="theme-label">Dark</span>
+            </span>
+          </button>
+          <button id="logoutBtn" class="logout-btn" onclick="handleLogout()">Çıkış Yap</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <div class="topbar">
+        <div style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+          <button class="menu-toggle" id="menuToggle">☰</button>
+          <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">
+            <a href="../anasayfa.html" style="color: var(--text-secondary); text-decoration: none;">Anasayfa</a>
+            <span>›</span>
+            <a href="../projeler.html" style="color: var(--text-secondary); text-decoration: none;">Projeler</a>
+            <span>›</span>
+            <span id="projectNameBreadcrumb" style="color: var(--brand-red); font-weight: 600;">Yükleniyor...</span>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <span id="userNameDisplay" class="topbar-user"></span>
+        </div>
+      </div>
+
+      <div id="alertContainer"></div>
+
+      <!-- Project Header -->
+      <section class="content-section">
+        <div style="background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-red-dark) 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+            <div style="flex: 1;">
+              <h2 id="projectName" style="margin: 0; font-size: 1.5rem;">Yükleniyor...</h2>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white; padding: 0.5rem 1rem; font-size: 0.9rem;" onclick="window.location.href='../projeler.html'">
+                ← Projelere Dön
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Şantiye Günlüğü Content -->
+        <div class="section-header">
+          <h3>📝 Şantiye Günlüğü</h3>
+          <button class="btn btn-primary" onclick="openAddLogModal()">+ Günlük Ekle</button>
+        </div>
+        <div id="logsList" style="margin-top: 1rem;">
+          <!-- Logs will be loaded here -->
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Add Log Modal -->
+  <div id="addLogModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Şantiye Günlüğü Ekle</h2>
+        <button class="modal-close" onclick="closeAddLogModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="addLogForm" onsubmit="handleAddLog(event)">
+          <div class="form-group">
+            <label for="logDate">Tarih *</label>
+            <input type="date" id="logDate" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+          </div>
+          <div class="form-group">
+            <label for="logPerformedBy">Yapan Kişi *</label>
+            <input type="text" id="logPerformedBy" placeholder="İşçi/Ekip adı" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+          </div>
+          <div class="form-group">
+            <label for="logDescription">Yapılan İş / Açıklama *</label>
+            <textarea id="logDescription" placeholder="Örn: Temel kazısı tamamlandı, beton dökümü yapıldı..." required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary); min-height: 120px; resize: vertical;"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="logPhoto">Fotoğraf (Opsiyonel)</label>
+            <input type="file" id="logPhoto" accept="image/*" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+            <small style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem; display: block;">Max 32MB - ImgBB üzerinden yüklenecek</small>
+          </div>
+          <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">💾 Kaydet</button>
+            <button type="button" class="btn btn-secondary" onclick="closeAddLogModal()" style="flex: 1;">❌ İptal</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load JS modules -->
+  <script type="module" src="../js/auth.js?v=6"></script>
+  <script type="module" src="../js/projects.js?v=6"></script>
+  <script type="module" src="../js/upload.js?v=6"></script>
+  <script type="module" src="../js/app.js?v=6"></script>
+
+  <script>
+    // Mobile menu toggle
+    document.getElementById('menuToggle')?.addEventListener('click', function() {
+      document.querySelector('.sidebar').classList.toggle('sidebar-open');
+    });
+
+    // Close sidebar on mobile when clicking outside
+    document.addEventListener('click', function(event) {
+      const sidebar = document.querySelector('.sidebar');
+      const menuToggle = document.getElementById('menuToggle');
+      
+      if (window.innerWidth <= 768 && 
+          sidebar.classList.contains('sidebar-open') && 
+          !sidebar.contains(event.target) && 
+          event.target !== menuToggle) {
+        sidebar.classList.remove('sidebar-open');
+      }
+    });
+
+    // Update navigation links with project ID
+    function updateNavLinks() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectId = urlParams.get('id');
+      if (projectId) {
+        // İş Akışı Linkleri
+        const navKesif = document.getElementById('navKesif');
+        const navTeklif = document.getElementById('navTeklif');
+        const navSozlesme = document.getElementById('navSozlesme');
+        const navMetraj = document.getElementById('navMetraj');
+        const navHakedis = document.getElementById('navHakedis');
+        const navOdeme = document.getElementById('navOdeme');
+        // Proje & Destek Linkleri
+        const navOzet = document.getElementById('navOzet');
+        const navStok = document.getElementById('navStok');
+        const navButce = document.getElementById('navButce');
+        const navGunluk = document.getElementById('navGunluk');
+        const navMusteri = document.getElementById('navMusteri');
+        
+        if (navKesif) navKesif.href = `kesif.html?id=${projectId}`;
+        if (navTeklif) navTeklif.href = `teklif.html?id=${projectId}`;
+        if (navSozlesme) navSozlesme.href = `sozlesme.html?id=${projectId}`;
+        if (navMetraj) navMetraj.href = `metraj-listesi.html?id=${projectId}`;
+        if (navHakedis) navHakedis.href = `hakedis-takibi.html?id=${projectId}`;
+        if (navOdeme) navOdeme.href = `odeme-takibi.html?id=${projectId}`;
+        if (navOzet) navOzet.href = `proje-ozeti.html?id=${projectId}`;
+        if (navStok) navStok.href = `stok-yonetimi.html?id=${projectId}`;
+        if (navButce) navButce.href = `butce-yonetimi.html?id=${projectId}`;
+        if (navGunluk) navGunluk.href = `santiye-gunlugu.html?id=${projectId}`;
+        if (navMusteri) navMusteri.href = `musteri-yetkileri.html?id=${projectId}`;
+      }
+    }
+
+    // Set default date for log form
+    document.addEventListener('DOMContentLoaded', function() {
+      updateNavLinks();
+      const logDate = document.getElementById('logDate');
+      if (logDate) {
+        logDate.valueAsDate = new Date();
+      }
+      
+      // Wait for modules to load
+      setTimeout(() => {
+        if (window.loadProjectLogs) {
+          console.log('✅ Calling loadProjectLogs');
+          window.loadProjectLogs();
+        } else {
+          console.warn('⚠️ loadProjectLogs not available yet');
+        }
+      }, 200);
+    });
+  </script>
+</body>
+</html>

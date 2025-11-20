@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bütçe Yönetimi - ADM Proje Takip</title>
+  <link rel="stylesheet" href="../css/style.css?v=6">
+  <style>
+    .budget-summary-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .budget-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-left: 4px solid var(--brand-red);
+    }
+
+    .budget-card.success {
+      border-left-color: #27ae60;
+    }
+
+    .budget-card.warning {
+      border-left-color: #f39c12;
+    }
+
+    .budget-card.danger {
+      border-left-color: #e74c3c;
+    }
+
+    .budget-card h3 {
+      margin: 0 0 0.75rem 0;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .budget-value {
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+
+    .budget-label {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .budget-breakdown {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 1.5rem;
+    }
+
+    .category-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      transition: background 0.2s;
+    }
+
+    .category-item:hover {
+      background: var(--bg-secondary);
+    }
+
+    .category-item:last-child {
+      border-bottom: none;
+    }
+
+    .category-info {
+      flex: 1;
+    }
+
+    .category-name {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .category-description {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .category-amount {
+      text-align: right;
+      margin-right: 1rem;
+    }
+
+    .category-planned {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.25rem;
+    }
+
+    .category-actual {
+      font-weight: bold;
+      font-size: 1.1rem;
+      color: var(--brand-red);
+    }
+
+    .category-variance {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      min-width: 100px;
+    }
+
+    .variance-value {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .variance-value.positive {
+      color: #27ae60;
+    }
+
+    .variance-value.negative {
+      color: #e74c3c;
+    }
+
+    .chart-container {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 1.5rem;
+    }
+
+    .expense-list {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .expense-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto auto;
+      gap: 1rem;
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      align-items: center;
+    }
+
+    .expense-item:last-child {
+      border-bottom: none;
+    }
+
+    .expense-date {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      min-width: 100px;
+    }
+
+    .expense-details {
+      flex: 1;
+    }
+
+    .expense-title {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .expense-category {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .expense-amount {
+      font-weight: bold;
+      font-size: 1.1rem;
+      color: var(--brand-red);
+    }
+
+    .expense-status {
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .status-paid {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .status-planned {
+      background: #d1ecf1;
+      color: #0c5460;
+    }
+
+    .filter-bar {
+      background: white;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 1.5rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .filter-group label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .filter-group select,
+    .filter-group input {
+      padding: 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+      .budget-summary-cards {
+        grid-template-columns: 1fr;
+      }
+
+      .expense-item {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+      }
+
+      .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <span class="logo-icon">🏗️</span>
+          <span class="logo-text">ADM Proje</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title">MENÜ</div>
+          <a href="../anasayfa.html" class="nav-item">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-text">Ana Sayfa</span>
+          </a>
+          <a href="../projeler.html" class="nav-item">
+            <span class="nav-icon">📊</span>
+            <span class="nav-text">Projeler</span>
+          </a>
+          <a href="../sirketler.html" class="nav-item">
+            <span class="nav-icon">🏢</span>
+            <span class="nav-text">Şirketler</span>
+          </a>
+          <a href="../kullanicilar.html" class="nav-item">
+            <span class="nav-icon">👥</span>
+            <span class="nav-text">Kullanıcılar</span>
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">PROJE</div>
+          <a href="proje-ozeti.html" class="nav-item" id="navOzet">
+            <span class="nav-icon">📋</span>
+            <span class="nav-text">Proje Özeti</span>
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">İŞ AKIŞI</div>
+          <a href="kesif.html" class="nav-item" id="navKesif">
+            <span class="nav-icon">🔍</span>
+            <span class="nav-text">1. Keşif</span>
+          </a>
+          <a href="teklif.html" class="nav-item" id="navTeklif">
+            <span class="nav-icon">💼</span>
+            <span class="nav-text">2. Teklif</span>
+          </a>
+          <a href="sozlesme.html" class="nav-item" id="navSozlesme">
+            <span class="nav-icon">📝</span>
+            <span class="nav-text">3. Sözleşme</span>
+          </a>
+          <a href="metraj-listesi.html" class="nav-item" id="navMetraj">
+            <span class="nav-icon">📐</span>
+            <span class="nav-text">4. Metraj</span>
+          </a>
+          <a href="hakedis-takibi.html" class="nav-item" id="navHakedis">
+            <span class="nav-icon">💰</span>
+            <span class="nav-text">5. Hakediş</span>
+          </a>
+          <a href="odeme-takibi.html" class="nav-item" id="navOdeme">
+            <span class="nav-icon">💳</span>
+            <span class="nav-text">6. Ödeme</span>
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">DESTEK</div>
+          <a href="butce-yonetimi.html" class="nav-item active" id="navButce">
+            <span class="nav-icon">💵</span>
+            <span class="nav-text">Bütçe Yönetimi</span>
+          </a>
+          <a href="stok-yonetimi.html" class="nav-item" id="navStok">
+            <span class="nav-icon">📦</span>
+            <span class="nav-text">Stok Yönetimi</span>
+          </a>
+          <a href="santiye-gunlugu.html" class="nav-item" id="navGunluk">
+            <span class="nav-icon">📔</span>
+            <span class="nav-text">Şantiye Günlüğü</span>
+          </a>
+          <a href="musteri-yetkileri.html" class="nav-item" id="navMusteri">
+            <span class="nav-icon">👥</span>
+            <span class="nav-text">Müşteri Yetkileri</span>
+          </a>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-avatar">A</div>
+          <div class="user-info">
+            <div class="user-name" id="sidebarUserName">Admin</div>
+            <div class="user-role" id="sidebarUserRole">Yönetici</div>
+          </div>
+        </div>
+        <button class="btn btn-secondary" style="width: 100%; margin-top: 1rem;" onclick="handleLogout()">
+          🚪 Çıkış Yap
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="top-bar">
+        <button class="menu-toggle" id="menuToggle">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <div class="breadcrumb">
+          <a href="../projeler.html">Projeler</a>
+          <span class="separator">/</span>
+          <span id="projectNameBreadcrumb">Proje</span>
+          <span class="separator">/</span>
+          <span>Bütçe Yönetimi</span>
+        </div>
+        <div class="top-bar-actions">
+          <button class="btn btn-primary" onclick="openAddExpenseModal()">
+            ➕ Gider Ekle
+          </button>
+          <button class="btn" onclick="exportBudgetToExcel()">
+            📊 Excel
+          </button>
+        </div>
+      </div>
+
+      <div class="content-wrapper">
+        <div class="page-header">
+          <div>
+            <h1 id="projectName">Bütçe Yönetimi</h1>
+            <p class="page-subtitle">Proje gelir-gider takibi ve bütçe kontrolü</p>
+          </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="budget-summary-cards">
+          <div class="budget-card">
+            <h3>💰 Toplam Bütçe</h3>
+            <div class="budget-value" style="color: #3498db;" id="totalBudget">₺0.00</div>
+            <div class="budget-label">Planlanan bütçe</div>
+          </div>
+
+          <div class="budget-card success">
+            <h3>✅ Gelirler</h3>
+            <div class="budget-value" style="color: #27ae60;" id="totalIncome">₺0.00</div>
+            <div class="budget-label">Hakediş ödemeleri</div>
+          </div>
+
+          <div class="budget-card warning">
+            <h3>📤 Giderler</h3>
+            <div class="budget-value" style="color: #f39c12;" id="totalExpense">₺0.00</div>
+            <div class="budget-label">Toplam harcama</div>
+          </div>
+
+          <div class="budget-card danger">
+            <h3>💵 Net Kar/Zarar</h3>
+            <div class="budget-value" id="netProfit">₺0.00</div>
+            <div class="budget-label" id="profitLabel">Mevcut durum</div>
+          </div>
+        </div>
+
+        <!-- Budget Breakdown by Category -->
+        <div class="budget-breakdown">
+          <h2 style="margin: 0 0 1.5rem 0;">📊 Kategori Bazlı Bütçe Dağılımı</h2>
+          <div id="categoryBreakdown">
+            <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">💼</div>
+              <p>Henüz gider kategorisi bulunmuyor</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-bar">
+          <div class="filter-group">
+            <label>🔍 Ara</label>
+            <input type="text" id="expenseSearchInput" placeholder="Gider ara..." style="min-width: 200px;">
+          </div>
+          <div class="filter-group">
+            <label>📂 Kategori</label>
+            <select id="categoryFilter">
+              <option value="">Tüm Kategoriler</option>
+              <option value="labor">İşçilik</option>
+              <option value="material">Malzeme</option>
+              <option value="equipment">Ekipman</option>
+              <option value="transport">Nakliye</option>
+              <option value="subcontractor">Taşeron</option>
+              <option value="administrative">İdari</option>
+              <option value="other">Diğer</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>📌 Durum</label>
+            <select id="statusFilter">
+              <option value="">Tüm Durumlar</option>
+              <option value="paid">Ödendi</option>
+              <option value="pending">Bekliyor</option>
+              <option value="planned">Planlandı</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>📅 Başlangıç</label>
+            <input type="date" id="startDateFilter">
+          </div>
+          <div class="filter-group">
+            <label>📅 Bitiş</label>
+            <input type="date" id="endDateFilter">
+          </div>
+          <div style="flex: 1;"></div>
+          <button class="btn btn-secondary" onclick="clearBudgetFilters()">
+            🔄 Temizle
+          </button>
+        </div>
+
+        <!-- Expense List -->
+        <div class="expense-list">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="margin: 0;">💸 Gider Listesi</h2>
+            <div style="font-size: 0.9rem; color: var(--text-secondary);">
+              <span id="expenseCount">0</span> kayıt bulundu
+            </div>
+          </div>
+          <div id="expenseListContainer">
+            <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+              <div style="font-size: 3rem; margin-bottom: 1rem;">💰</div>
+              <p style="margin: 0; font-size: 1.1rem;">Henüz gider kaydı bulunmuyor</p>
+              <p style="margin: 0.5rem 0 0 0;">Yeni gider ekleyerek başlayın</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add Expense Modal -->
+  <div id="addExpenseModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>💸 Yeni Gider Ekle</h2>
+        <button class="close-modal" onclick="closeAddExpenseModal()">&times;</button>
+      </div>
+      <form id="addExpenseForm" onsubmit="handleAddExpense(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Gider Adı *</label>
+            <input type="text" id="expenseTitle" required placeholder="Örn: İşçi bordrosu">
+          </div>
+          <div class="form-group">
+            <label>Kategori *</label>
+            <select id="expenseCategory" required>
+              <option value="">Kategori seçin</option>
+              <option value="labor">💼 İşçilik</option>
+              <option value="material">🧱 Malzeme</option>
+              <option value="equipment">🔧 Ekipman</option>
+              <option value="transport">🚛 Nakliye</option>
+              <option value="subcontractor">👷 Taşeron</option>
+              <option value="administrative">📋 İdari Giderler</option>
+              <option value="other">📦 Diğer</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Tutar (₺) *</label>
+            <input type="number" id="expenseAmount" required min="0" step="0.01" placeholder="0.00">
+          </div>
+          <div class="form-group">
+            <label>Tarih *</label>
+            <input type="date" id="expenseDate" required>
+          </div>
+          <div class="form-group">
+            <label>Durum *</label>
+            <select id="expenseStatus" required>
+              <option value="planned">📅 Planlandı</option>
+              <option value="pending">⏳ Bekliyor</option>
+              <option value="paid">✅ Ödendi</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Ödeme Yöntemi</label>
+            <select id="paymentMethod">
+              <option value="">Seçin</option>
+              <option value="cash">💵 Nakit</option>
+              <option value="bank_transfer">🏦 Banka Transferi</option>
+              <option value="check">📝 Çek</option>
+              <option value="credit_card">💳 Kredi Kartı</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Açıklama</label>
+          <textarea id="expenseDescription" rows="3" placeholder="Gider detayları..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Referans/Fatura No</label>
+          <input type="text" id="expenseReference" placeholder="Fatura veya referans numarası">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeAddExpenseModal()">İptal</button>
+          <button type="submit" class="btn btn-primary">💾 Kaydet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Load JS modules -->
+  <script type="module" src="../js/auth.js?v=6"></script>
+  <script type="module" src="../js/projects.js?v=6"></script>
+  <script type="module" src="../js/app.js?v=6"></script>
+
+  <script>
+    // Mobile menu toggle
+    document.getElementById('menuToggle')?.addEventListener('click', function() {
+      document.querySelector('.sidebar').classList.toggle('sidebar-open');
+    });
+
+    // Close sidebar on mobile when clicking outside
+    document.addEventListener('click', function(event) {
+      const sidebar = document.querySelector('.sidebar');
+      const menuToggle = document.getElementById('menuToggle');
+      
+      if (window.innerWidth <= 768 && 
+          sidebar.classList.contains('sidebar-open') && 
+          !sidebar.contains(event.target) && 
+          event.target !== menuToggle) {
+        sidebar.classList.remove('sidebar-open');
+      }
+    });
+
+    // Update navigation links with project ID
+    function updateNavLinks() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectId = urlParams.get('id');
+      if (projectId) {
+        // İş Akışı Linkleri
+        const navKesif = document.getElementById('navKesif');
+        const navTeklif = document.getElementById('navTeklif');
+        const navSozlesme = document.getElementById('navSozlesme');
+        const navMetraj = document.getElementById('navMetraj');
+        const navHakedis = document.getElementById('navHakedis');
+        const navOdeme = document.getElementById('navOdeme');
+        // Proje & Destek Linkleri
+        const navOzet = document.getElementById('navOzet');
+        const navStok = document.getElementById('navStok');
+        const navButce = document.getElementById('navButce');
+        const navGunluk = document.getElementById('navGunluk');
+        const navMusteri = document.getElementById('navMusteri');
+        
+        if (navKesif) navKesif.href = `kesif.html?id=${projectId}`;
+        if (navTeklif) navTeklif.href = `teklif.html?id=${projectId}`;
+        if (navSozlesme) navSozlesme.href = `sozlesme.html?id=${projectId}`;
+        if (navMetraj) navMetraj.href = `metraj-listesi.html?id=${projectId}`;
+        if (navHakedis) navHakedis.href = `hakedis-takibi.html?id=${projectId}`;
+        if (navOdeme) navOdeme.href = `odeme-takibi.html?id=${projectId}`;
+        if (navOzet) navOzet.href = `proje-ozeti.html?id=${projectId}`;
+        if (navStok) navStok.href = `stok-yonetimi.html?id=${projectId}`;
+        if (navButce) navButce.href = `butce-yonetimi.html?id=${projectId}`;
+        if (navGunluk) navGunluk.href = `santiye-gunlugu.html?id=${projectId}`;
+        if (navMusteri) navMusteri.href = `musteri-yetkileri.html?id=${projectId}`;
+      }
+    }
+
+    // Modal functions
+    function openAddExpenseModal() {
+      document.getElementById('addExpenseModal').style.display = 'block';
+      document.getElementById('expenseDate').valueAsDate = new Date();
+    }
+
+    function closeAddExpenseModal() {
+      document.getElementById('addExpenseModal').style.display = 'none';
+      document.getElementById('addExpenseForm').reset();
+    }
+
+    function clearBudgetFilters() {
+      document.getElementById('expenseSearchInput').value = '';
+      document.getElementById('categoryFilter').value = '';
+      document.getElementById('statusFilter').value = '';
+      document.getElementById('startDateFilter').value = '';
+      document.getElementById('endDateFilter').value = '';
+      if (window.loadBudget) window.loadBudget();
+    }
+
+    function exportBudgetToExcel() {
+      alert('Excel export özelliği yakında eklenecek');
+    }
+
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+      if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+      }
+    });
+
+    // Set current date as default
+    document.addEventListener('DOMContentLoaded', function() {
+      const today = new Date().toISOString().split('T')[0];
+      const expenseDateInput = document.getElementById('expenseDate');
+      if (expenseDateInput) {
+        expenseDateInput.value = today;
+      }
+    });
+
+    updateNavLinks();
+  </script>
+
+  <script type="module">
+    import { db, auth } from '../js/firebase-config.js';
+    import { doc, getDoc, collection, query, where, getDocs, addDoc, orderBy, Timestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    let currentProjectId = null;
+    let expenses = [];
+
+    // Load budget data
+    async function loadBudget() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectId = urlParams.get('id');
+      
+      if (!projectId) {
+        console.error('❌ Project ID not found');
+        window.location.href = '../projeler.html';
+        return;
+      }
+
+      currentProjectId = projectId;
+
+      try {
+        // Get project details
+        const projectDoc = await getDoc(doc(db, 'projects', projectId));
+        if (!projectDoc.exists()) {
+          alert('❌ Proje bulunamadı');
+          window.location.href = '../projeler.html';
+          return;
+        }
+
+        const project = { id: projectDoc.id, ...projectDoc.data() };
+        
+        document.getElementById('projectName').textContent = project.name || 'Proje';
+        document.getElementById('projectNameBreadcrumb').textContent = project.name || 'Proje';
+        document.getElementById('totalBudget').textContent = formatCurrency(project.budget || 0);
+
+        // Get income (from progress payments)
+        const paymentsQuery = query(
+          collection(db, 'progress_payments'),
+          where('projectId', '==', projectId),
+          where('status', '==', 'paid')
+        );
+        const paymentsSnap = await getDocs(paymentsQuery);
+        let totalIncome = 0;
+        paymentsSnap.forEach(doc => {
+          totalIncome += doc.data().netAmount || 0;
+        });
+
+        document.getElementById('totalIncome').textContent = formatCurrency(totalIncome);
+
+        // Get expenses
+        const expensesQuery = query(
+          collection(db, 'budget_expenses'),
+          where('projectId', '==', projectId),
+          orderBy('date', 'desc')
+        );
+        const expensesSnap = await getDocs(expensesQuery);
+        expenses = [];
+        let totalExpense = 0;
+        const categoryTotals = {};
+
+        expensesSnap.forEach(docSnap => {
+          const expense = { id: docSnap.id, ...docSnap.data() };
+          expenses.push(expense);
+          
+          if (expense.status === 'paid') {
+            totalExpense += expense.amount || 0;
+            
+            const category = expense.category || 'other';
+            categoryTotals[category] = (categoryTotals[category] || 0) + expense.amount;
+          }
+        });
+
+        // Apply filters
+        let filteredExpenses = applyFilters(expenses);
+
+        document.getElementById('totalExpense').textContent = formatCurrency(totalExpense);
+
+        // Calculate net profit
+        const netProfit = totalIncome - totalExpense;
+        const netProfitEl = document.getElementById('netProfit');
+        netProfitEl.textContent = formatCurrency(Math.abs(netProfit));
+        netProfitEl.style.color = netProfit >= 0 ? '#27ae60' : '#e74c3c';
+        document.getElementById('profitLabel').textContent = netProfit >= 0 ? 'Kar 📈' : 'Zarar 📉';
+
+        // Render category breakdown
+        renderCategoryBreakdown(categoryTotals, project.budget || 0);
+
+        // Render expense list
+        renderExpenseList(filteredExpenses);
+
+        console.log('✅ Budget data loaded');
+
+      } catch (error) {
+        console.error('❌ Error loading budget:', error);
+        alert('Bütçe verileri yüklenirken hata: ' + error.message);
+      }
+    }
+
+    function applyFilters(expenseList) {
+      let filtered = [...expenseList];
+
+      const search = document.getElementById('expenseSearchInput')?.value.toLowerCase();
+      const category = document.getElementById('categoryFilter')?.value;
+      const status = document.getElementById('statusFilter')?.value;
+      const startDate = document.getElementById('startDateFilter')?.value;
+      const endDate = document.getElementById('endDateFilter')?.value;
+
+      if (search) {
+        filtered = filtered.filter(exp => 
+          exp.title?.toLowerCase().includes(search) ||
+          exp.description?.toLowerCase().includes(search)
+        );
+      }
+
+      if (category) {
+        filtered = filtered.filter(exp => exp.category === category);
+      }
+
+      if (status) {
+        filtered = filtered.filter(exp => exp.status === status);
+      }
+
+      if (startDate) {
+        const start = new Date(startDate);
+        filtered = filtered.filter(exp => {
+          const expDate = exp.date?.toDate?.() || new Date(0);
+          return expDate >= start;
+        });
+      }
+
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59);
+        filtered = filtered.filter(exp => {
+          const expDate = exp.date?.toDate?.() || new Date(0);
+          return expDate <= end;
+        });
+      }
+
+      return filtered;
+    }
+
+    function renderCategoryBreakdown(categoryTotals, totalBudget) {
+      const container = document.getElementById('categoryBreakdown');
+      
+      const categoryNames = {
+        labor: '💼 İşçilik',
+        material: '🧱 Malzeme',
+        equipment: '🔧 Ekipman',
+        transport: '🚛 Nakliye',
+        subcontractor: '👷 Taşeron',
+        administrative: '📋 İdari Giderler',
+        other: '📦 Diğer'
+      };
+
+      if (Object.keys(categoryTotals).length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">💼</div>
+            <p>Henüz gider kategorisi bulunmuyor</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      const totalExpense = Object.values(categoryTotals).reduce((a, b) => a + b, 0);
+
+      Object.entries(categoryTotals).forEach(([category, amount]) => {
+        const percentage = totalBudget > 0 ? (amount / totalBudget) * 100 : 0;
+        const planned = totalBudget * 0.1; // Example: 10% per category
+        const variance = planned - amount;
+        
+        html += `
+          <div class="category-item">
+            <div class="category-info">
+              <div class="category-name">${categoryNames[category] || category}</div>
+              <div class="category-description">Bütçenin %${percentage.toFixed(1)}'i</div>
+            </div>
+            <div class="category-amount">
+              <div class="category-planned">Plan: ${formatCurrency(planned)}</div>
+              <div class="category-actual">${formatCurrency(amount)}</div>
+            </div>
+            <div class="category-variance">
+              <span class="variance-value ${variance >= 0 ? 'positive' : 'negative'}">
+                ${variance >= 0 ? '+' : ''}${formatCurrency(variance)}
+              </span>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function renderExpenseList(expenseList) {
+      const container = document.getElementById('expenseListContainer');
+      document.getElementById('expenseCount').textContent = expenseList.length;
+
+      if (expenseList.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">💰</div>
+            <p style="margin: 0; font-size: 1.1rem;">Henüz gider kaydı bulunmuyor</p>
+            <p style="margin: 0.5rem 0 0 0;">Yeni gider ekleyerek başlayın</p>
+          </div>
+        `;
+        return;
+      }
+
+      const categoryNames = {
+        labor: '💼 İşçilik',
+        material: '🧱 Malzeme',
+        equipment: '🔧 Ekipman',
+        transport: '🚛 Nakliye',
+        subcontractor: '👷 Taşeron',
+        administrative: '📋 İdari',
+        other: '📦 Diğer'
+      };
+
+      const statusMap = {
+        paid: { class: 'status-paid', text: '✅ Ödendi' },
+        pending: { class: 'status-pending', text: '⏳ Bekliyor' },
+        planned: { class: 'status-planned', text: '📅 Planlandı' }
+      };
+
+      let html = '';
+      expenseList.forEach(expense => {
+        const date = expense.date?.toDate?.() || new Date();
+        const status = statusMap[expense.status] || statusMap.planned;
+        
+        html += `
+          <div class="expense-item">
+            <div class="expense-date">${date.toLocaleDateString('tr-TR')}</div>
+            <div class="expense-details">
+              <div class="expense-title">${expense.title || 'Gider'}</div>
+              <div class="expense-category">${categoryNames[expense.category] || expense.category}</div>
+              ${expense.description ? `<div class="expense-category">${expense.description}</div>` : ''}
+            </div>
+            <div class="expense-amount">${formatCurrency(expense.amount || 0)}</div>
+            <div class="expense-status ${status.class}">${status.text}</div>
+            <div>
+              <button class="btn btn-secondary" style="padding: 0.5rem;" onclick="deleteExpense('${expense.id}')">🗑️</button>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    async function handleAddExpense(event) {
+      event.preventDefault();
+
+      const title = document.getElementById('expenseTitle').value;
+      const category = document.getElementById('expenseCategory').value;
+      const amount = parseFloat(document.getElementById('expenseAmount').value);
+      const date = document.getElementById('expenseDate').value;
+      const status = document.getElementById('expenseStatus').value;
+      const paymentMethod = document.getElementById('paymentMethod').value;
+      const description = document.getElementById('expenseDescription').value;
+      const reference = document.getElementById('expenseReference').value;
+
+      try {
+        const user = auth.currentUser;
+
+        await addDoc(collection(db, 'budget_expenses'), {
+          projectId: currentProjectId,
+          title: title,
+          category: category,
+          amount: amount,
+          date: new Date(date),
+          status: status,
+          paymentMethod: paymentMethod,
+          description: description,
+          reference: reference,
+          createdAt: Timestamp.now(),
+          createdBy: user.uid
+        });
+
+        alert('✅ Gider başarıyla eklendi!');
+        closeAddExpenseModal();
+        loadBudget();
+
+      } catch (error) {
+        console.error('❌ Error adding expense:', error);
+        alert('Gider eklenirken hata: ' + error.message);
+      }
+    }
+
+    window.deleteExpense = async function(expenseId) {
+      if (!confirm('Bu gider kaydını silmek istediğinize emin misiniz?')) return;
+      
+      alert('Silme işlemi yakında eklenecek');
+    };
+
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('tr-TR', {
+        style: 'currency',
+        currency: 'TRY',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(amount || 0);
+    }
+
+    // Add filter listeners
+    document.getElementById('expenseSearchInput')?.addEventListener('input', () => loadBudget());
+    document.getElementById('categoryFilter')?.addEventListener('change', () => loadBudget());
+    document.getElementById('statusFilter')?.addEventListener('change', () => loadBudget());
+    document.getElementById('startDateFilter')?.addEventListener('change', () => loadBudget());
+    document.getElementById('endDateFilter')?.addEventListener('change', () => loadBudget());
+
+    // Export functions
+    window.loadBudget = loadBudget;
+    window.handleAddExpense = handleAddExpense;
+
+    // Load on page ready
+    setTimeout(() => {
+      loadBudget();
+    }, 200);
+  </script>
+</body>
+</html>

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Proje Özeti - ADM İnşaat Proje Yönetim Sistemi</title>
+  <link rel="stylesheet" href="../css/style.css?v=6">
+</head>
+<body>
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="../assets/adm_logo.png" alt="ADM Studio" class="sidebar-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+        <h1 style="display: none;">🏗️ ADM İnşaat</h1>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="../anasayfa.html" class="nav-item">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Anasayfa</span>
+        </a>
+        <a href="../projeler.html" class="nav-item">
+          <span class="nav-icon">🏗️</span>
+          <span class="nav-text">Projeler</span>
+        </a>
+        
+        <!-- Project Navigation -->
+        <div style="margin-top: 1.5rem; padding: 0 1rem; color: var(--text-secondary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+          Proje Dashboard
+        </div>
+        <a href="proje-ozeti.html" class="nav-item active" id="navOzet">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Proje Özeti</span>
+        </a>
+        
+        <div style="margin-top: 1.5rem; padding: 0 1rem; color: var(--text-secondary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+          İş Akış Süreci
+        </div>
+        <a href="kesif.html" class="nav-item" id="navKesif">
+          <span class="nav-icon">🔍</span>
+          <span class="nav-text">1. Keşif</span>
+        </a>
+        <a href="teklif.html" class="nav-item" id="navTeklif">
+          <span class="nav-icon">💼</span>
+          <span class="nav-text">2. Teklif</span>
+        </a>
+        <a href="sozlesme.html" class="nav-item" id="navSozlesme">
+          <span class="nav-icon">📝</span>
+          <span class="nav-text">3. Sözleşme</span>
+        </a>
+        <a href="metraj-listesi.html" class="nav-item" id="navMetraj">
+          <span class="nav-icon">📐</span>
+          <span class="nav-text">4. Metraj (BOQ)</span>
+        </a>
+        <a href="hakedis-takibi.html" class="nav-item" id="navHakedis">
+          <span class="nav-icon">💰</span>
+          <span class="nav-text">5. Hakediş</span>
+        </a>
+        <a href="odeme-takibi.html" class="nav-item" id="navOdeme">
+          <span class="nav-icon">💳</span>
+          <span class="nav-text">6. Ödeme</span>
+        </a>
+        
+        <div style="margin-top: 1.5rem; padding: 0 1rem; color: var(--text-secondary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+          Destek Modüller
+        </div>
+        <a href="santiye-gunlugu.html" class="nav-item" id="navGunluk">
+          <span class="nav-icon">📔</span>
+          <span class="nav-text">Şantiye Günlüğü</span>
+        </a>
+        <a href="stok-yonetimi.html" class="nav-item" id="navStok">
+          <span class="nav-icon">📦</span>
+          <span class="nav-text">Stok Yönetimi</span>
+        </a>
+        <a href="butce-yonetimi.html" class="nav-item" id="navButce">
+          <span class="nav-icon">💵</span>
+          <span class="nav-text">Bütçe Yönetimi</span>
+        </a>
+        <a href="musteri-yetkileri.html" class="nav-item hidden" id="navMusteri">
+          <span class="nav-icon">👥</span>
+          <span class="nav-text">Müşteri Yetkileri</span>
+        </a>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">👤</div>
+          <div class="user-details">
+            <div class="user-name" id="sidebarUserName">Yükleniyor...</div>
+            <div class="user-role" id="sidebarUserRole">...</div>
+          </div>
+        </div>
+        <div class="sidebar-actions">
+          <button id="sidebarThemeToggle" class="theme-toggle-btn" onclick="toggleTheme()">
+            <span class="theme-option light-option">
+              <span class="theme-circle">⚪</span>
+              <span class="theme-label">Light</span>
+            </span>
+            <span class="theme-option dark-option active">
+              <span class="theme-circle">⚫</span>
+              <span class="theme-label">Dark</span>
+            </span>
+          </button>
+          <button id="logoutBtn" class="logout-btn" onclick="handleLogout()">Çıkış Yap</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <div class="topbar">
+        <div style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+          <button class="menu-toggle" id="menuToggle">☰</button>
+          <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">
+            <a href="../anasayfa.html" style="color: var(--text-secondary); text-decoration: none;">Anasayfa</a>
+            <span>›</span>
+            <a href="../projeler.html" style="color: var(--text-secondary); text-decoration: none;">Projeler</a>
+            <span>›</span>
+            <span id="projectNameBreadcrumb" style="color: var(--brand-red); font-weight: 600;">Yükleniyor...</span>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <span id="userNameDisplay" class="topbar-user"></span>
+        </div>
+      </div>
+
+      <div id="alertContainer"></div>
+
+      <!-- Project Header -->
+      <section class="content-section">
+        <div style="background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-red-dark) 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+            <div style="flex: 1;">
+              <h2 id="projectName" style="margin: 0; font-size: 1.5rem;">Yükleniyor...</h2>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white; padding: 0.5rem 1rem; font-size: 0.9rem;" onclick="window.location.href='../projeler.html'">
+                ← Projelere Dön
+              </button>
+              <button id="editProjectBtn" class="btn" style="background: white; color: var(--brand-red); padding: 0.5rem 1rem; font-size: 0.9rem;" onclick="openEditProjectModal()">
+                ✏️ Düzenle
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Proje Özeti Content -->
+        <div class="section-header">
+          <h3>📊 Proje Özeti</h3>
+        </div>
+        
+        <!-- Project Stats Cards -->
+        <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 1.5rem;" id="projectStatsCards">
+          <!-- Stats will be loaded dynamically -->
+        </div>
+        
+        <!-- Project Info Card -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <h3 style="margin-bottom: 1rem; color: var(--brand-red);">Proje Bilgileri</h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+            <div>
+              <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Proje Adı</label>
+              <div id="overviewProjectName" style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary);">-</div>
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Müşteri/Firma</label>
+              <div id="overviewCompany" style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary);">-</div>
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Durum</label>
+              <div id="overviewStatus" style="font-size: 1.1rem; font-weight: 600;">-</div>
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Başlangıç Tarihi</label>
+              <div id="overviewStartDate" style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary);">-</div>
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Bitiş Tarihi</label>
+              <div id="overviewEndDate" style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary);">-</div>
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Konum</label>
+              <div id="overviewLocation" style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary);">-</div>
+            </div>
+          </div>
+          <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+            <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Açıklama</label>
+            <div id="overviewDescription" style="line-height: 1.6; color: var(--text-primary);">-</div>
+          </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+          <div class="card" style="text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <div style="font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.9;">Toplam Günlük Kayıt</div>
+            <div id="overviewLogsCount" style="font-size: 2rem; font-weight: bold;">0</div>
+          </div>
+          <div class="card" style="text-align: center; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+            <div style="font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.9;">Toplam Stok Kalemi</div>
+            <div id="overviewStocksCount" style="font-size: 2rem; font-weight: bold;">0</div>
+          </div>
+          <div class="card" style="text-align: center; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+            <div style="font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.9;">Toplam Hakediş</div>
+            <div id="overviewPaymentsCount" style="font-size: 2rem; font-weight: bold;">0</div>
+          </div>
+          <div class="card" style="text-align: center; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white;">
+            <div style="font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.9;">Bütçe Kullanımı</div>
+            <div id="overviewBudgetUsage" style="font-size: 2rem; font-weight: bold;">0%</div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+          <h3 style="margin-bottom: 1rem; color: var(--brand-red);">⚡ Hızlı İşlemler</h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <button class="btn btn-primary" onclick="window.location.href='santiye-gunlugu.html' + window.location.search" style="padding: 1rem;">
+              📝 Günlük Ekle
+            </button>
+            <button class="btn btn-primary" onclick="window.location.href='stok-yonetimi.html' + window.location.search" style="padding: 1rem;">
+              📦 Stok Ekle
+            </button>
+            <button class="btn btn-primary" onclick="window.location.href='hakedis-takibi.html' + window.location.search" style="padding: 1rem;">
+              💰 Hakediş Ekle
+            </button>
+            <button class="btn btn-primary" onclick="window.location.href='butce-yonetimi.html' + window.location.search" style="padding: 1rem;">
+              💼 Bütçe Yönetimi
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Edit Project Modal -->
+  <div id="editProjectModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Proje Düzenle</h2>
+        <button class="modal-close" onclick="closeEditProjectModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="editProjectForm" onsubmit="handleUpdateProject(event)">
+          <div class="form-group">
+            <label for="editProjectName">Proje Adı *</label>
+            <input type="text" id="editProjectName" placeholder="Proje adını girin" required>
+          </div>
+          <div class="form-group">
+            <label for="editProjectDesc">Açıklama</label>
+            <textarea id="editProjectDesc" placeholder="Proje açıklaması" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; resize: vertical; height: 100px;"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="editProjectLocation">Konum *</label>
+            <input type="text" id="editProjectLocation" placeholder="Proje konumu" required>
+          </div>
+          <div class="form-group">
+            <label for="editProjectStatus">Durum *</label>
+            <select id="editProjectStatus" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px;">
+              <option value="active">Aktif</option>
+              <option value="completed">Tamamlandı</option>
+              <option value="on-hold">Beklemede</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Güncelle</button>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeEditProjectModal()">İptal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase Config -->
+  <script type="module" src="../js/firebase-config.js"></script>
+  
+  <!-- Load JS modules -->
+  <script type="module" src="../js/auth.js?v=7"></script>
+  <script type="module" src="../js/proje-ozeti.js?v=7"></script>
+  <script type="module" src="../js/app.js?v=7"></script>
+
+  <script>
+    // Mobile menu toggle
+    document.getElementById('menuToggle')?.addEventListener('click', function() {
+      document.querySelector('.sidebar').classList.toggle('sidebar-open');
+    });
+
+    // Close sidebar on mobile when clicking outside
+    document.addEventListener('click', function(event) {
+      const sidebar = document.querySelector('.sidebar');
+      const menuToggle = document.getElementById('menuToggle');
+      
+      if (window.innerWidth <= 768 && 
+          sidebar.classList.contains('sidebar-open') && 
+          !sidebar.contains(event.target) && 
+          event.target !== menuToggle) {
+        sidebar.classList.remove('sidebar-open');
+      }
+    });
+
+    // Update navigation links with project ID
+    function updateNavLinks() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectId = urlParams.get('id');
+      if (projectId) {
+        // İş Akışı Linkleri
+        const navKesif = document.getElementById('navKesif');
+        const navTeklif = document.getElementById('navTeklif');
+        const navSozlesme = document.getElementById('navSozlesme');
+        const navMetraj = document.getElementById('navMetraj');
+        const navHakedis = document.getElementById('navHakedis');
+        const navOdeme = document.getElementById('navOdeme');
+        // Proje & Destek Linkleri
+        const navOzet = document.getElementById('navOzet');
+        const navStok = document.getElementById('navStok');
+        const navButce = document.getElementById('navButce');
+        const navGunluk = document.getElementById('navGunluk');
+        const navMusteri = document.getElementById('navMusteri');
+        
+        if (navKesif) navKesif.href = `kesif.html?id=${projectId}`;
+        if (navTeklif) navTeklif.href = `teklif.html?id=${projectId}`;
+        if (navSozlesme) navSozlesme.href = `sozlesme.html?id=${projectId}`;
+        if (navMetraj) navMetraj.href = `metraj-listesi.html?id=${projectId}`;
+        if (navHakedis) navHakedis.href = `hakedis-takibi.html?id=${projectId}`;
+        if (navOdeme) navOdeme.href = `odeme-takibi.html?id=${projectId}`;
+        if (navOzet) navOzet.href = `proje-ozeti.html?id=${projectId}`;
+        if (navStok) navStok.href = `stok-yonetimi.html?id=${projectId}`;
+        if (navButce) navButce.href = `butce-yonetimi.html?id=${projectId}`;
+        if (navGunluk) navGunluk.href = `santiye-gunlugu.html?id=${projectId}`;
+        if (navMusteri) navMusteri.href = `musteri-yetkileri.html?id=${projectId}`;
+      }
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('📄 proje-ozeti.html DOM ready');
+      
+      // Update navigation links
+      updateNavLinks();
+    });
+  </script>
+</body>
+</html>

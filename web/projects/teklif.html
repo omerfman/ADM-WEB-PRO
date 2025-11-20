@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teklif - ADM Proje Takip</title>
+  <link rel="stylesheet" href="../css/style.css?v=6">
+  <style>
+    .teklif-header {
+      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+      color: white;
+      padding: 2rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+
+    .summary-item {
+      background: rgba(255,255,255,0.15);
+      padding: 1rem;
+      border-radius: 8px;
+      backdrop-filter: blur(10px);
+    }
+
+    .summary-item h4 {
+      margin: 0 0 0.5rem 0;
+      font-size: 0.85rem;
+      opacity: 0.9;
+    }
+
+    .summary-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .calculation-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 1.5rem;
+    }
+
+    .calc-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .calc-row:last-child {
+      border-bottom: none;
+      font-weight: bold;
+      font-size: 1.2rem;
+      color: var(--brand-red);
+      padding-top: 1rem;
+      margin-top: 0.5rem;
+      border-top: 2px solid var(--brand-red);
+    }
+
+    .calc-label {
+      color: var(--text-secondary);
+    }
+
+    .calc-value {
+      font-weight: 600;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .data-table th {
+      background: var(--bg-secondary);
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-primary);
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .data-table td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .data-table tr:hover {
+      background: var(--bg-secondary);
+    }
+
+    .status-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .status-draft { background: #e3f2fd; color: #1976d2; }
+    .status-sent { background: #fff3e0; color: #f57c00; }
+    .status-accepted { background: #e8f5e9; color: #388e3c; }
+    .status-rejected { background: #ffebee; color: #d32f2f; }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <span class="logo-icon">🏗️</span>
+          <span class="logo-text">ADM Proje</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title">MENÜ</div>
+          <a href="../anasayfa.html" class="nav-item">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-text">Ana Sayfa</span>
+          </a>
+          <a href="../projeler.html" class="nav-item">
+            <span class="nav-icon">📊</span>
+            <span class="nav-text">Projeler</span>
+          </a>
+          <a href="../sirketler.html" class="nav-item">
+            <span class="nav-icon">🏢</span>
+            <span class="nav-text">Şirketler</span>
+          </a>
+          <a href="../kullanicilar.html" class="nav-item">
+            <span class="nav-icon">👥</span>
+            <span class="nav-text">Kullanıcılar</span>
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">PROJE</div>
+          <a href="proje-ozeti.html" class="nav-item" id="navOzet">
+            <span class="nav-icon">📋</span>
+            <span class="nav-text">Proje Özeti</span>
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">İŞ AKIŞI</div>
+          <a href="kesif.html" class="nav-item" id="navKesif">
+            <span class="nav-icon">🔍</span>
+            <span class="nav-text">1. Keşif</span>
+          </a>
+          <a href="#" class="nav-item active">
+            <span class="nav-icon">💼</span>
+            <span class="nav-text">2. Teklif</span>
+          </a>
+          <a href="sozlesme.html" class="nav-item" id="navSozlesme">
+            <span class="nav-icon">📝</span>
+            <span class="nav-text">3. Sözleşme</span>
+          </a>
+          <a href="metraj-listesi.html" class="nav-item" id="navMetraj">
+            <span class="nav-icon">📐</span>
+            <span class="nav-text">4. Metraj</span>
+          </a>
+          <a href="hakedis-takibi.html" class="nav-item" id="navHakedis">
+            <span class="nav-icon">💰</span>
+            <span class="nav-text">5. Hakediş</span>
+          </a>
+          <a href="odeme-takibi.html" class="nav-item" id="navOdeme">
+            <span class="nav-icon">💳</span>
+            <span class="nav-text">6. Ödeme</span>
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <div class="nav-section-title">DESTEK</div>
+          <a href="proje-ozeti.html" class="nav-item" id="navOzet">
+            <span class="nav-icon">📋</span>
+            <span class="nav-text">Proje Özeti</span>
+          </a>
+          <a href="stok-yonetimi.html" class="nav-item" id="navStok">
+            <span class="nav-icon">📦</span>
+            <span class="nav-text">Stok Yönetimi</span>
+          </a>
+          <a href="butce-yonetimi.html" class="nav-item" id="navButce">
+            <span class="nav-icon">💼</span>
+            <span class="nav-text">Bütçe Yönetimi</span>
+          </a>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="user-avatar">A</div>
+          <div class="user-info">
+            <div class="user-name" id="sidebarUserName">Admin</div>
+            <div class="user-role" id="sidebarUserRole">Yönetici</div>
+          </div>
+        </div>
+        <button class="btn btn-secondary" style="width: 100%; margin-top: 1rem;" onclick="handleLogout()">
+          🚪 Çıkış Yap
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="top-bar">
+        <button class="menu-toggle" id="menuToggle">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <div class="breadcrumb">
+          <a href="../projeler.html">Projeler</a>
+          <span class="separator">/</span>
+          <span id="projectNameBreadcrumb">Proje</span>
+          <span class="separator">/</span>
+          <span>Teklif</span>
+        </div>
+        <div class="top-bar-actions">
+          <button class="btn" onclick="exportToExcel()">
+            📊 Excel İndir
+          </button>
+          <button class="btn" onclick="sendProposal()">
+            📧 Teklif Gönder
+          </button>
+          <button class="btn btn-primary" onclick="createContract()">
+            ✅ Sözleşmeye Dönüştür
+          </button>
+        </div>
+      </div>
+
+      <div class="content-wrapper">
+        <!-- Header -->
+        <div class="teklif-header">
+          <h1 style="margin: 0 0 0.5rem 0;">💼 Teklif Raporu</h1>
+          <p style="margin: 0; opacity: 0.9;" id="projectName">Müşteriye sunulan fiyat teklifi</p>
+          <div class="summary-grid">
+            <div class="summary-item">
+              <h4>Teklif No</h4>
+              <div class="summary-value" id="proposalNo">-</div>
+            </div>
+            <div class="summary-item">
+              <h4>Teklif Tarihi</h4>
+              <div class="summary-value" id="proposalDate">-</div>
+            </div>
+            <div class="summary-item">
+              <h4>Geçerlilik</h4>
+              <div class="summary-value" id="validUntil">30 gün</div>
+            </div>
+            <div class="summary-item">
+              <h4>Durum</h4>
+              <div class="summary-value" id="proposalStatus">Taslak</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Calculation Summary -->
+        <div class="calculation-card">
+          <h2 style="margin: 0 0 1.5rem 0;">💰 Fiyat Hesaplaması</h2>
+          
+          <div class="calc-row">
+            <span class="calc-label">Toplam İş Kalemi Maliyeti</span>
+            <span class="calc-value" id="subtotalCost">₺0.00</span>
+          </div>
+          
+          <div class="calc-row">
+            <span class="calc-label">
+              Genel Giderler (%)
+              <input type="number" id="overheadPercent" value="10" min="0" max="100" step="0.1" 
+                     style="width: 60px; margin-left: 0.5rem; padding: 0.25rem;" 
+                     onchange="recalculateProposal()">
+            </span>
+            <span class="calc-value" id="overheadCost">₺0.00</span>
+          </div>
+          
+          <div class="calc-row">
+            <span class="calc-label">Ara Toplam (Maliyet + Genel Giderler)</span>
+            <span class="calc-value" id="costWithOverhead">₺0.00</span>
+          </div>
+          
+          <div class="calc-row">
+            <span class="calc-label">
+              Kâr Marjı (%)
+              <input type="number" id="profitPercent" value="20" min="0" max="100" step="0.1" 
+                     style="width: 60px; margin-left: 0.5rem; padding: 0.25rem;" 
+                     onchange="recalculateProposal()">
+            </span>
+            <span class="calc-value" id="profitAmount">₺0.00</span>
+          </div>
+          
+          <div class="calc-row">
+            <span class="calc-label">Teklif Tutarı (KDV Hariç)</span>
+            <span class="calc-value" id="priceBeforeVat">₺0.00</span>
+          </div>
+          
+          <div class="calc-row">
+            <span class="calc-label">
+              KDV (%)
+              <input type="number" id="vatPercent" value="20" min="0" max="100" step="1" 
+                     style="width: 60px; margin-left: 0.5rem; padding: 0.25rem;" 
+                     onchange="recalculateProposal()">
+            </span>
+            <span class="calc-value" id="vatAmount">₺0.00</span>
+          </div>
+          
+          <div class="calc-row">
+            <span class="calc-label">💎 TOPLAM TEKLİF TUTARI (KDV Dahil)</span>
+            <span class="calc-value" style="font-size: 1.5rem; color: var(--brand-red);" id="grandTotal">₺0.00</span>
+          </div>
+        </div>
+
+        <!-- Items Table -->
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="margin: 0;">📋 Teklif Kalemleri</h2>
+            <button class="btn btn-primary" onclick="openAddItemModal()">
+              ➕ Kalem Ekle
+            </button>
+          </div>
+
+          <div style="overflow-x: auto;">
+            <table class="data-table" id="proposalTable">
+              <thead>
+                <tr>
+                  <th style="width: 60px;">Sıra</th>
+                  <th>İş Kalemi</th>
+                  <th>Kategori</th>
+                  <th>Birim</th>
+                  <th style="text-align: right;">Miktar</th>
+                  <th style="text-align: right;">Birim Fiyat</th>
+                  <th style="text-align: right;">Toplam</th>
+                  <th style="width: 100px;">İşlemler</th>
+                </tr>
+              </thead>
+              <tbody id="proposalTableBody">
+                <tr>
+                  <td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">💼</div>
+                    <p>Henüz teklif kalemi eklenmemiş</p>
+                    <button class="btn btn-primary" onclick="importFromKesif()" style="margin-top: 1rem;">
+                      📥 Keşiften İçe Aktar
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot id="proposalTableFooter" style="display: none;">
+                <tr style="background: var(--bg-secondary); font-weight: bold;">
+                  <td colspan="6" style="text-align: right; padding: 1rem;">TOPLAM:</td>
+                  <td style="text-align: right; color: var(--brand-red); font-size: 1.2rem;" id="footerTotal">₺0.00</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- Terms & Conditions -->
+        <div class="card" style="margin-top: 1.5rem;">
+          <h3 style="margin: 0 0 1rem 0;">📄 Teklif Şartları</h3>
+          <textarea id="proposalTerms" rows="6" style="width: 100%; padding: 1rem; border: 1px solid var(--border-color); border-radius: 6px; font-family: inherit;" placeholder="Ödeme şartları, teslimat süresi, garanti koşulları..."></textarea>
+          <button class="btn btn-primary" onclick="saveProposalTerms()" style="margin-top: 1rem;">
+            💾 Şartları Kaydet
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add Item Modal -->
+  <div id="addItemModal" class="modal">
+    <div class="modal-content" style="max-width: 700px;">
+      <div class="modal-header">
+        <h2>➕ Teklif Kalemi Ekle</h2>
+        <button class="close-modal" onclick="closeAddItemModal()">&times;</button>
+      </div>
+      <form id="addItemForm" onsubmit="handleAddItem(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>İş Kalemi Adı *</label>
+            <input type="text" id="itemName" required>
+          </div>
+          <div class="form-group">
+            <label>Kategori *</label>
+            <select id="itemCategory" required>
+              <option value="">Seçin</option>
+              <option value="hafriyat">Hafriyat</option>
+              <option value="kaba">Kaba İnşaat</option>
+              <option value="ince">İnce İnşaat</option>
+              <option value="tesisat">Tesisat</option>
+              <option value="elektrik">Elektrik</option>
+              <option value="diger">Diğer</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Birim *</label>
+            <select id="itemUnit" required>
+              <option value="">Seçin</option>
+              <option value="m²">m²</option>
+              <option value="m³">m³</option>
+              <option value="m">m</option>
+              <option value="Adet">Adet</option>
+              <option value="Kg">Kg</option>
+              <option value="Ton">Ton</option>
+              <option value="Lt">Lt</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Miktar *</label>
+            <input type="number" id="itemQuantity" required min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label>Birim Fiyat (₺) *</label>
+            <input type="number" id="itemUnitPrice" required min="0" step="0.01">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Açıklama</label>
+          <textarea id="itemDescription" rows="2"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeAddItemModal()">İptal</button>
+          <button type="submit" class="btn btn-primary">💾 Kaydet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="../js/auth.js?v=6"></script>
+  <script type="module" src="../js/projects.js?v=6"></script>
+  <script type="module" src="../js/app.js?v=6"></script>
+
+  <script>
+    document.getElementById('menuToggle')?.addEventListener('click', function() {
+      document.querySelector('.sidebar').classList.toggle('sidebar-open');
+    });
+
+    function updateNavLinks() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectId = urlParams.get('id');
+      if (projectId) {
+        // İş Akışı Linkleri
+        const navKesif = document.getElementById('navKesif');
+        const navTeklif = document.getElementById('navTeklif');
+        const navSozlesme = document.getElementById('navSozlesme');
+        const navMetraj = document.getElementById('navMetraj');
+        const navHakedis = document.getElementById('navHakedis');
+        const navOdeme = document.getElementById('navOdeme');
+        // Proje & Destek Linkleri
+        const navOzet = document.getElementById('navOzet');
+        const navStok = document.getElementById('navStok');
+        const navButce = document.getElementById('navButce');
+        const navGunluk = document.getElementById('navGunluk');
+        const navMusteri = document.getElementById('navMusteri');
+        
+        if (navKesif) navKesif.href = `kesif.html?id=${projectId}`;
+        if (navTeklif) navTeklif.href = `teklif.html?id=${projectId}`;
+        if (navSozlesme) navSozlesme.href = `sozlesme.html?id=${projectId}`;
+        if (navMetraj) navMetraj.href = `metraj-listesi.html?id=${projectId}`;
+        if (navHakedis) navHakedis.href = `hakedis-takibi.html?id=${projectId}`;
+        if (navOdeme) navOdeme.href = `odeme-takibi.html?id=${projectId}`;
+        if (navOzet) navOzet.href = `proje-ozeti.html?id=${projectId}`;
+        if (navStok) navStok.href = `stok-yonetimi.html?id=${projectId}`;
+        if (navButce) navButce.href = `butce-yonetimi.html?id=${projectId}`;
+        if (navGunluk) navGunluk.href = `santiye-gunlugu.html?id=${projectId}`;
+        if (navMusteri) navMusteri.href = `musteri-yetkileri.html?id=${projectId}`;
+      }
+    }
+
+    function openAddItemModal() {
+      document.getElementById('addItemModal').style.display = 'block';
+    }
+
+    function closeAddItemModal() {
+      document.getElementById('addItemModal').style.display = 'none';
+      document.getElementById('addItemForm').reset();
+    }
+
+    function importFromKesif() {
+      if (window.loadFromKesif) {
+        window.loadFromKesif();
+      }
+    }
+
+    function saveProposalTerms() {
+      const terms = document.getElementById('proposalTerms').value;
+      if (window.updateProposalTerms) {
+        window.updateProposalTerms(terms);
+      }
+    }
+
+    function recalculateProposal() {
+      if (window.calculateProposal) {
+        window.calculateProposal();
+      }
+    }
+
+    function sendProposal() {
+      if (confirm('Teklifi müşteriye göndermek istediğinize emin misiniz?')) {
+        if (window.markProposalAsSent) {
+          window.markProposalAsSent();
+        }
+      }
+    }
+
+    function createContract() {
+      if (confirm('Bu tekliften sözleşme oluşturmak istediğinize emin misiniz?')) {
+        if (window.convertToContract) {
+          window.convertToContract();
+        }
+      }
+    }
+
+    function exportToExcel() {
+      if (window.exportProposalToExcel) {
+        window.exportProposalToExcel();
+      }
+    }
+
+    window.addEventListener('click', function(event) {
+      if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+      }
+    });
+
+    updateNavLinks();
+  </script>
+
+  <script type="module">
+    import { db, auth } from '../js/firebase-config.js';
+    import { doc, getDoc, collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, setDoc, orderBy, Timestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    let currentProjectId = null;
+    let proposalItems = [];
+    let proposalData = {};
+
+    async function loadProposal() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectId = urlParams.get('id');
+      const fromKesif = urlParams.get('from');
+      
+      if (!projectId) {
+        window.location.href = '../projeler.html';
+        return;
+      }
+
+      currentProjectId = projectId;
+
+      try {
+        const projectDoc = await getDoc(doc(db, 'projects', projectId));
+        if (!projectDoc.exists()) {
+          alert('❌ Proje bulunamadı');
+          window.location.href = '../projeler.html';
+          return;
+        }
+
+        const project = { id: projectDoc.id, ...projectDoc.data() };
+        document.getElementById('projectName').textContent = project.name || 'Proje';
+        document.getElementById('projectNameBreadcrumb').textContent = project.name || 'Proje';
+
+        // Check if coming from kesif
+        if (fromKesif === 'kesif') {
+          const kesifData = sessionStorage.getItem('kesifToProposal');
+          if (kesifData) {
+            await importKesifData(JSON.parse(kesifData));
+            sessionStorage.removeItem('kesifToProposal');
+          }
+        }
+
+        // Load proposal metadata
+        const proposalDocRef = doc(db, 'proposals', projectId);
+        const proposalDoc = await getDoc(proposalDocRef);
+        
+        if (proposalDoc.exists()) {
+          proposalData = proposalDoc.data();
+          document.getElementById('proposalNo').textContent = proposalData.proposalNo || '-';
+          document.getElementById('proposalDate').textContent = proposalData.createdAt?.toDate().toLocaleDateString('tr-TR') || '-';
+          document.getElementById('validUntil').textContent = proposalData.validDays ? `${proposalData.validDays} gün` : '30 gün';
+          
+          const statusMap = {
+            draft: 'Taslak',
+            sent: 'Gönderildi',
+            accepted: 'Kabul Edildi',
+            rejected: 'Reddedildi'
+          };
+          document.getElementById('proposalStatus').textContent = statusMap[proposalData.status] || 'Taslak';
+          
+          if (proposalData.overheadPercent !== undefined) {
+            document.getElementById('overheadPercent').value = proposalData.overheadPercent;
+          }
+          if (proposalData.profitPercent !== undefined) {
+            document.getElementById('profitPercent').value = proposalData.profitPercent;
+          }
+          if (proposalData.vatPercent !== undefined) {
+            document.getElementById('vatPercent').value = proposalData.vatPercent;
+          }
+          if (proposalData.terms) {
+            document.getElementById('proposalTerms').value = proposalData.terms;
+          }
+        }
+
+        // Load proposal items
+        const itemsQuery = query(
+          collection(db, 'proposal_items'),
+          where('projectId', '==', projectId),
+          where('isDeleted', '==', false),
+          orderBy('order', 'asc')
+        );
+        const itemsSnap = await getDocs(itemsQuery);
+        proposalItems = [];
+        
+        itemsSnap.forEach(docSnap => {
+          proposalItems.push({ id: docSnap.id, ...docSnap.data() });
+        });
+
+        renderProposalTable();
+        calculateProposal();
+
+      } catch (error) {
+        console.error('❌ Error loading proposal:', error);
+        alert('Teklif verileri yüklenirken hata: ' + error.message);
+      }
+    }
+
+    async function importKesifData(kesifData) {
+      try {
+        const user = auth.currentUser;
+        
+        for (let i = 0; i < kesifData.items.length; i++) {
+          const item = kesifData.items[i];
+          await addDoc(collection(db, 'proposal_items'), {
+            projectId: currentProjectId,
+            name: item.name,
+            category: item.category,
+            unit: item.unit,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            description: item.description,
+            fromKesifId: item.fromKesifId,
+            order: i,
+            isDeleted: false,
+            createdAt: Timestamp.now(),
+            createdBy: user.uid
+          });
+        }
+
+        // Create or update proposal metadata
+        const proposalDocRef = doc(db, 'proposals', currentProjectId);
+        await setDoc(proposalDocRef, {
+          projectId: currentProjectId,
+          proposalNo: `TKL-${Date.now()}`,
+          overheadPercent: 10,
+          profitPercent: 20,
+          vatPercent: 20,
+          validDays: 30,
+          status: 'draft',
+          createdAt: Timestamp.now(),
+          createdBy: user.uid
+        });
+
+        alert('✅ Keşif verileri başarıyla aktarıldı!');
+        
+      } catch (error) {
+        console.error('❌ Error importing kesif:', error);
+        alert('Keşif verileri aktarılırken hata: ' + error.message);
+      }
+    }
+
+    function renderProposalTable() {
+      const tbody = document.getElementById('proposalTableBody');
+      const footer = document.getElementById('proposalTableFooter');
+
+      if (proposalItems.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+              <div style="font-size: 3rem; margin-bottom: 1rem;">💼</div>
+              <p>Henüz teklif kalemi eklenmemiş</p>
+              <button class="btn btn-primary" onclick="importFromKesif()" style="margin-top: 1rem;">
+                📥 Keşiften İçe Aktar
+              </button>
+            </td>
+          </tr>
+        `;
+        footer.style.display = 'none';
+        return;
+      }
+
+      const categoryNames = {
+        hafriyat: 'Hafriyat',
+        kaba: 'Kaba İnşaat',
+        ince: 'İnce İnşaat',
+        tesisat: 'Tesisat',
+        elektrik: 'Elektrik',
+        diger: 'Diğer'
+      };
+
+      let html = '';
+      let totalCost = 0;
+
+      proposalItems.forEach((item, index) => {
+        const total = (item.quantity || 0) * (item.unitPrice || 0);
+        totalCost += total;
+
+        html += `
+          <tr>
+            <td>${index + 1}</td>
+            <td>
+              <strong>${item.name}</strong>
+              ${item.description ? `<br><small style="color: var(--text-secondary);">${item.description}</small>` : ''}
+            </td>
+            <td>${categoryNames[item.category] || item.category}</td>
+            <td>${item.unit}</td>
+            <td style="text-align: right;">${formatNumber(item.quantity)}</td>
+            <td style="text-align: right;">${formatCurrency(item.unitPrice)}</td>
+            <td style="text-align: right;"><strong>${formatCurrency(total)}</strong></td>
+            <td>
+              <button class="btn btn-secondary" style="padding: 0.5rem;" onclick="deleteProposalItem('${item.id}')">🗑️</button>
+            </td>
+          </tr>
+        `;
+      });
+
+      tbody.innerHTML = html;
+      footer.style.display = 'table-footer-group';
+      document.getElementById('footerTotal').textContent = formatCurrency(totalCost);
+    }
+
+    window.calculateProposal = function() {
+      let subtotal = 0;
+      proposalItems.forEach(item => {
+        subtotal += (item.quantity || 0) * (item.unitPrice || 0);
+      });
+
+      const overheadPercent = parseFloat(document.getElementById('overheadPercent').value) || 0;
+      const profitPercent = parseFloat(document.getElementById('profitPercent').value) || 0;
+      const vatPercent = parseFloat(document.getElementById('vatPercent').value) || 0;
+
+      const overheadCost = subtotal * (overheadPercent / 100);
+      const costWithOverhead = subtotal + overheadCost;
+      const profitAmount = costWithOverhead * (profitPercent / 100);
+      const priceBeforeVat = costWithOverhead + profitAmount;
+      const vatAmount = priceBeforeVat * (vatPercent / 100);
+      const grandTotal = priceBeforeVat + vatAmount;
+
+      document.getElementById('subtotalCost').textContent = formatCurrency(subtotal);
+      document.getElementById('overheadCost').textContent = formatCurrency(overheadCost);
+      document.getElementById('costWithOverhead').textContent = formatCurrency(costWithOverhead);
+      document.getElementById('profitAmount').textContent = formatCurrency(profitAmount);
+      document.getElementById('priceBeforeVat').textContent = formatCurrency(priceBeforeVat);
+      document.getElementById('vatAmount').textContent = formatCurrency(vatAmount);
+      document.getElementById('grandTotal').textContent = formatCurrency(grandTotal);
+    };
+
+    async function handleAddItem(event) {
+      event.preventDefault();
+
+      const name = document.getElementById('itemName').value;
+      const category = document.getElementById('itemCategory').value;
+      const unit = document.getElementById('itemUnit').value;
+      const quantity = parseFloat(document.getElementById('itemQuantity').value);
+      const unitPrice = parseFloat(document.getElementById('itemUnitPrice').value);
+      const description = document.getElementById('itemDescription').value;
+
+      try {
+        const user = auth.currentUser;
+
+        await addDoc(collection(db, 'proposal_items'), {
+          projectId: currentProjectId,
+          name,
+          category,
+          unit,
+          quantity,
+          unitPrice,
+          description,
+          order: proposalItems.length,
+          isDeleted: false,
+          createdAt: Timestamp.now(),
+          createdBy: user.uid
+        });
+
+        alert('✅ Teklif kalemi eklendi!');
+        closeAddItemModal();
+        loadProposal();
+
+      } catch (error) {
+        console.error('❌ Error adding proposal item:', error);
+        alert('Teklif kalemi eklenirken hata: ' + error.message);
+      }
+    }
+
+    window.deleteProposalItem = async function(itemId) {
+      if (!confirm('Bu teklif kalemini silmek istediğinize emin misiniz?')) return;
+      
+      try {
+        await updateDoc(doc(db, 'proposal_items', itemId), {
+          isDeleted: true
+        });
+        alert('✅ Teklif kalemi silindi');
+        loadProposal();
+      } catch (error) {
+        console.error('❌ Error deleting proposal item:', error);
+        alert('Silme hatası: ' + error.message);
+      }
+    };
+
+    window.updateProposalTerms = async function(terms) {
+      try {
+        const proposalDocRef = doc(db, 'proposals', currentProjectId);
+        await updateDoc(proposalDocRef, { terms });
+        alert('✅ Teklif şartları kaydedildi');
+      } catch (error) {
+        console.error('❌ Error saving terms:', error);
+        alert('Şartlar kaydedilirken hata: ' + error.message);
+      }
+    };
+
+    window.markProposalAsSent = async function() {
+      try {
+        const proposalDocRef = doc(db, 'proposals', currentProjectId);
+        await updateDoc(proposalDocRef, {
+          status: 'sent',
+          sentAt: Timestamp.now()
+        });
+        alert('✅ Teklif gönderildi olarak işaretlendi');
+        loadProposal();
+      } catch (error) {
+        console.error('❌ Error updating status:', error);
+        alert('Durum güncellenirken hata: ' + error.message);
+      }
+    };
+
+    window.convertToContract = async function() {
+      try {
+        if (proposalItems.length === 0) {
+          alert('❌ Teklif kalemleri boş!');
+          return;
+        }
+
+        // Store proposal data for contract creation
+        sessionStorage.setItem('proposalToContract', JSON.stringify({
+          projectId: currentProjectId,
+          proposalId: currentProjectId,
+          items: proposalItems,
+          metadata: proposalData
+        }));
+
+        window.location.href = `sozlesme.html?id=${currentProjectId}&from=proposal`;
+
+      } catch (error) {
+        console.error('❌ Error converting to contract:', error);
+        alert('Sözleşme oluşturma hatası: ' + error.message);
+      }
+    };
+
+    window.loadFromKesif = async function() {
+      try {
+        const kesifQuery = query(
+          collection(db, 'kesif_items'),
+          where('projectId', '==', currentProjectId),
+          where('isDeleted', '==', false)
+        );
+        const kesifSnap = await getDocs(kesifQuery);
+        
+        if (kesifSnap.empty) {
+          alert('❌ Keşif kalemleri bulunamadı');
+          return;
+        }
+
+        const kesifItems = [];
+        kesifSnap.forEach(doc => {
+          kesifItems.push({ id: doc.id, ...doc.data() });
+        });
+
+        await importKesifData({
+          projectId: currentProjectId,
+          items: kesifItems
+        });
+
+        loadProposal();
+
+      } catch (error) {
+        console.error('❌ Error loading from kesif:', error);
+        alert('Keşiften yükleme hatası: ' + error.message);
+      }
+    };
+
+    window.handleAddItem = handleAddItem;
+
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('tr-TR', {
+        style: 'currency',
+        currency: 'TRY',
+        minimumFractionDigits: 2
+      }).format(amount || 0);
+    }
+
+    function formatNumber(num) {
+      return new Intl.NumberFormat('tr-TR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(num || 0);
+    }
+
+    setTimeout(() => {
+      loadProposal();
+    }, 200);
+  </script>
+</body>
+</html>

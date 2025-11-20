@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hakediş Takibi - ADM İnşaat Proje Yönetim Sistemi</title>
+  <link rel="stylesheet" href="../css/style.css?v=6">
+</head>
+<body>
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="../assets/adm_logo.png" alt="ADM Studio" class="sidebar-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+        <h1 style="display: none;">🏗️ ADM İnşaat</h1>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="../anasayfa.html" class="nav-item">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Anasayfa</span>
+        </a>
+        <a href="../projeler.html" class="nav-item">
+          <span class="nav-icon">🏗️</span>
+          <span class="nav-text">Projeler</span>
+        </a>
+        
+        <!-- Project Navigation -->
+        <div style="margin-top: 1.5rem; padding: 0 1rem; color: var(--text-secondary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+          Proje Dashboard
+        </div>
+        <a href="proje-ozeti.html" class="nav-item" id="navOzet">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Proje Özeti</span>
+        </a>
+        
+        <div style="margin-top: 1.5rem; padding: 0 1rem; color: var(--text-secondary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+          İş Akış Süreci
+        </div>
+        <a href="kesif.html" class="nav-item" id="navKesif">
+          <span class="nav-icon">🔍</span>
+          <span class="nav-text">1. Keşif</span>
+        </a>
+        <a href="teklif.html" class="nav-item" id="navTeklif">
+          <span class="nav-icon">💼</span>
+          <span class="nav-text">2. Teklif</span>
+        </a>
+        <a href="sozlesme.html" class="nav-item" id="navSozlesme">
+          <span class="nav-icon">📝</span>
+          <span class="nav-text">3. Sözleşme</span>
+        </a>
+        <a href="metraj-listesi.html" class="nav-item" id="navMetraj">
+          <span class="nav-icon">📐</span>
+          <span class="nav-text">4. Metraj (BOQ)</span>
+        </a>
+        <a href="hakedis-takibi.html" class="nav-item active" id="navHakedis">
+          <span class="nav-icon">💰</span>
+          <span class="nav-text">5. Hakediş</span>
+        </a>
+        <a href="odeme-takibi.html" class="nav-item" id="navOdeme">
+          <span class="nav-icon">💳</span>
+          <span class="nav-text">6. Ödeme</span>
+        </a>
+        
+        <div style="margin-top: 1.5rem; padding: 0 1rem; color: var(--text-secondary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+          Destek Modüller
+        </div>
+        <a href="santiye-gunlugu.html" class="nav-item" id="navGunluk">
+          <span class="nav-icon">📔</span>
+          <span class="nav-text">Şantiye Günlüğü</span>
+        </a>
+        <a href="stok-yonetimi.html" class="nav-item" id="navStok">
+          <span class="nav-icon">📦</span>
+          <span class="nav-text">Stok Yönetimi</span>
+        </a>
+        <a href="butce-yonetimi.html" class="nav-item" id="navButce">
+          <span class="nav-icon">💵</span>
+          <span class="nav-text">Bütçe Yönetimi</span>
+        </a>
+        <a href="musteri-yetkileri.html" class="nav-item hidden" id="navMusteri">
+          <span class="nav-icon">👥</span>
+          <span class="nav-text">Müşteri Yetkileri</span>
+        </a>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">👤</div>
+          <div class="user-details">
+            <div class="user-name" id="sidebarUserName">Yükleniyor...</div>
+            <div class="user-role" id="sidebarUserRole">...</div>
+          </div>
+        </div>
+        <div class="sidebar-actions">
+          <button id="sidebarThemeToggle" class="theme-toggle-btn" onclick="toggleTheme()">
+            <span class="theme-option light-option">
+              <span class="theme-circle">⚪</span>
+              <span class="theme-label">Light</span>
+            </span>
+            <span class="theme-option dark-option active">
+              <span class="theme-circle">⚫</span>
+              <span class="theme-label">Dark</span>
+            </span>
+          </button>
+          <button id="logoutBtn" class="logout-btn" onclick="handleLogout()">Çıkış Yap</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <div class="topbar">
+        <div style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+          <button class="menu-toggle" id="menuToggle">☰</button>
+          <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">
+            <a href="../anasayfa.html" style="color: var(--text-secondary); text-decoration: none;">Anasayfa</a>
+            <span>›</span>
+            <a href="../projeler.html" style="color: var(--text-secondary); text-decoration: none;">Projeler</a>
+            <span>›</span>
+            <span id="projectNameBreadcrumb" style="color: var(--brand-red); font-weight: 600;">Yükleniyor...</span>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <span id="userNameDisplay" class="topbar-user"></span>
+        </div>
+      </div>
+
+      <div id="alertContainer"></div>
+
+      <!-- Project Header -->
+      <section class="content-section">
+        <div style="background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-red-dark) 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+            <div style="flex: 1;">
+              <h2 id="projectName" style="margin: 0; font-size: 1.5rem;">Yükleniyor...</h2>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white; padding: 0.5rem 1rem; font-size: 0.9rem;" onclick="window.location.href='../projeler.html'">
+                ← Projelere Dön
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hakediş Özet Kartları -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+          <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <div style="font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.9;">Toplam Hakediş</div>
+            <div id="totalProgressPayments" style="font-size: 2rem; font-weight: bold;">0</div>
+          </div>
+          <div class="card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white;">
+            <div style="font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.9;">Toplam Tutar</div>
+            <div id="totalPaymentAmount" style="font-size: 2rem; font-weight: bold;">₺0</div>
+          </div>
+          <div class="card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;">
+            <div style="font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.9;">Ödenen</div>
+            <div id="totalPaidAmount" style="font-size: 2rem; font-weight: bold;">₺0</div>
+          </div>
+          <div class="card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white;">
+            <div style="font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.9;">Bekleyen</div>
+            <div id="totalPendingAmount" style="font-size: 2rem; font-weight: bold;">₺0</div>
+          </div>
+        </div>
+
+        <!-- Proje İlerleme Özeti -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <h3 style="margin-bottom: 1rem;">📈 Proje İlerleme Özeti</h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+            <div>
+              <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Sözleşme Bedeli</div>
+              <div id="contractAmount" style="font-size: 1.3rem; font-weight: bold; color: var(--brand-red);">₺0</div>
+            </div>
+            <div>
+              <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Toplam Hakediş</div>
+              <div id="totalInvoiced" style="font-size: 1.3rem; font-weight: bold; color: #3498db;">₺0</div>
+            </div>
+            <div>
+              <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Kalan İş</div>
+              <div id="remainingWork" style="font-size: 1.3rem; font-weight: bold; color: #e67e22;">₺0</div>
+            </div>
+            <div>
+              <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Tamamlanma Oranı</div>
+              <div id="completionRate" style="font-size: 1.3rem; font-weight: bold; color: #27ae60;">0%</div>
+            </div>
+          </div>
+          <div style="margin-top: 1.5rem;">
+            <div style="width: 100%; height: 30px; background: var(--bg-tertiary); border-radius: 15px; overflow: hidden;">
+              <div id="progressBar" style="height: 100%; background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%); width: 0%; transition: width 0.5s; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.9rem;">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hakediş Takibi Content -->
+        <div class="section-header">
+          <h3>💰 Hakediş Listesi</h3>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button class="btn btn-primary" onclick="openCreateProgressPaymentModal()">+ Yeni Hakediş</button>
+            <button class="btn" style="background: #27ae60; color: white;" onclick="exportProgressPaymentsToExcel()">📤 Excel İndir</button>
+          </div>
+        </div>
+
+        <!-- Filtreleme -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600;">🔍 Arama</label>
+              <input type="text" id="paymentSearchInput" placeholder="Hakediş no veya dönem..." style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--input-bg); color: var(--text-primary);">
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600;">📊 Durum</label>
+              <select id="paymentStatusFilter" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--input-bg); color: var(--text-primary);">
+                <option value="">Tümü</option>
+                <option value="draft">Taslak</option>
+                <option value="pending">Onay Bekliyor</option>
+                <option value="approved">Onaylandı</option>
+                <option value="paid">Ödendi</option>
+                <option value="cancelled">İptal</option>
+              </select>
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600;">🔢 Sıralama</label>
+              <select id="paymentSortFilter" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--input-bg); color: var(--text-primary);">
+                <option value="date-desc">Tarih (Yeni → Eski)</option>
+                <option value="date-asc">Tarih (Eski → Yeni)</option>
+                <option value="amount-desc">Tutar (Yüksek → Düşük)</option>
+                <option value="amount-asc">Tutar (Düşük → Yüksek)</option>
+              </select>
+            </div>
+            <div style="display: flex; align-items: flex-end;">
+              <button class="btn btn-secondary" onclick="clearPaymentFilters()" style="width: 100%;">🔄 Temizle</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress Payments List -->
+        <div id="progressPaymentsList" style="margin-top: 1rem;">
+          <!-- Progress payments will be loaded here -->
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Create Progress Payment Modal -->
+  <div id="createProgressPaymentModal" class="modal">
+    <div class="modal-content" style="max-width: 1200px; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header">
+        <h2>Yeni Hakediş Oluştur</h2>
+        <button class="modal-close" onclick="closeCreateProgressPaymentModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="createProgressPaymentForm" onsubmit="handleCreateProgressPayment(event)">
+          <!-- Hakediş Bilgileri -->
+          <div class="card" style="margin-bottom: 1.5rem;">
+            <h3 style="margin-bottom: 1rem;">📋 Hakediş Bilgileri</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+              <div class="form-group">
+                <label for="paymentNo">Hakediş No *</label>
+                <input type="text" id="paymentNo" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">Otomatik oluşturuldu</div>
+              </div>
+              <div class="form-group">
+                <label for="paymentPeriod">Dönem *</label>
+                <input type="text" id="paymentPeriod" placeholder="Örn: Ocak 2024" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+              </div>
+              <div class="form-group">
+                <label for="paymentStartDate">Başlangıç Tarihi *</label>
+                <input type="date" id="paymentStartDate" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+              </div>
+              <div class="form-group">
+                <label for="paymentEndDate">Bitiş Tarihi *</label>
+                <input type="date" id="paymentEndDate" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+              </div>
+            </div>
+          </div>
+
+          <!-- Kesinti Oranları -->
+          <div class="card" style="margin-bottom: 1.5rem;">
+            <h3 style="margin-bottom: 1rem;">📊 Kesinti Oranları</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+              <div class="form-group">
+                <label for="vatRate">KDV Oranı (%)</label>
+                <input type="number" id="vatRate" value="20" min="0" max="100" step="0.01" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+              </div>
+              <div class="form-group">
+                <label for="withholdingRate">Stopaj Oranı (%)</label>
+                <input type="number" id="withholdingRate" value="3" min="0" max="100" step="0.01" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+              </div>
+              <div class="form-group">
+                <label for="stampTaxRate">Damga Vergisi (%)</label>
+                <input type="number" id="stampTaxRate" value="0.948" min="0" max="100" step="0.001" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+              </div>
+            </div>
+          </div>
+
+          <!-- İş Kalemleri Seçimi -->
+          <div class="card" style="margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <h3 style="margin: 0;">🔨 İş Kalemleri</h3>
+              <button type="button" class="btn btn-secondary" onclick="loadBoqItemsForPayment()">📋 Metraj'dan Yükle</button>
+            </div>
+            <div id="paymentItemsContainer" style="max-height: 400px; overflow-y: auto;">
+              <!-- BOQ items will be loaded here -->
+              <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📋</div>
+                <p>Metraj listesinden iş kalemlerini yükleyin</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hesaplama Özeti -->
+          <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <h3 style="margin-bottom: 1rem; color: white;">💰 Hakediş Özeti</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+              <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+                <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.5rem;">Brüt Tutar</div>
+                <div id="summaryGrossAmount" style="font-size: 1.5rem; font-weight: bold;">₺0.00</div>
+              </div>
+              <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+                <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.5rem;">KDV</div>
+                <div id="summaryVatAmount" style="font-size: 1.5rem; font-weight: bold;">₺0.00</div>
+              </div>
+              <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+                <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.5rem;">Kesintiler</div>
+                <div id="summaryDeductions" style="font-size: 1.5rem; font-weight: bold;">₺0.00</div>
+              </div>
+              <div style="background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px;">
+                <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.5rem;">Net Ödeme</div>
+                <div id="summaryNetAmount" style="font-size: 1.5rem; font-weight: bold;">₺0.00</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notlar -->
+          <div class="form-group" style="margin-top: 1.5rem;">
+            <label for="paymentNotes">Notlar</label>
+            <textarea id="paymentNotes" rows="3" placeholder="Hakediş ile ilgili notlar..." style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary); resize: vertical;"></textarea>
+          </div>
+
+          <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">💾 Hakediş Oluştur</button>
+            <button type="button" class="btn btn-secondary" onclick="closeCreateProgressPaymentModal()" style="flex: 1;">❌ İptal</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Progress Payment Detail Modal -->
+  <div id="viewProgressPaymentModal" class="modal">
+    <div class="modal-content" style="max-width: 1200px; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header">
+        <h2 id="viewPaymentTitle">Hakediş Detayı</h2>
+        <button class="modal-close" onclick="closeViewProgressPaymentModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="viewPaymentContent">
+        <!-- Payment details will be loaded here -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeViewProgressPaymentModal()">Kapat</button>
+        <button class="btn" style="background: #e74c3c; color: white;" onclick="downloadPaymentPDF()">📄 PDF İndir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load JS modules -->
+  <script type="module" src="../js/auth.js?v=6"></script>
+  <script type="module" src="../js/projects.js?v=6"></script>
+  <script type="module" src="../js/progress-payments.js?v=6"></script>
+  <script type="module" src="../js/app.js?v=6"></script>
+
+  <script>
+    // Mobile menu toggle
+    document.getElementById('menuToggle')?.addEventListener('click', function() {
+      document.querySelector('.sidebar').classList.toggle('sidebar-open');
+    });
+
+    // Close sidebar on mobile when clicking outside
+    document.addEventListener('click', function(event) {
+      const sidebar = document.querySelector('.sidebar');
+      const menuToggle = document.getElementById('menuToggle');
+      
+      if (window.innerWidth <= 768 && 
+          sidebar.classList.contains('sidebar-open') && 
+          !sidebar.contains(event.target) && 
+          event.target !== menuToggle) {
+        sidebar.classList.remove('sidebar-open');
+      }
+    });
+
+    // Update navigation links with project ID
+    function updateNavLinks() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectId = urlParams.get('id');
+      if (projectId) {
+        // İş Akışı Linkleri
+        const navKesif = document.getElementById('navKesif');
+        const navTeklif = document.getElementById('navTeklif');
+        const navSozlesme = document.getElementById('navSozlesme');
+        const navMetraj = document.getElementById('navMetraj');
+        const navHakedis = document.getElementById('navHakedis');
+        const navOdeme = document.getElementById('navOdeme');
+        // Proje & Destek Linkleri
+        const navOzet = document.getElementById('navOzet');
+        const navStok = document.getElementById('navStok');
+        const navButce = document.getElementById('navButce');
+        const navGunluk = document.getElementById('navGunluk');
+        const navMusteri = document.getElementById('navMusteri');
+        
+        if (navKesif) navKesif.href = `kesif.html?id=${projectId}`;
+        if (navTeklif) navTeklif.href = `teklif.html?id=${projectId}`;
+        if (navSozlesme) navSozlesme.href = `sozlesme.html?id=${projectId}`;
+        if (navMetraj) navMetraj.href = `metraj-listesi.html?id=${projectId}`;
+        if (navHakedis) navHakedis.href = `hakedis-takibi.html?id=${projectId}`;
+        if (navOdeme) navOdeme.href = `odeme-takibi.html?id=${projectId}`;
+        if (navOzet) navOzet.href = `proje-ozeti.html?id=${projectId}`;
+        if (navStok) navStok.href = `stok-yonetimi.html?id=${projectId}`;
+        if (navButce) navButce.href = `butce-yonetimi.html?id=${projectId}`;
+        if (navGunluk) navGunluk.href = `santiye-gunlugu.html?id=${projectId}`;
+        if (navMusteri) navMusteri.href = `musteri-yetkileri.html?id=${projectId}`;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Update navigation links
+      updateNavLinks();
+      
+      // Filtreleme event listeners
+      const searchInput = document.getElementById('paymentSearchInput');
+      const statusFilter = document.getElementById('paymentStatusFilter');
+      const sortFilter = document.getElementById('paymentSortFilter');
+
+      if (searchInput) searchInput.addEventListener('input', applyPaymentFilters);
+      if (statusFilter) statusFilter.addEventListener('change', applyPaymentFilters);
+      if (sortFilter) sortFilter.addEventListener('change', applyPaymentFilters);
+      
+      // Wait for modules to load
+      setTimeout(() => {
+        if (window.loadProgressPaymentsPage) {
+          console.log('✅ Calling loadProgressPaymentsPage');
+          window.loadProgressPaymentsPage();
+          
+          // Setup BOQ loading when modal opens
+          const createBtn = document.getElementById('openCreatePaymentBtn');
+          if (createBtn) {
+            createBtn.addEventListener('click', () => {
+              setTimeout(() => {
+                window.loadBoqItemsForPayment();
+              }, 100);
+            });
+          }
+          
+          // Add tax rate change listeners
+          const vatRate = document.getElementById('vatRate');
+          const withholdingRate = document.getElementById('withholdingRate');
+          const stampTaxRate = document.getElementById('stampTaxRate');
+          
+          if (vatRate) vatRate.addEventListener('input', () => window.updatePaymentSummary());
+          if (withholdingRate) withholdingRate.addEventListener('input', () => window.updatePaymentSummary());
+          if (stampTaxRate) stampTaxRate.addEventListener('input', () => window.updatePaymentSummary());
+        } else {
+          console.error('❌ loadProgressPaymentsPage not available');
+        }
+      }, 200);
+    });
+
+    // Filtreleme fonksiyonları
+    function applyPaymentFilters() {
+      if (window.loadProgressPaymentsPage) {
+        window.loadProgressPaymentsPage();
+      }
+    }
+
+    function clearPaymentFilters() {
+      document.getElementById('paymentSearchInput').value = '';
+      document.getElementById('paymentStatusFilter').value = '';
+      document.getElementById('paymentSortFilter').value = 'date-desc';
+      applyPaymentFilters();
+    }
+
+    // Modal functions
+    function openCreatePaymentModal() {
+      document.getElementById('createPaymentModal').style.display = 'block';
+      if (window.loadBoqItemsForPayment) {
+        setTimeout(() => window.loadBoqItemsForPayment(), 100);
+      }
+    }
+
+    function closeCreatePaymentModal() {
+      document.getElementById('createPaymentModal').style.display = 'none';
+      document.getElementById('createPaymentForm').reset();
+    }
+
+    function openViewPaymentModal() {
+      document.getElementById('viewPaymentModal').style.display = 'block';
+    }
+
+    function closeViewPaymentModal() {
+      document.getElementById('viewPaymentModal').style.display = 'none';
+    }
+
+    function saveProgressPayment() {
+      if (window.createProgressPayment) {
+        window.createProgressPayment();
+      }
+    }
+
+    // Alias for button onclick
+    function openCreateProgressPaymentModal() {
+      openCreatePaymentModal();
+    }
+
+    function exportProgressPaymentsToExcel() {
+      if (window.exportPaymentsToExcel) {
+        window.exportPaymentsToExcel();
+      } else {
+        alert('Excel export özelliği yükleniyor, lütfen tekrar deneyin.');
+      }
+    }
+
+    // Close modals when clicking outside
+    window.addEventListener('click', function(event) {
+      if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+      }
+    });
+
+    // Export functions to window
+    window.applyPaymentFilters = applyPaymentFilters;
+    window.clearPaymentFilters = clearPaymentFilters;
+    window.openCreatePaymentModal = openCreatePaymentModal;
+    window.closeCreatePaymentModal = closeCreatePaymentModal;
+    window.openViewPaymentModal = openViewPaymentModal;
+    window.closeViewPaymentModal = closeViewPaymentModal;
+    window.saveProgressPayment = saveProgressPayment;
+    window.openCreateProgressPaymentModal = openCreateProgressPaymentModal;
+    window.exportProgressPaymentsToExcel = exportProgressPaymentsToExcel;
+    window.clearPaymentFilters = clearPaymentFilters;
+  </script>
+</body>
+</html>

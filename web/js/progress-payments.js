@@ -519,8 +519,796 @@ function exportPaymentToPDF(paymentId) {
   alert('PDF export özelliği yakında eklenecek');
 }
 
+/**
+ * NEW PAGE FUNCTIONS - For hakedis-takibi.html
+ */
+
+/**
+ * Load progress payments for new standalone page
+ */
+async function loadProgressPaymentsPage() {
+  // Get project ID from URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const projectId = urlParams.get('id');
+  
+  if (!projectId) {
+    console.error('❌ Project ID not found in URL');
+    window.location.href = '../projeler.html';
+    return;
+  }
+  
+  currentProjectId = projectId;
+  window.currentProjectId = projectId;
+  
+  try {
+    // Get project details
+    const projectDoc = await getDoc(doc(db, 'projects', projectId));
+    if (!projectDoc.exists()) {
+      alert('❌ Proje bulunamadı');
+      window.location.href = '../projeler.html';
+      return;
+    }
+    
+    currentProject = { id: projectDoc.id, ...projectDoc.data() };
+    
+    // Update page title and breadcrumb
+    const projectNameEl = document.getElementById('projectName');
+    const breadcrumbEl = document.getElementById('projectNameBreadcrumb');
+    if (projectNameEl) projectNameEl.textContent = currentProject.name || 'Proje';
+    if (breadcrumbEl) breadcrumbEl.textContent = currentProject.name || 'Proje';
+    
+    // Get BOQ items for contract amount
+    const boqQuery = query(
+      collection(db, 'boq_items'),
+      where('projectId', '==', projectId),
+      where('isDeleted', '==', false)
+    );
+    const boqSnap = await getDocs(boqQuery);
+    boqItems = [];
+    let totalContractAmount = 0;
+    
+    boqSnap.forEach(docSnap => {
+      const item = { id: docSnap.id, ...docSnap.data() };
+      boqItems.push(item);
+      totalContractAmount += (item.totalPrice || 0);
+    });
+    
+    // Get progress payments
+    const paymentsQuery = query(
+      collection(db, 'progress_payments'),
+      where('projectId', '==', projectId),
+      orderBy('createdAt', 'desc')
+    );
+    const paymentsSnap = await getDocs(paymentsQuery);
+    progressPayments = [];
+    
+    let totalPaymentAmount = 0;
+    let totalPaidAmount = 0;
+    let totalPendingAmount = 0;
+    
+    paymentsSnap.forEach(docSnap => {
+      const payment = { id: docSnap.id, ...docSnap.data() };
+      progressPayments.push(payment);
+      
+      const netAmount = payment.netAmount || 0;
+      totalPaymentAmount += netAmount;
+      
+      if (payment.status === 'paid') {
+        totalPaidAmount += netAmount;
+      } else if (payment.status === 'approved' || payment.status === 'pending') {
+        totalPendingAmount += netAmount;
+      }
+    });
+    
+    // Apply filters
+    const searchInput = document.getElementById('paymentSearchInput');
+    const statusFilter = document.getElementById('paymentStatusFilter');
+    const sortFilter = document.getElementById('paymentSortFilter');
+    
+    let filteredPayments = [...progressPayments];
+    
+    if (searchInput?.value) {
+      const searchTerm = searchInput.value.toLowerCase();
+      filteredPayments = filteredPayments.filter(payment => 
+        payment.paymentNo?.toLowerCase().includes(searchTerm) ||
+        payment.period?.toLowerCase().includes(searchTerm)
+      );
+    }
+    
+    if (statusFilter?.value) {
+      filteredPayments = filteredPayments.filter(payment => payment.status === statusFilter.value);
+    }
+    
+    if (sortFilter?.value) {
+      switch (sortFilter.value) {
+        case 'date-asc':
+          filteredPayments.sort((a, b) => {
+            const dateA = a.createdAt?.toDate?.() || new Date(0);
+            const dateB = b.createdAt?.toDate?.() || new Date(0);
+            return dateA - dateB;
+          });
+          break;
+        case 'amount-asc':
+          filteredPayments.sort((a, b) => (a.netAmount || 0) - (b.netAmount || 0));
+          break;
+        case 'amount-desc':
+          filteredPayments.sort((a, b) => (b.netAmount || 0) - (a.netAmount || 0));
+          break;
+        default: // date-desc
+          filteredPayments.sort((a, b) => {
+            const dateA = a.createdAt?.toDate?.() || new Date(0);
+            const dateB = b.createdAt?.toDate?.() || new Date(0);
+            return dateB - dateA;
+          });
+      }
+    }
+    
+    // Update summary cards
+    const totalPaymentsEl = document.getElementById('totalProgressPayments');
+    const totalPaymentAmountEl = document.getElementById('totalPaymentAmount');
+    const totalPaidEl = document.getElementById('totalPaidAmount');
+    const totalPendingEl = document.getElementById('totalPendingAmount');
+    
+    if (totalPaymentsEl) totalPaymentsEl.textContent = progressPayments.length;
+    if (totalPaymentAmountEl) totalPaymentAmountEl.textContent = formatCurrency(totalPaymentAmount);
+    if (totalPaidEl) totalPaidEl.textContent = formatCurrency(totalPaidAmount);
+    if (totalPendingEl) totalPendingEl.textContent = formatCurrency(totalPendingAmount);
+    
+    // Update progress summary
+    const contractAmountEl = document.getElementById('contractAmount');
+    const totalInvoicedEl = document.getElementById('totalInvoiced');
+    const remainingWorkEl = document.getElementById('remainingWork');
+    const completionRateEl = document.getElementById('completionRate');
+    const progressBarEl = document.getElementById('progressBar');
+    
+    const remainingWork = totalContractAmount - totalPaymentAmount;
+    const completionRate = totalContractAmount > 0 ? ((totalPaymentAmount / totalContractAmount) * 100) : 0;
+    
+    if (contractAmountEl) contractAmountEl.textContent = formatCurrency(totalContractAmount);
+    if (totalInvoicedEl) totalInvoicedEl.textContent = formatCurrency(totalPaymentAmount);
+    if (remainingWorkEl) remainingWorkEl.textContent = formatCurrency(remainingWork);
+    if (completionRateEl) completionRateEl.textContent = completionRate.toFixed(1) + '%';
+    
+    if (progressBarEl) {
+      progressBarEl.style.width = completionRate + '%';
+      progressBarEl.textContent = completionRate.toFixed(1) + '%';
+      
+      // Change color based on completion
+      if (completionRate >= 80) {
+        progressBarEl.style.background = 'linear-gradient(90deg, #43e97b 0%, #38f9d7 100%)';
+      } else if (completionRate >= 50) {
+        progressBarEl.style.background = 'linear-gradient(90deg, #4facfe 0%, #00f2fe 100%)';
+      } else {
+        progressBarEl.style.background = 'linear-gradient(90deg, #fa709a 0%, #fee140 100%)';
+      }
+    }
+    
+    // Render payments list
+    renderProgressPaymentsPage(filteredPayments);
+    
+    console.log(`✅ Loaded ${progressPayments.length} progress payments`);
+    
+  } catch (error) {
+    console.error('❌ Error loading progress payments:', error);
+    alert('Hakediş verileri yüklenirken hata: ' + error.message);
+  }
+}
+
+/**
+ * Render progress payments list for page
+ */
+function renderProgressPaymentsPage(payments) {
+  const container = document.getElementById('progressPaymentsList');
+  if (!container) return;
+  
+  if (payments.length === 0) {
+    container.innerHTML = `
+      <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">💰</div>
+        <p style="margin: 0; font-size: 1.1rem;">Henüz hakediş kaydı bulunmuyor</p>
+        <p style="margin: 0.5rem 0 0 0;">Yeni hakediş oluşturarak başlayın</p>
+      </div>
+    `;
+    return;
+  }
+  
+  const statusColors = {
+    draft: { bg: '#95a5a6', text: 'Taslak', icon: '📝' },
+    pending: { bg: '#f39c12', text: 'Onay Bekliyor', icon: '⏳' },
+    approved: { bg: '#3498db', text: 'Onaylandı', icon: '✅' },
+    paid: { bg: '#27ae60', text: 'Ödendi', icon: '💵' },
+    cancelled: { bg: '#e74c3c', text: 'İptal', icon: '❌' }
+  };
+  
+  let html = '';
+  
+  payments.forEach(payment => {
+    const status = statusColors[payment.status] || statusColors.draft;
+    const createdDate = payment.createdAt?.toDate?.() || new Date();
+    const startDate = payment.startDate?.toDate?.() || null;
+    const endDate = payment.endDate?.toDate?.() || null;
+    
+    html += `
+      <div class="card" style="margin-bottom: 1rem; border-left: 4px solid ${status.bg};">
+        <div style="display: flex; justify-content: space-between; align-items: start; gap: 1rem; flex-wrap: wrap;">
+          <div style="flex: 1;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+              <span style="font-size: 1.5rem;">${status.icon}</span>
+              <div>
+                <div style="font-weight: 600; font-size: 1.1rem; color: var(--brand-red);">
+                  ${payment.paymentNo || 'Hakediş'}
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                  ${payment.period || 'Dönem belirtilmemiş'}
+                </div>
+              </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem; margin-top: 1rem;">
+              <div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Brüt Tutar</div>
+                <div style="font-weight: 600;">${formatCurrency(payment.grossAmount || 0)}</div>
+              </div>
+              <div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">KDV</div>
+                <div style="font-weight: 600;">${formatCurrency(payment.vatAmount || 0)}</div>
+              </div>
+              <div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Kesintiler</div>
+                <div style="font-weight: 600; color: #e74c3c;">${formatCurrency((payment.withholdingAmount || 0) + (payment.stampTaxAmount || 0))}</div>
+              </div>
+              <div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary);">Net Ödeme</div>
+                <div style="font-weight: 600; font-size: 1.1rem; color: #27ae60;">${formatCurrency(payment.netAmount || 0)}</div>
+              </div>
+            </div>
+            
+            ${startDate && endDate ? `
+              <div style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--text-secondary);">
+                📅 ${startDate.toLocaleDateString('tr-TR')} - ${endDate.toLocaleDateString('tr-TR')}
+              </div>
+            ` : ''}
+            
+            <div style="margin-top: 0.5rem;">
+              <span style="display: inline-block; padding: 0.25rem 0.75rem; background: ${status.bg}; color: white; border-radius: 12px; font-size: 0.8rem; font-weight: 600;">
+                ${status.text}
+              </span>
+            </div>
+          </div>
+          
+          <div style="display: flex; gap: 0.5rem; flex-direction: column; align-items: flex-end;">
+            <button class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem; white-space: nowrap;" onclick="viewProgressPaymentDetail('${payment.id}')">
+              👁️ Detay
+            </button>
+            ${payment.status === 'draft' ? `
+              <button class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #3498db; color: white;" onclick="editProgressPayment('${payment.id}')">
+                ✏️ Düzenle
+              </button>
+            ` : ''}
+            ${payment.status === 'approved' || payment.status === 'paid' ? `
+              <button class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #e74c3c; color: white;" onclick="downloadProgressPaymentPDF('${payment.id}')">
+                📄 PDF
+              </button>
+            ` : ''}
+            ${payment.status === 'draft' || payment.status === 'pending' ? `
+              <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem;" onclick="deleteProgressPayment('${payment.id}')">
+                🗑️ Sil
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+}
+
+/**
+ * Open create progress payment modal
+ */
+function openCreateProgressPaymentModal() {
+  // Generate next payment number
+  const nextNo = progressPayments.length + 1;
+  const paymentNo = `HAK-${String(nextNo).padStart(3, '0')}`;
+  
+  document.getElementById('paymentNo').value = paymentNo;
+  
+  // Set current month as default period
+  const now = new Date();
+  const monthNames = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 
+                      'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+  document.getElementById('paymentPeriod').value = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+  
+  // Set default dates (first and last day of current month)
+  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  
+  document.getElementById('paymentStartDate').value = firstDay.toISOString().split('T')[0];
+  document.getElementById('paymentEndDate').value = lastDay.toISOString().split('T')[0];
+  
+  document.getElementById('createProgressPaymentModal').style.display = 'block';
+}
+
+function closeCreateProgressPaymentModal() {
+  document.getElementById('createProgressPaymentModal').style.display = 'none';
+  document.getElementById('createProgressPaymentForm').reset();
+}
+
+/**
+ * Load BOQ items for payment
+ */
+async function loadBoqItemsForPayment() {
+  const container = document.getElementById('paymentItemsContainer');
+  if (!container) return;
+  
+  if (boqItems.length === 0) {
+    container.innerHTML = `
+      <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+        <div style="font-size: 2rem; margin-bottom: 0.5rem;">📋</div>
+        <p>Metraj listesinde iş kalemi bulunmuyor</p>
+        <a href="metraj-listesi.html${window.location.search}" class="btn btn-primary" style="margin-top: 1rem;">
+          Metraj Listesine Git
+        </a>
+      </div>
+    `;
+    return;
+  }
+  
+  // Calculate completed quantities from previous payments
+  const completedQuantities = {};
+  progressPayments.forEach(payment => {
+    if (payment.status !== 'cancelled' && payment.items) {
+      payment.items.forEach(item => {
+        if (!completedQuantities[item.boqItemId]) {
+          completedQuantities[item.boqItemId] = 0;
+        }
+        completedQuantities[item.boqItemId] += (item.currentQuantity || 0);
+      });
+    }
+  });
+  
+  let html = `
+    <div style="max-height: 400px; overflow-y: auto;">
+      <table class="data-table" style="width: 100%;">
+        <thead style="position: sticky; top: 0; background: var(--bg-secondary); z-index: 1;">
+          <tr>
+            <th style="width: 100px;">Poz No</th>
+            <th style="min-width: 200px;">İş Kalemi</th>
+            <th style="width: 80px;">Birim</th>
+            <th style="width: 100px;">Sözleşme</th>
+            <th style="width: 100px;">Yapılan</th>
+            <th style="width: 100px;">Kalan</th>
+            <th style="width: 120px;">Bu Dönem</th>
+            <th style="width: 120px;">Birim Fiyat</th>
+            <th style="width: 120px;">Tutar</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+  
+  boqItems.forEach(item => {
+    const completedQty = completedQuantities[item.id] || 0;
+    const remainingQty = (item.quantity || 0) - completedQty;
+    
+    html += `
+      <tr data-boq-item-id="${item.id}">
+        <td><strong>${item.pozNo}</strong></td>
+        <td>${item.name || item.description}</td>
+        <td>${item.unit}</td>
+        <td style="text-align: right;">${formatNumber(item.quantity)}</td>
+        <td style="text-align: right;">${formatNumber(completedQty)}</td>
+        <td style="text-align: right; color: ${remainingQty > 0 ? '#27ae60' : '#e74c3c'};">${formatNumber(remainingQty)}</td>
+        <td>
+          <input 
+            type="number" 
+            class="payment-item-quantity" 
+            data-boq-item-id="${item.id}"
+            data-unit-price="${item.unitPrice || 0}"
+            min="0" 
+            max="${remainingQty}" 
+            step="0.01" 
+            value="0"
+            style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; text-align: right;"
+            oninput="calculatePaymentItemTotal(this)"
+          >
+        </td>
+        <td style="text-align: right;">${formatCurrency(item.unitPrice || 0)}</td>
+        <td style="text-align: right;">
+          <strong class="payment-item-total" data-boq-item-id="${item.id}">₺0.00</strong>
+        </td>
+      </tr>
+    `;
+  });
+  
+  html += `
+        </tbody>
+        <tfoot>
+          <tr style="background: var(--bg-secondary); font-weight: bold;">
+            <td colspan="8" style="text-align: right;">TOPLAM:</td>
+            <td style="text-align: right;" id="paymentItemsTotal">₺0.00</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  `;
+  
+  container.innerHTML = html;
+  updatePaymentSummary();
+}
+
+/**
+ * Calculate payment item total
+ */
+function calculatePaymentItemTotal(input) {
+  const boqItemId = input.dataset.boqItemId;
+  const quantity = parseFloat(input.value) || 0;
+  const unitPrice = parseFloat(input.dataset.unitPrice) || 0;
+  const total = quantity * unitPrice;
+  
+  const totalEl = document.querySelector(`.payment-item-total[data-boq-item-id="${boqItemId}"]`);
+  if (totalEl) {
+    totalEl.textContent = formatCurrency(total);
+  }
+  
+  updatePaymentSummary();
+}
+
+/**
+ * Update payment summary
+ */
+function updatePaymentSummary() {
+  // Calculate total from all items
+  let grossAmount = 0;
+  document.querySelectorAll('.payment-item-quantity').forEach(input => {
+    const quantity = parseFloat(input.value) || 0;
+    const unitPrice = parseFloat(input.dataset.unitPrice) || 0;
+    grossAmount += quantity * unitPrice;
+  });
+  
+  // Get rates
+  const vatRate = parseFloat(document.getElementById('vatRate')?.value || 20) / 100;
+  const withholdingRate = parseFloat(document.getElementById('withholdingRate')?.value || 3) / 100;
+  const stampTaxRate = parseFloat(document.getElementById('stampTaxRate')?.value || 0.948) / 100;
+  
+  // Calculate amounts
+  const vatAmount = grossAmount * vatRate;
+  const subtotal = grossAmount + vatAmount;
+  const withholdingAmount = grossAmount * withholdingRate;
+  const stampTaxAmount = grossAmount * stampTaxRate;
+  const deductions = withholdingAmount + stampTaxAmount;
+  const netAmount = subtotal - deductions;
+  
+  // Update summary
+  const itemsTotalEl = document.getElementById('paymentItemsTotal');
+  const summaryGrossEl = document.getElementById('summaryGrossAmount');
+  const summaryVatEl = document.getElementById('summaryVatAmount');
+  const summaryDeductionsEl = document.getElementById('summaryDeductions');
+  const summaryNetEl = document.getElementById('summaryNetAmount');
+  
+  if (itemsTotalEl) itemsTotalEl.textContent = formatCurrency(grossAmount);
+  if (summaryGrossEl) summaryGrossEl.textContent = formatCurrency(grossAmount);
+  if (summaryVatEl) summaryVatEl.textContent = formatCurrency(vatAmount);
+  if (summaryDeductionsEl) summaryDeductionsEl.textContent = formatCurrency(deductions);
+  if (summaryNetEl) summaryNetEl.textContent = formatCurrency(netAmount);
+}
+
+/**
+ * Handle create progress payment
+ */
+async function handleCreateProgressPayment(event) {
+  event.preventDefault();
+  
+  const paymentNo = document.getElementById('paymentNo').value;
+  const period = document.getElementById('paymentPeriod').value;
+  const startDate = document.getElementById('paymentStartDate').value;
+  const endDate = document.getElementById('paymentEndDate').value;
+  const notes = document.getElementById('paymentNotes').value;
+  
+  const vatRate = parseFloat(document.getElementById('vatRate').value) / 100;
+  const withholdingRate = parseFloat(document.getElementById('withholdingRate').value) / 100;
+  const stampTaxRate = parseFloat(document.getElementById('stampTaxRate').value) / 100;
+  
+  // Collect payment items
+  const items = [];
+  let grossAmount = 0;
+  
+  document.querySelectorAll('.payment-item-quantity').forEach(input => {
+    const quantity = parseFloat(input.value) || 0;
+    if (quantity > 0) {
+      const boqItemId = input.dataset.boqItemId;
+      const unitPrice = parseFloat(input.dataset.unitPrice) || 0;
+      const currentAmount = quantity * unitPrice;
+      
+      const boqItem = boqItems.find(item => item.id === boqItemId);
+      if (boqItem) {
+        items.push({
+          boqItemId: boqItemId,
+          pozNo: boqItem.pozNo,
+          name: boqItem.name || boqItem.description,
+          unit: boqItem.unit,
+          contractQuantity: boqItem.quantity,
+          currentQuantity: quantity,
+          unitPrice: unitPrice,
+          currentAmount: currentAmount
+        });
+        
+        grossAmount += currentAmount;
+      }
+    }
+  });
+  
+  if (items.length === 0) {
+    alert('❌ Lütfen en az bir iş kalemi için miktar girin');
+    return;
+  }
+  
+  // Calculate amounts
+  const vatAmount = grossAmount * vatRate;
+  const subtotal = grossAmount + vatAmount;
+  const withholdingAmount = grossAmount * withholdingRate;
+  const stampTaxAmount = grossAmount * stampTaxRate;
+  const netAmount = subtotal - withholdingAmount - stampTaxAmount;
+  
+  try {
+    const user = auth.currentUser;
+    
+    const paymentData = {
+      projectId: currentProjectId,
+      paymentNo: paymentNo,
+      period: period,
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
+      items: items,
+      grossAmount: grossAmount,
+      vatRate: vatRate,
+      vatAmount: vatAmount,
+      subtotal: subtotal,
+      withholdingRate: withholdingRate,
+      withholdingAmount: withholdingAmount,
+      stampTaxRate: stampTaxRate,
+      stampTaxAmount: stampTaxAmount,
+      netAmount: netAmount,
+      notes: notes,
+      status: 'draft',
+      createdAt: Timestamp.now(),
+      createdBy: user.uid,
+      updatedAt: Timestamp.now()
+    };
+    
+    await addDoc(collection(db, 'progress_payments'), paymentData);
+    
+    alert('✅ Hakediş başarıyla oluşturuldu!');
+    closeCreateProgressPaymentModal();
+    loadProgressPaymentsPage();
+    
+  } catch (error) {
+    console.error('❌ Error creating progress payment:', error);
+    alert('Hakediş oluşturulurken hata: ' + error.message);
+  }
+}
+
+/**
+ * View progress payment detail
+ */
+function viewProgressPaymentDetail(paymentId) {
+  const payment = progressPayments.find(p => p.id === paymentId);
+  if (!payment) return;
+  
+  const modal = document.getElementById('viewProgressPaymentModal');
+  const titleEl = document.getElementById('viewPaymentTitle');
+  const contentEl = document.getElementById('viewPaymentContent');
+  
+  if (titleEl) titleEl.textContent = `${payment.paymentNo} - ${payment.period}`;
+  
+  const statusColors = {
+    draft: { bg: '#95a5a6', text: 'Taslak', icon: '📝' },
+    pending: { bg: '#f39c12', text: 'Onay Bekliyor', icon: '⏳' },
+    approved: { bg: '#3498db', text: 'Onaylandı', icon: '✅' },
+    paid: { bg: '#27ae60', text: 'Ödendi', icon: '💵' },
+    cancelled: { bg: '#e74c3c', text: 'İptal', icon: '❌' }
+  };
+  
+  const status = statusColors[payment.status] || statusColors.draft;
+  const startDate = payment.startDate?.toDate?.();
+  const endDate = payment.endDate?.toDate?.();
+  
+  let html = `
+    <div class="card" style="margin-bottom: 1.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+        <div>
+          <h3 style="margin: 0 0 0.5rem 0;">${payment.paymentNo}</h3>
+          <div style="font-size: 0.9rem; color: var(--text-secondary);">${payment.period}</div>
+          ${startDate && endDate ? `
+            <div style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-secondary);">
+              📅 ${startDate.toLocaleDateString('tr-TR')} - ${endDate.toLocaleDateString('tr-TR')}
+            </div>
+          ` : ''}
+        </div>
+        <span style="padding: 0.5rem 1rem; background: ${status.bg}; color: white; border-radius: 12px; font-weight: 600;">
+          ${status.icon} ${status.text}
+        </span>
+      </div>
+      
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+        <div>
+          <div style="font-size: 0.75rem; color: var(--text-secondary);">Brüt Tutar</div>
+          <div style="font-weight: 600; font-size: 1.1rem;">${formatCurrency(payment.grossAmount || 0)}</div>
+        </div>
+        <div>
+          <div style="font-size: 0.75rem; color: var(--text-secondary);">KDV (%${((payment.vatRate || 0) * 100).toFixed(0)})</div>
+          <div style="font-weight: 600; font-size: 1.1rem;">${formatCurrency(payment.vatAmount || 0)}</div>
+        </div>
+        <div>
+          <div style="font-size: 0.75rem; color: var(--text-secondary);">Ara Toplam</div>
+          <div style="font-weight: 600; font-size: 1.1rem;">${formatCurrency(payment.subtotal || 0)}</div>
+        </div>
+        <div>
+          <div style="font-size: 0.75rem; color: var(--text-secondary);">Stopaj (%${((payment.withholdingRate || 0) * 100).toFixed(2)})</div>
+          <div style="font-weight: 600; font-size: 1.1rem; color: #e74c3c;">-${formatCurrency(payment.withholdingAmount || 0)}</div>
+        </div>
+        <div>
+          <div style="font-size: 0.75rem; color: var(--text-secondary);">Damga V. (%${((payment.stampTaxRate || 0) * 100).toFixed(3)})</div>
+          <div style="font-weight: 600; font-size: 1.1rem; color: #e74c3c;">-${formatCurrency(payment.stampTaxAmount || 0)}</div>
+        </div>
+        <div style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); padding: 1rem; border-radius: 8px; color: white;">
+          <div style="font-size: 0.75rem; opacity: 0.9;">Net Ödeme</div>
+          <div style="font-weight: bold; font-size: 1.3rem;">${formatCurrency(payment.netAmount || 0)}</div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  if (payment.items && payment.items.length > 0) {
+    html += `
+      <div class="card">
+        <h3 style="margin-bottom: 1rem;">🔨 İş Kalemleri</h3>
+        <div style="overflow-x: auto;">
+          <table class="data-table" style="width: 100%;">
+            <thead>
+              <tr>
+                <th>Poz No</th>
+                <th>İş Kalemi</th>
+                <th>Birim</th>
+                <th style="text-align: right;">Bu Dönem</th>
+                <th style="text-align: right;">Birim Fiyat</th>
+                <th style="text-align: right;">Tutar</th>
+              </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    payment.items.forEach(item => {
+      html += `
+        <tr>
+          <td><strong>${item.pozNo}</strong></td>
+          <td>${item.name}</td>
+          <td>${item.unit}</td>
+          <td style="text-align: right;">${formatNumber(item.currentQuantity)}</td>
+          <td style="text-align: right;">${formatCurrency(item.unitPrice)}</td>
+          <td style="text-align: right;"><strong>${formatCurrency(item.currentAmount)}</strong></td>
+        </tr>
+      `;
+    });
+    
+    html += `
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+  
+  if (payment.notes) {
+    html += `
+      <div class="card" style="margin-top: 1.5rem;">
+        <h4 style="margin: 0 0 0.5rem 0;">📝 Notlar</h4>
+        <p style="margin: 0; color: var(--text-secondary);">${payment.notes}</p>
+      </div>
+    `;
+  }
+  
+  if (contentEl) contentEl.innerHTML = html;
+  if (modal) modal.style.display = 'block';
+}
+
+function closeViewProgressPaymentModal() {
+  const modal = document.getElementById('viewProgressPaymentModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function editProgressPayment(paymentId) {
+  alert('Hakediş düzenleme özelliği yakında eklenecek');
+}
+
+function deleteProgressPayment(paymentId) {
+  if (!confirm('Bu hakediş kaydını silmek istediğinize emin misiniz?')) return;
+  
+  // TODO: Implement delete
+  alert('Silme işlemi yakında eklenecek');
+}
+
+function downloadProgressPaymentPDF(paymentId) {
+  alert('PDF indirme özelliği yakında eklenecek');
+}
+
+async function exportProgressPaymentsToExcel() {
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectId = urlParams.get('id');
+    
+    if (!projectId) {
+      alert('Proje ID bulunamadı');
+      return;
+    }
+
+    // Get project name
+    const projectDoc = await getDoc(doc(db, 'projects', projectId));
+    const projectName = projectDoc.exists() ? projectDoc.data().name : 'Proje';
+
+    // Get all payments for this project
+    const paymentsQuery = query(
+      collection(db, 'progress_payments'),
+      where('projectId', '==', projectId),
+      orderBy('periodNumber', 'asc')
+    );
+    
+    const snapshot = await getDocs(paymentsQuery);
+    
+    if (snapshot.empty) {
+      alert('Henüz hakediş kaydı bulunmamaktadır.');
+      return;
+    }
+
+    // Create CSV content
+    let csv = '\uFEFF'; // UTF-8 BOM for Excel Turkish character support
+    csv += 'Dönem No,Hakediş Tarihi,Açıklama,Durum,Ara Toplam,KDV,Stopaj,Damga Vergisi,Net Tutar\n';
+    
+    snapshot.forEach(doc => {
+      const payment = doc.data();
+      const date = payment.periodDate ? new Date(payment.periodDate.seconds * 1000).toLocaleDateString('tr-TR') : '-';
+      const status = payment.status === 'approved' ? 'Onaylandı' : 
+                     payment.status === 'pending' ? 'Bekliyor' : 
+                     payment.status === 'draft' ? 'Taslak' : 'İptal';
+      
+      csv += `${payment.periodNumber || '-'},`;
+      csv += `${date},`;
+      csv += `"${payment.description || '-'}",`;
+      csv += `${status},`;
+      csv += `${payment.subtotal?.toFixed(2) || '0.00'},`;
+      csv += `${payment.vatAmount?.toFixed(2) || '0.00'},`;
+      csv += `${payment.withholdingAmount?.toFixed(2) || '0.00'},`;
+      csv += `${payment.stampTaxAmount?.toFixed(2) || '0.00'},`;
+      csv += `${payment.netTotal?.toFixed(2) || '0.00'}\n`;
+    });
+
+    // Create download
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${projectName}_Hakedisler_${new Date().toLocaleDateString('tr-TR').replace(/\./g, '-')}.csv`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    console.log('✅ Excel export completed');
+  } catch (error) {
+    console.error('❌ Excel export error:', error);
+    alert('Excel export sırasında hata oluştu: ' + error.message);
+  }
+}
+
+function downloadPaymentPDF() {
+  alert('PDF indirme özelliği yakında eklenecek');
+}
+
 // Export functions
 window.loadProgressPayments = loadProgressPayments;
+window.loadProgressPaymentsPage = loadProgressPaymentsPage;
 window.openPaymentConfigModal = openPaymentConfigModal;
 window.closePaymentConfigModal = closePaymentConfigModal;
 window.savePaymentConfig = savePaymentConfig;
@@ -530,5 +1318,19 @@ window.createPaymentPeriod = createPaymentPeriod;
 window.viewPaymentDetail = viewPaymentDetail;
 window.editPayment = editPayment;
 window.exportPaymentToPDF = exportPaymentToPDF;
+window.openCreateProgressPaymentModal = openCreateProgressPaymentModal;
+window.closeCreateProgressPaymentModal = closeCreateProgressPaymentModal;
+window.loadBoqItemsForPayment = loadBoqItemsForPayment;
+window.calculatePaymentItemTotal = calculatePaymentItemTotal;
+window.updatePaymentSummary = updatePaymentSummary;
+window.handleCreateProgressPayment = handleCreateProgressPayment;
+window.viewProgressPaymentDetail = viewProgressPaymentDetail;
+window.closeViewProgressPaymentModal = closeViewProgressPaymentModal;
+window.editProgressPayment = editProgressPayment;
+window.deleteProgressPayment = deleteProgressPayment;
+window.downloadProgressPaymentPDF = downloadProgressPaymentPDF;
+window.exportProgressPaymentsToExcel = exportProgressPaymentsToExcel;
+window.exportPaymentsToExcel = exportProgressPaymentsToExcel; // Alias
+window.downloadPaymentPDF = downloadPaymentPDF;
 
 console.log('✅ Progress Payments module loaded');

@@ -219,6 +219,85 @@ service cloud.firestore {
       allow create, update, delete: if isSignedIn() && !isClient();
     }
 
+    // ========== WORKFLOW COLLECTIONS (KEŞİF → TEKLİF → SÖZLEŞME → METRAJ → HAKEDİŞ → ÖDEME) ==========
+    
+    // Keşif Items (Preliminary Survey Items)
+    match /kesif_items/{itemId} {
+      // Clients cannot see keşif details (internal cost estimation)
+      allow read: if isSignedIn() && !isClient();
+      allow create, update: if isSignedIn() && !isClient() && (isCompanyAdmin() || isCompanyUser() || isSuperAdmin());
+      allow delete: if isSignedIn() && !isClient() && (isCompanyAdmin() || isSuperAdmin());
+    }
+
+    // Keşif Metadata (Survey Summary Data)
+    match /kesif_metadata/{metadataId} {
+      // Clients cannot see keşif metadata (internal data)
+      allow read: if isSignedIn() && !isClient();
+      allow create, update: if isSignedIn() && !isClient() && (isCompanyAdmin() || isCompanyUser() || isSuperAdmin());
+      allow delete: if isSignedIn() && !isClient() && (isCompanyAdmin() || isSuperAdmin());
+    }
+
+    // Proposal Items (Teklif Kalemleri)
+    match /proposal_items/{itemId} {
+      // Clients can read proposal items if they have project access
+      allow read: if isSignedIn() && (
+        !isClient() ||
+        (exists(/databases/$(database)/documents/projects/$(resource.data.projectId)) &&
+         request.auth.uid in get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.get('allowedClients', []))
+      );
+      allow create, update: if isSignedIn() && !isClient() && (isCompanyAdmin() || isCompanyUser() || isSuperAdmin());
+      allow delete: if isSignedIn() && !isClient() && (isCompanyAdmin() || isSuperAdmin());
+    }
+
+    // Proposals (Teklif Dökümanları)
+    match /proposals/{proposalId} {
+      // Clients can read proposals if they have project access
+      allow read: if isSignedIn() && (
+        !isClient() ||
+        (exists(/databases/$(database)/documents/projects/$(resource.data.projectId)) &&
+         request.auth.uid in get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.get('allowedClients', []))
+      );
+      allow create, update: if isSignedIn() && !isClient() && (isCompanyAdmin() || isCompanyUser() || isSuperAdmin());
+      allow delete: if isSignedIn() && !isClient() && (isCompanyAdmin() || isSuperAdmin());
+    }
+
+    // Contract Items (Sözleşme Kalemleri)
+    match /contract_items/{itemId} {
+      // Clients can read contract items if they have project access
+      allow read: if isSignedIn() && (
+        !isClient() ||
+        (exists(/databases/$(database)/documents/projects/$(resource.data.projectId)) &&
+         request.auth.uid in get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.get('allowedClients', []))
+      );
+      allow create, update: if isSignedIn() && !isClient() && (isCompanyAdmin() || isCompanyUser() || isSuperAdmin());
+      allow delete: if isSignedIn() && !isClient() && (isCompanyAdmin() || isSuperAdmin());
+    }
+
+    // Contracts (Sözleşme Dökümanları)
+    match /contracts/{contractId} {
+      // Clients can read contracts if they have project access
+      allow read: if isSignedIn() && (
+        !isClient() ||
+        (exists(/databases/$(database)/documents/projects/$(resource.data.projectId)) &&
+         request.auth.uid in get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.get('allowedClients', []))
+      );
+      allow create, update: if isSignedIn() && !isClient() && (isCompanyAdmin() || isCompanyUser() || isSuperAdmin());
+      allow delete: if isSignedIn() && !isClient() && (isCompanyAdmin() || isSuperAdmin());
+    }
+
+    // Payment Records (Ödeme Kayıtları)
+    match /payment_records/{recordId} {
+      // Clients can read payment records if they have project access and visibility is enabled
+      allow read: if isSignedIn() && (
+        !isClient() ||
+        (exists(/databases/$(database)/documents/projects/$(resource.data.projectId)) &&
+         request.auth.uid in get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.get('allowedClients', []) &&
+         get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.get('clientVisibility', {}).get('showPayments', false))
+      );
+      allow create, update: if isSignedIn() && !isClient() && (isCompanyAdmin() || isCompanyUser() || isSuperAdmin());
+      allow delete: if isSignedIn() && !isClient() && (isCompanyAdmin() || isSuperAdmin());
+    }
+
     // ========== HAKEDIŞ (PROGRESS PAYMENT) COLLECTIONS ==========
     
     // BOQ Items (Bill of Quantities)

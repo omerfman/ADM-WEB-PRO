@@ -218,8 +218,8 @@ function renderProjectsList() {
  * Open project detail page
  */
 function openProjectDetail(projectId) {
-  // Redirect to project detail page with project ID
-  window.location.href = `project-detail.html?id=${projectId}`;
+  // Redirect to new project overview page with full workflow
+  window.location.href = `projects/proje-ozeti.html?id=${projectId}`;
 }
 
 /**
@@ -481,6 +481,7 @@ async function handleAddStock(event) {
       unit,
       quantity,
       unitPrice,
+      usedQuantity: 0, // Track used quantity
       createdBy: user.uid,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -504,6 +505,139 @@ async function deleteStock(projectId, stockId) {
       await loadProjectStocks(projectId);
     } catch (error) {
       showAlert('Silme işlemi başarısız: ' + error.message, 'danger');
+    }
+  }
+}
+
+// ========== STOCK USAGE FUNCTIONS ==========
+async function handleUseStock(event) {
+  event.preventDefault();
+  
+  const stockId = document.getElementById('useStockId').value;
+  const quantity = parseFloat(document.getElementById('useStockQuantity').value);
+  const usageDate = document.getElementById('useStockDate').value;
+  const usedBy = document.getElementById('useStockUsedBy').value;
+  const location = document.getElementById('useStockLocation').value;
+  const notes = document.getElementById('useStockNotes').value;
+
+  try {
+    const user = auth.currentUser;
+    if (!user || !currentProjectId) {
+      showAlert('Hata: Proje seçilmemiş', 'danger');
+      return;
+    }
+
+    // Get current stock data
+    const stockRef = doc(db, 'projects', currentProjectId, 'stocks', stockId);
+    const stockSnap = await getDoc(stockRef);
+    
+    if (!stockSnap.exists()) {
+      showAlert('Stok bulunamadı', 'danger');
+      return;
+    }
+
+    const stockData = stockSnap.data();
+    const currentUsed = stockData.usedQuantity || 0;
+    const remaining = stockData.quantity - currentUsed;
+
+    // Validate quantity
+    if (quantity > remaining) {
+      showAlert(`Hata: Yetersiz stok! Kalan miktar: ${remaining} ${stockData.unit}`, 'danger');
+      return;
+    }
+
+    // Update stock used quantity
+    await updateDoc(stockRef, {
+      usedQuantity: currentUsed + quantity,
+      updatedAt: serverTimestamp()
+    });
+
+    // Create usage record
+    const usageRef = collection(db, 'projects', currentProjectId, 'stocks', stockId, 'usage');
+    await addDoc(usageRef, {
+      quantity,
+      usageDate: new Date(usageDate),
+      usedBy,
+      location: location || '',
+      notes: notes || '',
+      recordedBy: user.uid,
+      createdAt: serverTimestamp()
+    });
+
+    showAlert('Stok kullanımı kaydedildi!', 'success');
+    if (window.closeUseStockModal) window.closeUseStockModal();
+    await loadProjectStocks(currentProjectId);
+  } catch (error) {
+    console.error('❌ Stok kullanımı kaydedilemedi:', error);
+    showAlert('Kayıt hatası: ' + error.message, 'danger');
+  }
+}
+
+async function loadStockUsageHistory(stockId) {
+  try {
+    if (!currentProjectId) {
+      console.warn('⚠️ currentProjectId not set');
+      return;
+    }
+
+    const usageRef = collection(db, 'projects', currentProjectId, 'stocks', stockId, 'usage');
+    const q = query(usageRef, orderBy('usageDate', 'desc'));
+    const usageSnap = await getDocs(q);
+
+    const historyList = document.getElementById('stockUsageHistoryList');
+    if (!historyList) return;
+
+    if (usageSnap.empty) {
+      historyList.innerHTML = `
+        <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">📋</div>
+          <div>Henüz kullanım kaydı bulunmuyor</div>
+        </div>
+      `;
+      return;
+    }
+
+    let html = '';
+    usageSnap.forEach(docSnap => {
+      const usage = docSnap.data();
+      const date = usage.usageDate?.toDate?.() || new Date();
+      
+      html += `
+        <div class="card" style="margin-bottom: 1rem; border-left: 4px solid var(--brand-red);">
+          <div style="display: flex; justify-content: space-between; align-items: start; gap: 1rem; flex-wrap: wrap;">
+            <div style="flex: 1;">
+              <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <strong style="color: var(--brand-red); font-size: 1.2rem;">${usage.quantity}</strong>
+                <span style="color: var(--text-secondary); font-size: 0.9rem; align-self: center;">birim kullanıldı</span>
+              </div>
+              <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                📅 ${date.toLocaleDateString('tr-TR')}
+              </div>
+              ${usage.usedBy ? `<div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                👤 ${usage.usedBy}
+              </div>` : ''}
+              ${usage.location ? `<div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                📍 ${usage.location}
+              </div>` : ''}
+              ${usage.notes ? `<div style="margin-top: 0.5rem; padding: 0.5rem; background: var(--bg-tertiary); border-radius: 4px; font-size: 0.9rem;">
+                ${usage.notes}
+              </div>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    historyList.innerHTML = html;
+  } catch (error) {
+    console.error('❌ Kullanım geçmişi yüklenemedi:', error);
+    const historyList = document.getElementById('stockUsageHistoryList');
+    if (historyList) {
+      historyList.innerHTML = `
+        <div style="text-align: center; padding: 2rem; color: var(--text-danger);">
+          Kullanım geçmişi yüklenirken hata oluştu
+        </div>
+      `;
     }
   }
 }
@@ -933,6 +1067,8 @@ window.openAddStockModal = openAddStockModal;
 window.closeAddStockModal = closeAddStockModal;
 window.handleAddStock = handleAddStock;
 window.deleteStock = deleteStock;
+window.handleUseStock = handleUseStock;
+window.loadStockUsageHistory = loadStockUsageHistory;
 window.openAddPaymentModal = openAddPaymentModal;
 window.closeAddPaymentModal = closeAddPaymentModal;
 window.handleAddPayment = handleAddPayment;
