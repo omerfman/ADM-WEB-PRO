@@ -128,6 +128,18 @@ export async function loadTeklif() {
       if (teklifMetadata.paymentTerms) {
         document.getElementById('proposalTerms').value = teklifMetadata.paymentTerms;
       }
+      
+      // Load proposal details
+      if (teklifMetadata.title) {
+        document.getElementById('proposalTitle').value = teklifMetadata.title;
+      }
+      if (teklifMetadata.validityDays) {
+        document.getElementById('validityDays').value = teklifMetadata.validityDays;
+        document.getElementById('validUntil').textContent = `${teklifMetadata.validityDays} gün`;
+      }
+      if (teklifMetadata.terms) {
+        document.getElementById('proposalTerms').value = teklifMetadata.terms;
+      }
     }
 
     // Load teklif items
