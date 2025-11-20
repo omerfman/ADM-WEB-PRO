@@ -415,6 +415,14 @@
 
     function openRecordPaymentModal(hakedisId = null) {
       document.getElementById('recordPaymentModal').style.display = 'block';
+      
+      // Reset submit button state
+      const submitBtn = document.querySelector('#recordPaymentForm button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '💾 Kaydet';
+      }
+      
       // Set default date to today
       document.getElementById('paymentDate').valueAsDate = new Date();
       
@@ -437,8 +445,31 @@
     }
 
     function closeRecordPaymentModal() {
-      document.getElementById('recordPaymentModal').style.display = 'none';
-      document.getElementById('recordPaymentForm').reset();
+      const modal = document.getElementById('recordPaymentModal');
+      const form = document.getElementById('recordPaymentForm');
+      const infoCard = document.getElementById('hakedisInfoCard');
+      const submitBtn = form?.querySelector('button[type="submit"]');
+      
+      // Reset submit button state
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '💾 Kaydet';
+      }
+      
+      // Hide info card
+      if (infoCard) {
+        infoCard.style.display = 'none';
+      }
+      
+      // Reset form
+      if (form) {
+        form.reset();
+      }
+      
+      // Close modal
+      if (modal) {
+        modal.style.display = 'none';
+      }
     }
 
     function syncFromHakedis() {
@@ -827,6 +858,13 @@
 
     async function handleRecordPayment(event) {
       event.preventDefault();
+      
+      // Prevent double submit
+      const submitBtn = event.target.querySelector('button[type="submit"]');
+      if (submitBtn && submitBtn.disabled) {
+        console.log('⚠️ Already submitting, ignoring duplicate submit');
+        return;
+      }
 
       const hakedisId = document.getElementById('hakedisSelect').value;
       const amount = parseFloat(document.getElementById('paymentAmount').value);
@@ -854,14 +892,14 @@
         const remaining = netAmount - paidAmount;
 
         if (amount > remaining + 0.01) {
-          const confirm = window.confirm(
+          const confirmResult = window.confirm(
             `⚠️ UYARI: Girilen tutar kalan tutarı aşıyor!\n\n` +
             `Kalan Tutar: ${formatCurrency(remaining)}\n` +
             `Girilen Tutar: ${formatCurrency(amount)}\n` +
             `Fark: ${formatCurrency(amount - remaining)}\n\n` +
             `Devam etmek istiyor musunuz?`
           );
-          if (!confirm) return;
+          if (!confirmResult) return;
         }
       }
 
@@ -869,10 +907,10 @@
         const user = auth.currentUser;
         
         // Show loading state
-        const submitBtn = event.target.querySelector('button[type="submit"]');
-        const originalText = submitBtn.textContent;
-        submitBtn.disabled = true;
-        submitBtn.textContent = '⏳ Kaydediliyor...';
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = '⏳ Kaydediliyor...';
+        }
 
         await addDoc(collection(db, 'payment_records'), {
           projectId: currentProjectId,
