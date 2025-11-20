@@ -648,6 +648,27 @@
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF('p', 'mm', 'a4');
 
+        // Add Turkish character support
+        pdf.setLanguage("tr");
+        
+        // Helper function to convert Turkish characters for better compatibility
+        const turkishToLatin = (text) => {
+          if (!text) return '';
+          return String(text)
+            .replace(/Ğ/g, 'G')
+            .replace(/ğ/g, 'g')
+            .replace(/Ü/g, 'U')
+            .replace(/ü/g, 'u')
+            .replace(/Ş/g, 'S')
+            .replace(/ş/g, 's')
+            .replace(/İ/g, 'I')
+            .replace(/ı/g, 'i')
+            .replace(/Ö/g, 'O')
+            .replace(/ö/g, 'o')
+            .replace(/Ç/g, 'C')
+            .replace(/ç/g, 'c');
+        };
+
         // Colors
         const primaryColor = [211, 47, 47]; // Brand red
         const darkGray = [51, 51, 51];
@@ -660,18 +681,18 @@
         pdf.setTextColor(255, 255, 255);
         pdf.setFontSize(24);
         pdf.setFont('helvetica', 'bold');
-        pdf.text('ADM İNŞAAT', 15, 20);
+        pdf.text('ADM INSAAT', 15, 20);
         
         pdf.setFontSize(10);
         pdf.setFont('helvetica', 'normal');
-        pdf.text('Proje Yönetim Sistemi', 15, 27);
+        pdf.text('Proje Yonetim Sistemi', 15, 27);
         pdf.text('Tel: +90 XXX XXX XX XX | info@adm.com', 15, 33);
 
         // Title
         pdf.setTextColor(...darkGray);
         pdf.setFontSize(18);
         pdf.setFont('helvetica', 'bold');
-        pdf.text('FİYAT TEKLİFİ', 105, 55, { align: 'center' });
+        pdf.text('FIYAT TEKLIFI', 105, 55, { align: 'center' });
 
         // Project Info Box
         pdf.setDrawColor(...lightGray);
@@ -681,29 +702,29 @@
         pdf.setFontSize(10);
         pdf.setFont('helvetica', 'bold');
         pdf.setTextColor(...darkGray);
-        pdf.text('PROJE BİLGİLERİ', 20, 72);
+        pdf.text('PROJE BILGILERI', 20, 72);
 
         pdf.setFont('helvetica', 'normal');
         pdf.setFontSize(9);
-        pdf.text(`Proje Adı: ${project.name || '-'}`, 20, 78);
-        pdf.text(`Müşteri: ${project.clientName || '-'}`, 20, 84);
-        pdf.text(`Firma: ${project.companyName || '-'}`, 20, 90);
+        pdf.text(`Proje Adi: ${turkishToLatin(project.name) || '-'}`, 20, 78);
+        pdf.text(`Musteri: ${turkishToLatin(project.clientName) || '-'}`, 20, 84);
+        pdf.text(`Firma: ${turkishToLatin(project.companyName) || '-'}`, 20, 90);
         pdf.text(`Teklif Tarihi: ${new Date().toLocaleDateString('tr-TR')}`, 20, 96);
 
         // Table
         const tableData = items.map((item, index) => [
           (index + 1).toString(),
-          item.name || '-',
-          item.category || '-',
+          turkishToLatin(item.name) || '-',
+          turkishToLatin(item.category) || '-',
           item.unit || '-',
           new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2 }).format(item.quantity || 0),
-          new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(item.unitPrice || 0),
-          new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format((item.quantity || 0) * (item.unitPrice || 0))
+          new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2 }).format(item.unitPrice || 0) + ' TL',
+          new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2 }).format((item.quantity || 0) * (item.unitPrice || 0)) + ' TL'
         ]);
 
         pdf.autoTable({
           startY: 110,
-          head: [['#', 'İş Kalemi', 'Kategori', 'Birim', 'Miktar', 'Birim Fiyat', 'Toplam']],
+          head: [['#', 'Is Kalemi', 'Kategori', 'Birim', 'Miktar', 'Birim Fiyat', 'Toplam']],
           body: tableData,
           theme: 'striped',
           headStyles: {
@@ -744,29 +765,29 @@
 
         let yPos = finalY + 8;
         pdf.text('Ara Toplam:', 125, yPos);
-        pdf.text(new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(subtotal), 190, yPos, { align: 'right' });
+        pdf.text(new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2 }).format(subtotal) + ' TL', 190, yPos, { align: 'right' });
 
         if (overhead > 0) {
           yPos += 6;
           pdf.text(`Genel Giderler (%${overhead}):`, 125, yPos);
-          pdf.text(new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(overheadAmount), 190, yPos, { align: 'right' });
+          pdf.text(new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2 }).format(overheadAmount) + ' TL', 190, yPos, { align: 'right' });
         }
 
         if (profit > 0) {
           yPos += 6;
-          pdf.text(`Kâr (%${profit}):`, 125, yPos);
-          pdf.text(new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(profitAmount), 190, yPos, { align: 'right' });
+          pdf.text(`Kar (%${profit}):`, 125, yPos);
+          pdf.text(new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2 }).format(profitAmount) + ' TL', 190, yPos, { align: 'right' });
         }
 
         yPos += 6;
         pdf.setLineWidth(0.3);
         pdf.line(125, yPos - 2, 190, yPos - 2);
-        pdf.text('KDV Hariç Toplam:', 125, yPos);
-        pdf.text(new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(totalBeforeVat), 190, yPos, { align: 'right' });
+        pdf.text('KDV Haric Toplam:', 125, yPos);
+        pdf.text(new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2 }).format(totalBeforeVat) + ' TL', 190, yPos, { align: 'right' });
 
         yPos += 6;
         pdf.text(`KDV (%${vat}):`, 125, yPos);
-        pdf.text(new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(vatAmount), 190, yPos, { align: 'right' });
+        pdf.text(new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2 }).format(vatAmount) + ' TL', 190, yPos, { align: 'right' });
 
         yPos += 6;
         pdf.setFont('helvetica', 'bold');
@@ -775,7 +796,7 @@
         pdf.rect(120, yPos - 5, 75, 8, 'F');
         pdf.setTextColor(255, 255, 255);
         pdf.text('GENEL TOPLAM:', 125, yPos);
-        pdf.text(new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(grandTotal), 190, yPos, { align: 'right' });
+        pdf.text(new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2 }).format(grandTotal) + ' TL', 190, yPos, { align: 'right' });
 
         // Terms & Conditions
         if (metadata.terms) {
@@ -784,11 +805,11 @@
             pdf.setTextColor(...darkGray);
             pdf.setFontSize(9);
             pdf.setFont('helvetica', 'bold');
-            pdf.text('ŞARTLAR VE KOŞULLAR:', 15, termsY);
+            pdf.text('SARTLAR VE KOSULLAR:', 15, termsY);
             
             pdf.setFont('helvetica', 'normal');
             pdf.setFontSize(8);
-            const splitTerms = pdf.splitTextToSize(metadata.terms, 180);
+            const splitTerms = pdf.splitTextToSize(turkishToLatin(metadata.terms), 180);
             pdf.text(splitTerms, 15, termsY + 6);
           }
         }
@@ -797,10 +818,10 @@
         pdf.setFontSize(8);
         pdf.setTextColor(...lightGray);
         pdf.setFont('helvetica', 'italic');
-        pdf.text('Bu teklif ADM Web Pro sistemi ile oluşturulmuştur.', 105, 285, { align: 'center' });
+        pdf.text('Bu teklif ADM Web Pro sistemi ile olusturulmustur.', 105, 285, { align: 'center' });
 
         // Save PDF
-        const fileName = `Teklif_${project.name || 'Proje'}_${new Date().toLocaleDateString('tr-TR').replace(/\./g, '-')}.pdf`;
+        const fileName = `Teklif_${turkishToLatin(project.name) || 'Proje'}_${new Date().toLocaleDateString('tr-TR').replace(/\./g, '-')}.pdf`;
         pdf.save(fileName);
 
         alert('✅ PDF başarıyla indirildi!');
