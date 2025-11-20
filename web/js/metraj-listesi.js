@@ -87,6 +87,89 @@ async function loadProjectData() {
 }
 
 /**
+ * Load from Contract
+ */
+async function loadFromContract() {
+  if (!currentProjectId) {
+    showAlert('Proje ID bulunamadı', 'danger');
+    return;
+  }
+
+  if (!confirm('Sözleşme kalemleri metraj listesine yüklenecek. Devam etmek istiyor musunuz?')) {
+    return;
+  }
+
+  try {
+    showAlert('📥 Sözleşme kalemleri yükleniyor...', 'info');
+
+    // Get contract items from contract_items collection
+    const contractRef = collection(db, 'contract_items');
+    const contractQuery = query(
+      contractRef,
+      where('projectId', '==', currentProjectId)
+    );
+
+    const contractSnap = await getDocs(contractQuery);
+
+    if (contractSnap.empty) {
+      showAlert('⚠️ Bu proje için sözleşme kalemi bulunamadı. Önce sözleşme oluşturun.', 'warning');
+      return;
+    }
+
+    let importedCount = 0;
+    let skippedCount = 0;
+
+    // Check each contract item
+    for (const contractDoc of contractSnap.docs) {
+      const contractItem = contractDoc.data();
+
+      // Check if already exists in BOQ (by pozNo)
+      const existingItem = boqItems.find(item => item.pozNo === contractItem.pozNo);
+
+      if (existingItem) {
+        skippedCount++;
+        continue;
+      }
+
+      // Add to boq_items collection
+      const boqRef = collection(db, 'boq_items');
+      await addDoc(boqRef, {
+        projectId: currentProjectId,
+        pozNo: contractItem.pozNo || '',
+        category: contractItem.category || 'Diğer',
+        description: contractItem.description || contractItem.name || '',
+        unit: contractItem.unit || 'Adet',
+        quantity: parseFloat(contractItem.contractQuantity) || parseFloat(contractItem.quantity) || 0,
+        unitPrice: parseFloat(contractItem.unitPrice) || 0,
+        totalPrice: (parseFloat(contractItem.contractQuantity) || parseFloat(contractItem.quantity) || 0) * (parseFloat(contractItem.unitPrice) || 0),
+        width: null,
+        height: null,
+        completedQuantity: 0,
+        completedPercentage: 0,
+        isDeleted: false,
+        importedFrom: 'contract',
+        importedAt: serverTimestamp(),
+        createdAt: serverTimestamp(),
+        createdBy: auth.currentUser?.email || 'unknown'
+      });
+
+      importedCount++;
+    }
+
+    if (importedCount > 0) {
+      showAlert(`✅ ${importedCount} sözleşme kalemi metraj listesine aktarıldı!${skippedCount > 0 ? ` (${skippedCount} kalem zaten mevcut, atlandı)` : ''}`, 'success');
+      await loadBoqItems();
+    } else if (skippedCount > 0) {
+      showAlert(`⚠️ Tüm sözleşme kalemleri zaten metraj listesinde mevcut (${skippedCount} kalem)`, 'warning');
+    }
+
+  } catch (error) {
+    console.error('❌ Sözleşme kalemleri yüklenirken hata:', error);
+    showAlert('❌ Hata: ' + error.message, 'danger');
+  }
+}
+
+/**
  * Load BOQ Items
  */
 async function loadBoqItems() {
@@ -193,6 +276,9 @@ function renderBoqTable(items = boqItems) {
         <p>${currentProject?.name || 'Proje'} - ${items.length} Kalem</p>
       </div>
       <div class="boq-action-buttons">
+        <button class="btn btn-success" onclick="loadFromContract()" style="margin-right: 0.5rem;">
+          📥 Sözleşmeden Yükle
+        </button>
         <button class="btn btn-primary" onclick="addNewBoqItemInline()">
           ➕ Yeni Kalem Ekle
         </button>
@@ -867,6 +953,7 @@ function showAlert(message, type = 'info') {
 console.log('📋 Metraj modülü yükleniyor - fonksiyonlar export ediliyor...');
 window.initMetrajListesi = initMetrajListesi;
 window.loadBoqItems = loadBoqItems;
+window.loadFromContract = loadFromContract;
 window.applyBoqFilters = applyBoqFilters;
 window.clearBoqFilters = clearBoqFilters;
 window.addNewBoqItemInline = addNewBoqItemInline;
@@ -885,6 +972,7 @@ console.log('✅ Metraj modülü fonksiyonları export edildi:', {
   addNewBoqItemInline: !!window.addNewBoqItemInline,
   editBoqItemInline: !!window.editBoqItemInline,
   loadBoqItems: !!window.loadBoqItems,
+  loadFromContract: !!window.loadFromContract,
   clearBoqFilters: !!window.clearBoqFilters
 });
 
