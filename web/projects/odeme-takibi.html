@@ -248,7 +248,7 @@
               </select>
             </div>
             <div style="display: flex; align-items: flex-end;">
-              <button class="btn" onclick="syncFromHakedis()" style="width: 100%;">
+              <button class="btn" onclick="window.syncFromHakedis()" style="width: 100%;">
                 🔄 Hakediş Senkronize Et
               </button>
             </div>
@@ -538,10 +538,9 @@
         const collectionRate = totalInvoiced > 0 ? (totalCollected / totalInvoiced * 100) : 0;
         document.getElementById('collectionRate').textContent = `%${collectionRate.toFixed(1)}`;
 
-        document.getElementById('receivableAmount').textContent = formatCurrency(totalInvoiced);
-        document.getElementById('collectedAmount').textContent = formatCurrency(totalCollected);
-        document.getElementById('pendingAmount').textContent = formatCurrency(totalPending);
-        document.getElementById('overdueAmount').textContent = formatCurrency(totalOverdue);
+        // Update payment count
+        const countEl = document.getElementById('paymentCount');
+        if (countEl) countEl.textContent = progressPayments.length;
 
         renderPaymentsTable();
         renderPaymentHistory();
@@ -562,8 +561,9 @@
           <tr>
             <td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
               <div style="font-size: 3rem; margin-bottom: 1rem;">💳</div>
-              <p>Henüz ödeme kaydı yok</p>
-              <button class="btn btn-primary" onclick="syncFromHakedis()" style="margin-top: 1rem;">
+              <p style="margin: 0; font-size: 1.1rem;">Henüz hakediş kaydı yok</p>
+              <p style="margin: 0.5rem 0 1rem 0;">Önce hakediş oluşturun, ardından ödeme takibi yapabilirsiniz</p>
+              <button class="btn btn-primary" onclick="window.syncFromHakedis()" style="margin-top: 0.5rem;">
                 🔄 Hakediş Verilerini Senkronize Et
               </button>
             </td>
@@ -757,7 +757,7 @@
       }
     }
 
-    window.synchronizeFromHakedis = async function() {
+    window.syncFromHakedis = async function() {
       try {
         const hakedisQuery = query(
           collection(db, 'progress_payments'),
@@ -767,11 +767,11 @@
         const hakedisSnap = await getDocs(hakedisQuery);
         
         if (hakedisSnap.empty) {
-          alert('❌ Hakediş kaydı bulunamadı');
+          alert('❌ Hakediş kaydı bulunamadı. Önce hakediş oluşturun.');
           return;
         }
 
-        alert('✅ Hakediş verileri senkronize edildi!');
+        alert(`✅ ${hakedisSnap.size} hakediş kaydı senkronize edildi!`);
         loadPayments();
 
       } catch (error) {
