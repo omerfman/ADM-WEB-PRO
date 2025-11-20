@@ -123,6 +123,12 @@ service cloud.firestore {
         // Stocks visible only to non-clients (company internal data)
         allow read: if isSignedIn() && !isClient();
         allow create, update, delete: if isSignedIn() && !isClient();
+        
+        // Stock usage subcollection
+        match /usage/{usageId} {
+          allow read: if isSignedIn() && !isClient();
+          allow create, update, delete: if isSignedIn() && !isClient();
+        }
       }
 
       match /payments/{paymentId} {
