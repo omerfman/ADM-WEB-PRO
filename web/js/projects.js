@@ -553,8 +553,16 @@ async function handleAddLog(event) {
 
   try {
     const user = auth.currentUser;
-    if (!user || !currentProjectId) {
-      showAlert('❌ Hata: Proje seçilmemiş', 'danger');
+    const projectId = window.currentProjectId;
+    
+    if (!user) {
+      showAlert('❌ Hata: Kullanıcı oturumu bulunamadı', 'danger');
+      return;
+    }
+    
+    if (!projectId) {
+      showAlert('❌ Hata: Proje ID\'si bulunamadı. Lütfen sayfayı yenileyin.', 'danger');
+      console.error('currentProjectId not found. window.currentProjectId:', window.currentProjectId);
       return;
     }
 
@@ -564,7 +572,7 @@ async function handleAddLog(event) {
     if (photoFile) {
       try {
         showAlert('📸 Fotoğraf yükleniyor...', 'info');
-        photoUrl = await uploadPhotoToImgBB(photoFile, currentProjectId);
+        photoUrl = await uploadPhotoToImgBB(photoFile, projectId);
         console.log('✅ Photo uploaded to ImgBB:', photoUrl);
       } catch (error) {
         console.error('❌ Photo upload failed:', error);
@@ -574,7 +582,7 @@ async function handleAddLog(event) {
     }
 
     // Create log entry
-    const logsRef = collection(db, 'projects', currentProjectId, 'logs');
+    const logsRef = collection(db, 'projects', projectId, 'logs');
     await addDoc(logsRef, {
       date: new Date(date),
       title: `Günlük - ${date}`,
@@ -590,7 +598,7 @@ async function handleAddLog(event) {
 
     showAlert('✅ Şantiye günlüğü başarıyla eklendi!', 'success');
     closeAddLogModal();
-    await loadProjectLogs(currentProjectId);
+    await loadProjectLogs(projectId);
   } catch (error) {
     console.error('❌ Log eklenemedi:', error);
     showAlert('❌ Günlük eklenirken hata: ' + error.message, 'danger');
