@@ -354,30 +354,28 @@
         <div class="card" style="margin-top: 1.5rem;">
           <h2 style="margin: 0 0 1.5rem 0;">📎 Sözleşme Ekleri</h2>
           
-          <div style="background: var(--bg-secondary); border: 2px dashed var(--border-color); border-radius: 12px; padding: 2rem; margin-bottom: 1.5rem; text-align: center;">
-            <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.7;">📄</div>
-            <h3 style="margin: 0 0 0.5rem 0; color: var(--text-primary);">Dosya Yükle</h3>
-            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">
-              İmzalı sözleşme, teknik şartname, ek belgeler vb.
-            </p>
-            
-            <div class="form-group" style="margin-bottom: 1rem;">
-              <label>Dosya Açıklaması</label>
-              <input type="text" id="attachmentDescription" placeholder="Örn: İmzalı Sözleşme, Teknik Şartname, Ek-1..." style="width: 100%; padding: 0.75rem; border: 1.5px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
-            </div>
-            
-            <input type="file" id="contractAttachment" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" style="display: none;" onchange="handleAttachmentUpload(event)">
-            <button class="btn btn-primary" onclick="document.getElementById('contractAttachment').click()">
-              📁 Dosya Seç ve Yükle
-            </button>
-            <div style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--text-secondary);">
-              Desteklenen formatlar: PDF, Word, Excel, Resim (Max 32MB)
-            </div>
-          </div>
-
-          <div id="attachmentsList" style="background: var(--bg-secondary); border-radius: 8px; padding: 1rem;">
+            <div style="background: var(--bg-secondary); border: 2px dashed var(--border-color); border-radius: 12px; padding: 2rem; margin-bottom: 1.5rem; text-align: center;">
+              <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.7;">📸</div>
+              <h3 style="margin: 0 0 0.5rem 0; color: var(--text-primary);">Fotoğraf Yükle</h3>
+              <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">
+                Sözleşme ile ilgili fotoğraflar (imzalı sayfa, şantiye, vb.)
+              </p>
+              
+              <div class="form-group" style="margin-bottom: 1rem;">
+                <label>Fotoğraf Açıklaması</label>
+                <input type="text" id="attachmentDescription" placeholder="Örn: İmzalı Sözleşme Sayfası, Şantiye Fotoğrafı..." style="width: 100%; padding: 0.75rem; border: 1.5px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+              </div>
+              
+              <input type="file" id="contractAttachment" accept="image/*" style="display: none;" onchange="handleAttachmentUpload(event)">
+              <button class="btn btn-primary" onclick="document.getElementById('contractAttachment').click()">
+                📸 Fotoğraf Seç ve Yükle
+              </button>
+              <div style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--text-secondary);">
+                Desteklenen formatlar: JPG, PNG, GIF (Max 32MB) • ImgBB ile ücretsiz hosting
+              </div>
+            </div>          <div id="attachmentsList" style="background: var(--bg-secondary); border-radius: 8px; padding: 1rem;">
             <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
-              <div style="font-size: 2rem; margin-bottom: 0.5rem;">📭</div>
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">�</div>
               <p>Henüz ek yüklenmemiş</p>
             </div>
           </div>
@@ -954,7 +952,13 @@
 
       const description = document.getElementById('attachmentDescription').value.trim();
       if (!description) {
-        alert('⚠️ Lütfen dosya açıklaması girin');
+        alert('⚠️ Lütfen fotoğraf açıklaması girin');
+        return;
+      }
+
+      // Check if file is an image
+      if (!file.type.startsWith('image/')) {
+        alert('❌ Sadece resim dosyaları yüklenebilir!\n\nDesteklenen formatlar: JPG, PNG, GIF');
         return;
       }
 
@@ -971,7 +975,7 @@
       }
 
       try {
-        showAlert('📤 Dosya yükleniyor...', 'warning');
+        showAlert('📤 Fotoğraf yükleniyor...', 'warning');
 
         // Create form data for ImgBB
         const formData = new FormData();
@@ -1014,7 +1018,7 @@
           provider: 'imgbb'
         });
 
-        showAlert('✅ Dosya başarıyla yüklendi!', 'success');
+        showAlert('✅ Fotoğraf başarıyla yüklendi!', 'success');
 
         // Clear input
         document.getElementById('attachmentDescription').value = '';
@@ -1046,7 +1050,7 @@
         if (attachmentsSnap.empty) {
           attachmentsList.innerHTML = `
             <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
-              <div style="font-size: 2rem; margin-bottom: 0.5rem;">📭</div>
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">�</div>
               <p>Henüz ek yüklenmemiş</p>
             </div>
           `;
@@ -1068,7 +1072,10 @@
               border-bottom: 1px solid var(--border-color);
               align-items: center;
             ">
-              <div style="font-size: 2.5rem; flex-shrink: 0;">${fileIcon}</div>
+              <img src="${attachment.thumbURL || attachment.downloadURL}" 
+                   alt="${attachment.description}"
+                   style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 2px solid var(--border-color); cursor: pointer; flex-shrink: 0;"
+                   onclick="window.open('${attachment.downloadURL}', '_blank')">
               <div style="flex: 1; min-width: 0;">
                 <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem; word-break: break-word;">
                   ${attachment.description}
@@ -1135,19 +1142,14 @@
     function getFileIcon(fileName) {
       const ext = fileName.split('.').pop().toLowerCase();
       const icons = {
-        'pdf': '📕',
-        'doc': '📘',
-        'docx': '📘',
-        'xls': '📗',
-        'xlsx': '📗',
-        'jpg': '🖼️',
-        'jpeg': '🖼️',
+        'jpg': '📸',
+        'jpeg': '📸',
         'png': '🖼️',
-        'gif': '🖼️',
-        'zip': '📦',
-        'rar': '📦'
+        'gif': '🎞️',
+        'webp': '🖼️',
+        'svg': '🎨'
       };
-      return icons[ext] || '📄';
+      return icons[ext] || '📸';
     }
 
     /**
