@@ -3,117 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teklif - ADM Proje Takip</title>
-  <link rel="stylesheet" href="../css/style.css?v=6">
-  <style>
-    .teklif-header {
-      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-      color: white;
-      padding: 2rem;
-      border-radius: 12px;
-      margin-bottom: 2rem;
-    }
-
-    .summary-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin: 1.5rem 0;
-    }
-
-    .summary-item {
-      background: rgba(255,255,255,0.15);
-      padding: 1rem;
-      border-radius: 8px;
-      backdrop-filter: blur(10px);
-    }
-
-    .summary-item h4 {
-      margin: 0 0 0.5rem 0;
-      font-size: 0.85rem;
-      opacity: 0.9;
-    }
-
-    .summary-value {
-      font-size: 1.5rem;
-      font-weight: bold;
-    }
-
-    .calculation-card {
-      background: white;
-      padding: 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      margin-bottom: 1.5rem;
-    }
-
-    .calc-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 0.75rem 0;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .calc-row:last-child {
-      border-bottom: none;
-      font-weight: bold;
-      font-size: 1.2rem;
-      color: var(--brand-red);
-      padding-top: 1rem;
-      margin-top: 0.5rem;
-      border-top: 2px solid var(--brand-red);
-    }
-
-    .calc-label {
-      color: var(--text-secondary);
-    }
-
-    .calc-value {
-      font-weight: 600;
-    }
-
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .data-table th {
-      background: var(--bg-secondary);
-      padding: 1rem;
-      text-align: left;
-      font-weight: 600;
-      color: var(--text-primary);
-      border-bottom: 2px solid var(--border-color);
-    }
-
-    .data-table td {
-      padding: 1rem;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .data-table tr:hover {
-      background: var(--bg-secondary);
-    }
-
-    .status-badge {
-      padding: 0.25rem 0.75rem;
-      border-radius: 12px;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
-
-    .status-draft { background: #e3f2fd; color: #1976d2; }
-    .status-sent { background: #fff3e0; color: #f57c00; }
-    .status-accepted { background: #e8f5e9; color: #388e3c; }
-    .status-rejected { background: #ffebee; color: #d32f2f; }
-  </style>
+  <title>Teklif - ADM İnşaat Proje Yönetim Sistemi</title>
+  <link rel="stylesheet" href="../css/style.css?v=9">
 </head>
 <body>
-  <div class="app-container">
+  <div class="dashboard-layout">
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
@@ -147,7 +41,7 @@
         <div class="nav-section">
           <div class="nav-section-title">PROJE</div>
           <a href="proje-ozeti.html" class="nav-item" id="navOzet">
-            <span class="nav-icon">📋</span>
+            <span class="nav-icon">�</span>
             <span class="nav-text">Proje Özeti</span>
           </a>
         </div>
@@ -183,7 +77,7 @@
         <div class="nav-section">
           <div class="nav-section-title">DESTEK</div>
           <a href="proje-ozeti.html" class="nav-item" id="navOzet">
-            <span class="nav-icon">📋</span>
+            <span class="nav-icon">�</span>
             <span class="nav-text">Proje Özeti</span>
           </a>
           <a href="stok-yonetimi.html" class="nav-item" id="navStok">
@@ -191,7 +85,7 @@
             <span class="nav-text">Stok Yönetimi</span>
           </a>
           <a href="butce-yonetimi.html" class="nav-item" id="navButce">
-            <span class="nav-icon">💼</span>
+            <span class="nav-icon">�</span>
             <span class="nav-text">Bütçe Yönetimi</span>
           </a>
         </div>
@@ -213,133 +107,159 @@
 
     <!-- Main Content -->
     <main class="main-content">
-      <div class="top-bar">
-        <button class="menu-toggle" id="menuToggle">
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
-        <div class="breadcrumb">
-          <a href="../projeler.html">Projeler</a>
-          <span class="separator">/</span>
-          <span id="projectNameBreadcrumb">Proje</span>
-          <span class="separator">/</span>
-          <span>Teklif</span>
+      <!-- Top Bar -->
+      <div class="topbar">
+        <div style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+          <button class="menu-toggle" id="menuToggle">☰</button>
+          <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">
+            <a href="../anasayfa.html" style="color: var(--text-secondary); text-decoration: none;">Anasayfa</a>
+            <span>›</span>
+            <a href="../projeler.html" style="color: var(--text-secondary); text-decoration: none;">Projeler</a>
+            <span>›</span>
+            <span id="projectNameBreadcrumb" style="color: var(--brand-red); font-weight: 600;">Yükleniyor...</span>
+          </div>
         </div>
-        <div class="top-bar-actions">
-          <button class="btn" onclick="exportToExcel()">
+        <div class="topbar-actions">
+          <span id="userNameDisplay" class="topbar-user"></span>
+        </div>
+      </div>
+
+      <div id="alertContainer"></div>
+
+      <!-- Content Section -->
+      <section class="content-section">
+        <!-- Project Header -->
+        <div style="background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-red-dark) 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+            <div style="flex: 1;">
+              <h2 id="projectName" style="margin: 0; font-size: 1.5rem;">Yükleniyor...</h2>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white; padding: 0.5rem 1rem; font-size: 0.9rem;" onclick="window.location.href='../projeler.html'">
+                ← Projelere Dön
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Teklif Header -->
+        <div style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">
+          <h1 style="margin: 0 0 0.5rem 0; font-size: 1.5rem;">💼 Teklif Raporu</h1>
+          <p style="margin: 0 0 1rem 0; opacity: 0.9;">Müşteriye sunulan fiyat teklifi</p>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-top: 1rem;">
+            <div style="background: rgba(255,255,255,0.15); padding: 1rem; border-radius: 8px; backdrop-filter: blur(10px);">
+              <h4 style="margin: 0 0 0.5rem 0; font-size: 0.85rem; opacity: 0.9;">Teklif No</h4>
+              <div style="font-size: 1.2rem; font-weight: bold;" id="proposalNo">-</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.15); padding: 1rem; border-radius: 8px; backdrop-filter: blur(10px);">
+              <h4 style="margin: 0 0 0.5rem 0; font-size: 0.85rem; opacity: 0.9;">Teklif Tarihi</h4>
+              <div style="font-size: 1.2rem; font-weight: bold;" id="proposalDate">-</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.15); padding: 1rem; border-radius: 8px; backdrop-filter: blur(10px);">
+              <h4 style="margin: 0 0 0.5rem 0; font-size: 0.85rem; opacity: 0.9;">Geçerlilik</h4>
+              <div style="font-size: 1.2rem; font-weight: bold;" id="validUntil">30 gün</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.15); padding: 1rem; border-radius: 8px; backdrop-filter: blur(10px);">
+              <h4 style="margin: 0 0 0.5rem 0; font-size: 0.85rem; opacity: 0.9;">Durum</h4>
+              <div style="font-size: 1.2rem; font-weight: bold;" id="proposalStatus">Taslak</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Calculation Summary -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <h2 style="margin: 0 0 1.5rem 0;">💰 Fiyat Hesaplaması</h2>
+          
+          <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 0.5rem;">
+            <span style="color: var(--text-secondary);">Toplam İş Kalemi Maliyeti</span>
+            <span style="font-weight: 600;" id="subtotalCost">₺0.00</span>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 0.5rem;">
+            <span style="color: var(--text-secondary);">
+              Genel Giderler (%)
+              <input type="number" id="overheadPercent" value="10" min="0" max="100" step="0.1" 
+                     style="width: 60px; margin-left: 0.5rem; padding: 0.25rem; border: 1px solid var(--border-color); border-radius: 4px; background: var(--input-bg); color: var(--text-primary);" 
+                     onchange="recalculateProposal()">
+            </span>
+            <span style="font-weight: 600;" id="overheadCost">₺0.00</span>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 0.5rem;">
+            <span style="color: var(--text-secondary);">Ara Toplam (Maliyet + Genel Giderler)</span>
+            <span style="font-weight: 600;" id="costWithOverhead">₺0.00</span>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 0.5rem;">
+            <span style="color: var(--text-secondary);">
+              Kâr Marjı (%)
+              <input type="number" id="profitPercent" value="20" min="0" max="100" step="0.1" 
+                     style="width: 60px; margin-left: 0.5rem; padding: 0.25rem; border: 1px solid var(--border-color); border-radius: 4px; background: var(--input-bg); color: var(--text-primary);" 
+                     onchange="recalculateProposal()">
+            </span>
+            <span style="font-weight: 600;" id="profitAmount">₺0.00</span>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 0.5rem;">
+            <span style="color: var(--text-secondary);">Teklif Tutarı (KDV Hariç)</span>
+            <span style="font-weight: 600;" id="priceBeforeVat">₺0.00</span>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 0.5rem;">
+            <span style="color: var(--text-secondary);">
+              KDV (%)
+              <input type="number" id="vatPercent" value="20" min="0" max="100" step="1" 
+                     style="width: 60px; margin-left: 0.5rem; padding: 0.25rem; border: 1px solid var(--border-color); border-radius: 4px; background: var(--input-bg); color: var(--text-primary);" 
+                     onchange="recalculateProposal()">
+            </span>
+            <span style="font-weight: 600;" id="vatAmount">₺0.00</span>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; padding: 1rem 0; flex-wrap: wrap; gap: 0.5rem; background: linear-gradient(135deg, rgba(231, 76, 60, 0.1), rgba(192, 57, 43, 0.1)); margin: 1rem -1.5rem -1.5rem; padding: 1rem 1.5rem; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;">
+            <span style="font-size: 1.2rem; font-weight: bold; color: var(--text-primary);">💎 TOPLAM TEKLİF TUTARI (KDV Dahil)</span>
+            <span style="font-size: 1.5rem; font-weight: bold; color: var(--brand-red);" id="grandTotal">₺0.00</span>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+          <button class="btn" style="background: #27ae60; color: white;" onclick="exportToExcel()">
             📊 Excel İndir
           </button>
-          <button class="btn" onclick="sendProposal()">
+          <button class="btn" style="background: #3498db; color: white;" onclick="sendProposal()">
             📧 Teklif Gönder
           </button>
           <button class="btn btn-primary" onclick="createContract()">
             ✅ Sözleşmeye Dönüştür
           </button>
         </div>
-      </div>
-
-      <div class="content-wrapper">
-        <!-- Header -->
-        <div class="teklif-header">
-          <h1 style="margin: 0 0 0.5rem 0;">💼 Teklif Raporu</h1>
-          <p style="margin: 0; opacity: 0.9;" id="projectName">Müşteriye sunulan fiyat teklifi</p>
-          <div class="summary-grid">
-            <div class="summary-item">
-              <h4>Teklif No</h4>
-              <div class="summary-value" id="proposalNo">-</div>
-            </div>
-            <div class="summary-item">
-              <h4>Teklif Tarihi</h4>
-              <div class="summary-value" id="proposalDate">-</div>
-            </div>
-            <div class="summary-item">
-              <h4>Geçerlilik</h4>
-              <div class="summary-value" id="validUntil">30 gün</div>
-            </div>
-            <div class="summary-item">
-              <h4>Durum</h4>
-              <div class="summary-value" id="proposalStatus">Taslak</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Calculation Summary -->
-        <div class="calculation-card">
-          <h2 style="margin: 0 0 1.5rem 0;">💰 Fiyat Hesaplaması</h2>
-          
-          <div class="calc-row">
-            <span class="calc-label">Toplam İş Kalemi Maliyeti</span>
-            <span class="calc-value" id="subtotalCost">₺0.00</span>
-          </div>
-          
-          <div class="calc-row">
-            <span class="calc-label">
-              Genel Giderler (%)
-              <input type="number" id="overheadPercent" value="10" min="0" max="100" step="0.1" 
-                     style="width: 60px; margin-left: 0.5rem; padding: 0.25rem;" 
-                     onchange="recalculateProposal()">
-            </span>
-            <span class="calc-value" id="overheadCost">₺0.00</span>
-          </div>
-          
-          <div class="calc-row">
-            <span class="calc-label">Ara Toplam (Maliyet + Genel Giderler)</span>
-            <span class="calc-value" id="costWithOverhead">₺0.00</span>
-          </div>
-          
-          <div class="calc-row">
-            <span class="calc-label">
-              Kâr Marjı (%)
-              <input type="number" id="profitPercent" value="20" min="0" max="100" step="0.1" 
-                     style="width: 60px; margin-left: 0.5rem; padding: 0.25rem;" 
-                     onchange="recalculateProposal()">
-            </span>
-            <span class="calc-value" id="profitAmount">₺0.00</span>
-          </div>
-          
-          <div class="calc-row">
-            <span class="calc-label">Teklif Tutarı (KDV Hariç)</span>
-            <span class="calc-value" id="priceBeforeVat">₺0.00</span>
-          </div>
-          
-          <div class="calc-row">
-            <span class="calc-label">
-              KDV (%)
-              <input type="number" id="vatPercent" value="20" min="0" max="100" step="1" 
-                     style="width: 60px; margin-left: 0.5rem; padding: 0.25rem;" 
-                     onchange="recalculateProposal()">
-            </span>
-            <span class="calc-value" id="vatAmount">₺0.00</span>
-          </div>
-          
-          <div class="calc-row">
-            <span class="calc-label">💎 TOPLAM TEKLİF TUTARI (KDV Dahil)</span>
-            <span class="calc-value" style="font-size: 1.5rem; color: var(--brand-red);" id="grandTotal">₺0.00</span>
-          </div>
-        </div>
 
         <!-- Items Table -->
         <div class="card">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
             <h2 style="margin: 0;">📋 Teklif Kalemleri</h2>
-            <button class="btn btn-primary" onclick="openAddItemModal()">
-              ➕ Kalem Ekle
-            </button>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn" style="background: var(--brand-red); color: white;" onclick="importFromKesif()">
+                📥 Keşiften Aktar
+              </button>
+              <button class="btn btn-primary" onclick="openAddItemModal()">
+                ➕ Kalem Ekle
+              </button>
+            </div>
           </div>
 
-          <div style="overflow-x: auto;">
-            <table class="data-table" id="proposalTable">
+          <div class="table-responsive">
+            <table class="data-table" id="proposalTable" style="width: 100%; min-width: 800px;">
               <thead>
                 <tr>
-                  <th style="width: 60px;">Sıra</th>
-                  <th>İş Kalemi</th>
-                  <th>Kategori</th>
-                  <th>Birim</th>
-                  <th style="text-align: right;">Miktar</th>
-                  <th style="text-align: right;">Birim Fiyat</th>
-                  <th style="text-align: right;">Toplam</th>
-                  <th style="width: 100px;">İşlemler</th>
+                  <th style="min-width: 50px;">Sıra</th>
+                  <th style="min-width: 250px;">İş Kalemi</th>
+                  <th style="min-width: 120px;">Kategori</th>
+                  <th style="min-width: 80px;">Birim</th>
+                  <th style="text-align: right; min-width: 100px;">Miktar</th>
+                  <th style="text-align: right; min-width: 120px;">Birim Fiyat</th>
+                  <th style="text-align: right; min-width: 120px;">Toplam</th>
+                  <th style="min-width: 100px;">İşlemler</th>
                 </tr>
               </thead>
               <tbody id="proposalTableBody">
@@ -367,12 +287,12 @@
         <!-- Terms & Conditions -->
         <div class="card" style="margin-top: 1.5rem;">
           <h3 style="margin: 0 0 1rem 0;">📄 Teklif Şartları</h3>
-          <textarea id="proposalTerms" rows="6" style="width: 100%; padding: 1rem; border: 1px solid var(--border-color); border-radius: 6px; font-family: inherit;" placeholder="Ödeme şartları, teslimat süresi, garanti koşulları..."></textarea>
-          <button class="btn btn-primary" onclick="saveProposalTerms()" style="margin-top: 1rem;">
+          <textarea id="proposalTerms" rows="6" style="width: 100%; padding: 1rem; border: 1px solid var(--border-color); border-radius: 6px; font-family: inherit; background: var(--input-bg); color: var(--text-primary); resize: vertical;" placeholder="Ödeme şartları, teslimat süresi, garanti koşulları..."></textarea>
+          <button class="btn btn-primary" onclick="saveProposalTerms()" style="margin-top: 1rem; width: 100%;">
             💾 Şartları Kaydet
           </button>
         </div>
-      </div>
+      </section>
     </main>
   </div>
 
