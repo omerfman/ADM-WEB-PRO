@@ -306,6 +306,25 @@
   <script type="module" src="../js/teklif.js?v=1"></script>
   <script type="module" src="../js/app.js?v=6"></script>
 
+  <script type="module">
+    import { db, auth } from '../js/firebase-config.js';
+    import { doc, getDoc, collection, query, where, getDocs, addDoc, setDoc, orderBy, Timestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    // Make functions available globally
+    window.db = db;
+    window.auth = auth;
+    window.doc = doc;
+    window.getDoc = getDoc;
+    window.collection = collection;
+    window.query = query;
+    window.where = where;
+    window.getDocs = getDocs;
+    window.addDoc = addDoc;
+    window.setDoc = setDoc;
+    window.orderBy = orderBy;
+    window.Timestamp = Timestamp;
+  </script>
+
   <script>
     document.getElementById('menuToggle')?.addEventListener('click', function() {
       document.querySelector('.sidebar').classList.toggle('sidebar-open');
@@ -356,9 +375,103 @@
       }
     }
 
-    function createContract() {
-      if (confirm('Bu tekliften sözleşme oluşturmak istediğinize emin misiniz?')) {
-        alert('Sözleşme modülü yakında eklenecek!');
+    async function createContract() {
+      if (!confirm('Bu tekliften sözleşme oluşturmak istediğinize emin misiniz?')) {
+        return;
+      }
+
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const projectId = urlParams.get('id');
+
+        if (!projectId) {
+          alert('❌ Proje ID bulunamadı');
+          return;
+        }
+
+        // Check if contract already exists
+        const contractDocRef = doc(db, 'contracts', projectId);
+        const contractDoc = await getDoc(contractDocRef);
+        
+        if (contractDoc.exists()) {
+          if (confirm('Bu proje için zaten bir sözleşme mevcut. Sözleşme sayfasına gitmek ister misiniz?')) {
+            window.location.href = `sozlesme.html?id=${projectId}`;
+          }
+          return;
+        }
+
+        // Get proposal items
+        const itemsQuery = query(
+          collection(db, 'teklif_items'),
+          where('projectId', '==', projectId),
+          where('isDeleted', '==', false),
+          orderBy('pozNo', 'asc')
+        );
+        const itemsSnap = await getDocs(itemsQuery);
+        
+        if (itemsSnap.empty) {
+          alert('❌ Teklif kalemleri bulunamadı');
+          return;
+        }
+
+        const proposalItems = [];
+        itemsSnap.forEach(docSnap => {
+          proposalItems.push({ id: docSnap.id, ...docSnap.data() });
+        });
+
+        // Get proposal metadata
+        const proposalDocRef = doc(db, 'teklif_metadata', projectId);
+        const proposalDoc = await getDoc(proposalDocRef);
+        let totalAmount = 0;
+
+        // Create contract items
+        for (const item of proposalItems) {
+          const itemTotal = (item.quantity || 0) * (item.unitPrice || 0);
+          totalAmount += itemTotal;
+
+          await addDoc(collection(db, 'contract_items'), {
+            projectId: projectId,
+            pozNo: item.pozNo,
+            name: item.name,
+            category: item.category,
+            unit: item.unit,
+            contractQuantity: item.quantity,
+            unitPrice: item.unitPrice,
+            description: item.description || '',
+            fromProposalId: item.id,
+            isLocked: false,
+            isDeleted: false,
+            createdAt: Timestamp.now(),
+            createdBy: auth.currentUser.uid
+          });
+        }
+
+        // Create contract metadata
+        const proposalMetadata = proposalDoc.exists() ? proposalDoc.data() : {};
+        await setDoc(contractDocRef, {
+          projectId: projectId,
+          contractNo: `SZL-${Date.now()}`,
+          contractAmount: totalAmount,
+          contractType: 'fixed',
+          penaltyRate: 0.001,
+          provisionalAcceptance: 15,
+          finalAcceptance: 365,
+          paymentType: 'progress',
+          advancePayment: 0,
+          retentionRate: 10,
+          status: 'draft',
+          fromProposalId: projectId,
+          proposalData: proposalMetadata,
+          createdAt: Timestamp.now(),
+          createdBy: auth.currentUser.uid
+        });
+
+        alert('✅ Sözleşme başarıyla oluşturuldu!');
+        window.location.href = `sozlesme.html?id=${projectId}&from=proposal`;
+
+      } catch (error) {
+        console.error('❌ Error creating contract:', error);
+        alert('Sözleşme oluşturulurken hata: ' + error.message);
       }
     }
 
