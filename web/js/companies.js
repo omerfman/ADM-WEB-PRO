@@ -516,17 +516,11 @@ async function handleAddCompanyUser(event, companyId) {
     
     const idToken = await auth.currentUser.getIdToken();
     
-    // Get API base URL from config or use default
-    const apiBaseUrl = window.API_BASE_URL || '';
+    // Use relative path in production, localhost in development
+    const apiUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000/api/users' : '/api/users';
+    console.log('🔗 API URL:', apiUrl);
     
-    if (!apiBaseUrl) {
-      alert('❌ Bu işlem şu anda kullanılamıyor. Lütfen sistem yöneticinize başvurun.');
-      return;
-    }
-    
-    console.log('🔗 API URL:', `${apiBaseUrl}/api/users`);
-    
-    const response = await fetch(`${apiBaseUrl}/api/users`, {
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -133,16 +133,10 @@ async function handleCreateEmployee(event) {
 
   try {
     const idToken = await auth.currentUser.getIdToken();
-    const apiBaseUrl = window.API_BASE_URL || '';
-    
-    if (!apiBaseUrl) {
-      alert('❌ Çalışan oluşturma işlemi şu anda kullanılamıyor. Lütfen sistem yöneticinize başvurun.');
-      return;
-    }
     
     console.log('🔄 Creating employee with data:', { ...employeeData, password: '***' });
     
-    const response = await fetch(`${apiBaseUrl}/api/users`, {
+    const response = await fetch('/api/users', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

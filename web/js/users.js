@@ -91,11 +91,8 @@ async function handleCreateUser(event) {
     if (role === 'client') {
       console.log('   Client Info:', userData.clientInfo);
     }
-
-    // Get API base URL from config or use default
-    const apiBaseUrl = window.API_BASE_URL || '';
     
-    const response = await fetch(`${apiBaseUrl}/api/users`, {
+    const response = await fetch('/api/users', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
