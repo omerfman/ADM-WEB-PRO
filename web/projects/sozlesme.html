@@ -5,6 +5,74 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sözleşme - ADM İnşaat Proje Yönetim Sistemi</title>
   <link rel="stylesheet" href="../css/style.css?v=11">
+  <style>
+    /* Photo Upload Modal Styles */
+    .photo-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .photo-modal-content {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 600px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: slideUp 0.3s ease;
+    }
+
+    .photo-modal-header {
+      padding: 1.5rem;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .photo-modal-body {
+      padding: 1.5rem;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* Spinner animation */
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
   <div class="dashboard-layout">
@@ -356,27 +424,63 @@
           
             <div style="background: var(--bg-secondary); border: 2px dashed var(--border-color); border-radius: 12px; padding: 2rem; margin-bottom: 1.5rem; text-align: center;">
               <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.7;">📸</div>
-              <h3 style="margin: 0 0 0.5rem 0; color: var(--text-primary);">Fotoğraf Yükle</h3>
+              <h3 style="margin: 0 0 0.5rem 0; color: var(--text-primary);">Fotoğraf Ekle</h3>
               <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">
-                Sözleşme ile ilgili fotoğraflar (imzalı sayfa, şantiye, vb.)
+                Sözleşme ile ilgili fotoğrafları yükleyin
               </p>
               
-              <div class="form-group" style="margin-bottom: 1rem;">
-                <label>Fotoğraf Açıklaması</label>
-                <input type="text" id="attachmentDescription" placeholder="Örn: İmzalı Sözleşme Sayfası, Şantiye Fotoğrafı..." style="width: 100%; padding: 0.75rem; border: 1.5px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
-              </div>
-              
-              <input type="file" id="contractAttachment" accept="image/*" style="display: none;" onchange="handleAttachmentUpload(event)">
-              <button class="btn btn-primary" onclick="document.getElementById('contractAttachment').click()">
+              <input type="file" id="contractAttachment" accept="image/*" style="display: none;" onchange="uploadContractAttachment(event)">
+              <button class="btn btn-primary" onclick="document.getElementById('contractAttachment').click()" style="font-size: 1.1rem; padding: 0.75rem 2rem;">
                 📸 Fotoğraf Seç ve Yükle
               </button>
               <div style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--text-secondary);">
-                Desteklenen formatlar: JPG, PNG, GIF (Max 32MB) • ImgBB ile ücretsiz hosting
+                JPG, PNG, GIF (Max 32MB) • Ücretsiz ImgBB hosting
               </div>
             </div>          <div id="attachmentsList" style="background: var(--bg-secondary); border-radius: 8px; padding: 1rem;">
             <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
               <div style="font-size: 2rem; margin-bottom: 0.5rem;">�</div>
               <p>Henüz ek yüklenmemiş</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Photo Description Modal -->
+        <div id="photoDescriptionModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 10000; backdrop-filter: blur(4px);">
+          <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1rem;">
+            <div style="background: var(--bg-primary); border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.3); max-width: 500px; width: 100%;">
+              
+              <div style="background: linear-gradient(135deg, var(--brand-red), var(--brand-red-dark)); color: white; padding: 1.5rem; border-radius: 16px 16px 0 0;">
+                <h3 style="margin: 0; font-size: 1.3rem;">📸 Fotoğraf Açıklaması</h3>
+              </div>
+
+              <div style="padding: 2rem;">
+                <div style="text-align: center; margin-bottom: 1.5rem;">
+                  <img id="photoPreview" src="" alt="Preview" style="max-width: 100%; max-height: 300px; border-radius: 12px; border: 3px solid var(--border-color); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                </div>
+
+                <div class="form-group">
+                  <label style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem; display: block;">Fotoğraf Açıklaması *</label>
+                  <input type="text" id="photoDescriptionInput" placeholder="Örn: İmzalı Sözleşme Sayfası 1..." 
+                         style="width: 100%; padding: 0.875rem; border: 2px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary); font-size: 1rem;"
+                         onkeypress="if(event.key === 'Enter') savePhotoDescription()">
+                  <small style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem; display: block;">
+                    Bu açıklama fotoğrafı listede görüntülerken kullanılacak
+                  </small>
+                </div>
+
+                <div id="uploadProgress" style="display: none; margin-top: 1rem;">
+                  <div style="background: var(--bg-secondary); border-radius: 8px; padding: 1rem; text-align: center;">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">⏳</div>
+                    <div style="color: var(--text-primary); font-weight: 600; margin-bottom: 0.25rem;">Yükleniyor...</div>
+                    <div style="color: var(--text-secondary); font-size: 0.85rem;" id="uploadStatus">İşleniyor</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="padding: 1rem 2rem 2rem; display: flex; gap: 1rem;">
+                <button class="btn btn-secondary" onclick="closePhotoDescriptionModal()" style="flex: 1; padding: 0.75rem;">❌ İptal</button>
+                <button class="btn btn-primary" onclick="savePhotoDescription()" style="flex: 1; padding: 0.75rem;">💾 Kaydet</button>
+              </div>
             </div>
           </div>
         </div>
@@ -513,6 +617,7 @@
     let currentProjectId = null;
     let contractItems = [];
     let contractData = {};
+    let pendingPhotoUpload = null; // Temporary storage for uploaded photo
 
     async function loadContract() {
       const urlParams = new URLSearchParams(window.location.search);
@@ -945,26 +1050,18 @@
 
     /**
      * Upload contract attachment to ImgBB
+     * NEW UX: Select → Upload → Describe → Save
      */
     window.uploadContractAttachment = async function(event) {
       const file = event.target.files[0];
       if (!file) return;
 
-      const description = document.getElementById('attachmentDescription').value.trim();
-      if (!description) {
-        alert('⚠️ Lütfen fotoğraf açıklaması girin');
-        return;
-      }
+      // Reset file input
+      event.target.value = '';
 
       // Check if file is an image
       if (!file.type.startsWith('image/')) {
         alert('❌ Sadece resim dosyaları yüklenebilir!\n\nDesteklenen formatlar: JPG, PNG, GIF');
-        return;
-      }
-
-      // Check API key
-      if (!IMGBB_API_KEY || IMGBB_API_KEY === 'YOUR_IMGBB_API_KEY') {
-        alert('❌ ImgBB API key ayarlanmamış!\n\n1. https://api.imgbb.com/ adresinden ücretsiz hesap oluşturun\n2. API key\'inizi alın\n3. web/js/imgbb-config.js dosyasında IMGBB_API_KEY değerini güncelleyin');
         return;
       }
 
@@ -974,15 +1071,29 @@
         return;
       }
 
-      try {
-        showAlert('📤 Fotoğraf yükleniyor...', 'warning');
+      // Check API key
+      if (!IMGBB_API_KEY || IMGBB_API_KEY === 'YOUR_IMGBB_API_KEY') {
+        alert('❌ ImgBB API key ayarlanmamış!\n\n1. https://api.imgbb.com/ adresinden ücretsiz hesap oluşturun\n2. API key\'inizi alın\n3. web/js/imgbb-config.js dosyasında IMGBB_API_KEY değerini güncelleyin');
+        return;
+      }
 
-        // Create form data for ImgBB
+      try {
+        // Open modal and show preview immediately
+        openPhotoDescriptionModal();
+        showUploadProgress(true, 'Fotoğraf yükleniyor...');
+
+        // Preview image
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          document.getElementById('photoPreview').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+
+        // Upload to ImgBB
         const formData = new FormData();
         formData.append('image', file);
         formData.append('name', `contract_${currentProjectId}_${Date.now()}`);
 
-        // Upload to ImgBB
         const response = await fetch(`${IMGBB_UPLOAD_URL}?key=${IMGBB_API_KEY}`, {
           method: 'POST',
           body: formData
@@ -1000,38 +1111,131 @@
         }
 
         const imageData = result.data;
-        const downloadURL = imageData.url;
+
+        // Store uploaded photo data temporarily
+        pendingPhotoUpload = {
+          fileName: file.name,
+          downloadURL: imageData.url,
+          deleteURL: imageData.delete_url,
+          thumbURL: imageData.thumb?.url || imageData.url,
+          size: file.size,
+          contentType: file.type
+        };
+
+        // Hide progress, enable description input
+        showUploadProgress(false);
+        
+        // Focus on description input
+        setTimeout(() => {
+          document.getElementById('photoDescriptionInput').focus();
+        }, 100);
+
+      } catch (error) {
+        console.error('❌ Error uploading attachment:', error);
+        closePhotoDescriptionModal();
+        showAlert('❌ Yükleme hatası: ' + error.message, 'danger');
+      }
+    };
+
+    /**
+     * Save photo with description to Firestore
+     */
+    window.savePhotoDescription = async function() {
+      const description = document.getElementById('photoDescriptionInput').value.trim();
+      
+      if (!description) {
+        alert('⚠️ Lütfen fotoğraf açıklaması girin');
+        document.getElementById('photoDescriptionInput').focus();
+        return;
+      }
+
+      if (!pendingPhotoUpload) {
+        alert('❌ Yüklenmiş fotoğraf bulunamadı');
+        closePhotoDescriptionModal();
+        return;
+      }
+
+      try {
+        showUploadProgress(true, 'Kaydediliyor...');
 
         // Save metadata to Firestore
         await addDoc(collection(db, 'contract_attachments'), {
           projectId: currentProjectId,
-          fileName: file.name,
+          fileName: pendingPhotoUpload.fileName,
           description: description,
-          downloadURL: downloadURL,
-          deleteURL: imageData.delete_url,
-          thumbURL: imageData.thumb?.url || downloadURL,
-          size: file.size,
-          contentType: file.type,
+          downloadURL: pendingPhotoUpload.downloadURL,
+          deleteURL: pendingPhotoUpload.deleteURL,
+          thumbURL: pendingPhotoUpload.thumbURL,
+          size: pendingPhotoUpload.size,
+          contentType: pendingPhotoUpload.contentType,
           uploadedBy: auth.currentUser.uid,
           uploadedByEmail: auth.currentUser.email,
           uploadedAt: Timestamp.now(),
           provider: 'imgbb'
         });
 
-        showAlert('✅ Fotoğraf başarıyla yüklendi!', 'success');
+        // Show success
+        const progressDiv = document.getElementById('uploadProgress');
+        progressDiv.innerHTML = `
+          <div style="background: linear-gradient(135deg, #4caf50, #45a049); border-radius: 8px; padding: 1.5rem; text-align: center; color: white;">
+            <div style="font-size: 3rem; margin-bottom: 0.5rem;">✅</div>
+            <div style="font-weight: 600; font-size: 1.1rem;">Başarıyla Kaydedildi!</div>
+          </div>
+        `;
 
-        // Clear input
-        document.getElementById('attachmentDescription').value = '';
-        event.target.value = '';
-
-        // Reload attachments
-        loadContractAttachments();
+        // Close modal and reload after delay
+        setTimeout(() => {
+          closePhotoDescriptionModal();
+          loadContractAttachments();
+        }, 1500);
 
       } catch (error) {
-        console.error('❌ Error uploading attachment:', error);
-        showAlert('❌ Yükleme hatası: ' + error.message, 'danger');
+        console.error('❌ Error saving to Firestore:', error);
+        showUploadProgress(false);
+        showAlert('❌ Kaydetme hatası: ' + error.message, 'danger');
       }
     };
+
+    /**
+     * Open photo description modal
+     */
+    function openPhotoDescriptionModal() {
+      const modal = document.getElementById('photoDescriptionModal');
+      modal.style.display = 'block';
+      document.getElementById('photoDescriptionInput').value = '';
+      document.getElementById('photoPreview').src = '';
+      pendingPhotoUpload = null;
+    }
+
+    /**
+     * Close photo description modal
+     */
+    window.closePhotoDescriptionModal = function() {
+      const modal = document.getElementById('photoDescriptionModal');
+      modal.style.display = 'none';
+      pendingPhotoUpload = null;
+    };
+
+    /**
+     * Show/hide upload progress
+     */
+    function showUploadProgress(show, message = '') {
+      const progressDiv = document.getElementById('uploadProgress');
+      const inputDiv = document.getElementById('photoDescriptionInput').parentElement;
+      
+      if (show) {
+        progressDiv.style.display = 'block';
+        inputDiv.style.opacity = '0.5';
+        inputDiv.style.pointerEvents = 'none';
+        if (message) {
+          document.getElementById('uploadStatus').textContent = message;
+        }
+      } else {
+        progressDiv.style.display = 'none';
+        inputDiv.style.opacity = '1';
+        inputDiv.style.pointerEvents = 'auto';
+      }
+    }
 
     /**
      * Load and display contract attachments
