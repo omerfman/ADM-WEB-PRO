@@ -371,6 +371,58 @@
     </div>
   </div>
 
+  <!-- Edit Payment Modal -->
+  <div id="editPaymentModal" class="modal">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <h2>✏️ Ödeme Düzenle</h2>
+        <button class="modal-close" onclick="closeEditPaymentModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="editPaymentForm" onsubmit="handleEditPayment(event)">
+          <input type="hidden" id="editPaymentId">
+          <input type="hidden" id="editProgressPaymentId">
+          
+          <div class="form-group">
+            <label>Hakediş</label>
+            <input type="text" id="editHakedisLabel" readonly style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--bg-secondary); color: var(--text-primary);">
+          </div>
+          
+          <div class="form-group">
+            <label>Ödeme Tutarı (₺) *</label>
+            <input type="number" id="editPaymentAmount" required min="0.01" step="0.01" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--input-bg); color: var(--text-primary);">
+          </div>
+          
+          <div class="form-group">
+            <label>Ödeme Tarihi *</label>
+            <input type="date" id="editPaymentDate" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--input-bg); color: var(--text-primary);">
+          </div>
+          
+          <div class="form-group">
+            <label>Ödeme Yöntemi</label>
+            <select id="editPaymentMethod" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--input-bg); color: var(--text-primary);">
+              <option value="bank_transfer">🏦 Banka Havalesi</option>
+              <option value="check">📝 Çek</option>
+              <option value="cash">💵 Nakit</option>
+              <option value="credit_card">💳 Kredi Kartı</option>
+              <option value="promissory_note">📄 Senet</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>Açıklama</label>
+            <textarea id="editPaymentNotes" rows="3" placeholder="Ek notlar..." style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--input-bg); color: var(--text-primary); resize: vertical;"></textarea>
+          </div>
+          
+          <div style="display: flex; gap: 0.75rem; justify-content: flex-end; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+            <button type="button" class="btn btn-secondary" onclick="closeEditPaymentModal()">❌ İptal</button>
+            <button type="submit" class="btn btn-primary">💾 Güncelle</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts -->
   <script type="module" src="../js/auth.js?v=6"></script>
   <script type="module" src="../js/projects.js?v=6"></script>
@@ -558,7 +610,11 @@
         payments = [];
         
         paymentsSnap.forEach(docSnap => {
-          payments.push({ id: docSnap.id, ...docSnap.data() });
+          const paymentData = { id: docSnap.id, ...docSnap.data() };
+          // Filter out deleted payments
+          if (!paymentData.isDeleted) {
+            payments.push(paymentData);
+          }
         });
 
         // Calculate totals
@@ -759,10 +815,32 @@
         }
 
         html += `
-          <div style="padding: 1rem; background: white; border-radius: 8px; border-left: 4px solid #27ae60;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-              <strong>${hakedisLabel}</strong>
-              <span style="color: #27ae60; font-weight: bold;">${formatCurrency(payment.amount)}</span>
+          <div style="padding: 1rem; background: white; border-radius: 8px; border-left: 4px solid #27ae60; position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+              <div style="flex: 1;">
+                <strong>${hakedisLabel}</strong>
+                <div style="color: #27ae60; font-weight: bold; font-size: 1.2rem; margin-top: 0.25rem;">
+                  ${formatCurrency(payment.amount)}
+                </div>
+              </div>
+              <div style="display: flex; gap: 0.5rem;">
+                <button 
+                  class="btn btn-icon" 
+                  onclick="openEditPaymentModal('${payment.id}')"
+                  title="Düzenle"
+                  style="padding: 0.5rem; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem;"
+                >
+                  ✏️
+                </button>
+                <button 
+                  class="btn btn-icon" 
+                  onclick="deletePayment('${payment.id}')"
+                  title="Sil"
+                  style="padding: 0.5rem; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem;"
+                >
+                  🗑️
+                </button>
+              </div>
             </div>
             <div style="font-size: 0.85rem; color: var(--text-secondary);">
               📅 ${paymentDate} • ${methodNames[payment.method] || payment.method}
@@ -1038,6 +1116,175 @@
     };
 
     window.handleRecordPayment = handleRecordPayment;
+
+    // Edit Payment Modal Functions
+    window.openEditPaymentModal = async function(paymentId) {
+      const payment = payments.find(p => p.id === paymentId);
+      if (!payment) {
+        alert('❌ Ödeme kaydı bulunamadı');
+        return;
+      }
+
+      const hakedis = progressPayments.find(h => h.id === payment.progressPaymentId);
+      let hakedisLabel = 'Hakediş Bilinmiyor';
+      if (hakedis) {
+        const paymentNo = hakedis.paymentNo || `#${progressPayments.indexOf(hakedis) + 1}`;
+        const period = hakedis.period || hakedis.periodName || '';
+        hakedisLabel = period ? `${paymentNo} - ${period}` : paymentNo;
+      }
+
+      // Fill form
+      document.getElementById('editPaymentId').value = payment.id;
+      document.getElementById('editProgressPaymentId').value = payment.progressPaymentId;
+      document.getElementById('editHakedisLabel').value = hakedisLabel;
+      document.getElementById('editPaymentAmount').value = payment.amount;
+      
+      const paymentDate = payment.paymentDate?.toDate ? payment.paymentDate.toDate() : new Date(payment.paymentDate);
+      document.getElementById('editPaymentDate').valueAsDate = paymentDate;
+      
+      document.getElementById('editPaymentMethod').value = payment.method || 'bank_transfer';
+      document.getElementById('editPaymentNotes').value = payment.notes || '';
+
+      // Reset submit button
+      const submitBtn = document.querySelector('#editPaymentForm button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '💾 Güncelle';
+      }
+
+      // Show modal
+      document.getElementById('editPaymentModal').style.display = 'block';
+    };
+
+    window.closeEditPaymentModal = function() {
+      const modal = document.getElementById('editPaymentModal');
+      const form = document.getElementById('editPaymentForm');
+      const submitBtn = form?.querySelector('button[type="submit"]');
+      
+      // Reset submit button state
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '💾 Güncelle';
+      }
+      
+      // Reset form
+      if (form) form.reset();
+      
+      // Close modal
+      if (modal) modal.style.display = 'none';
+    };
+
+    window.handleEditPayment = async function(event) {
+      event.preventDefault();
+
+      const submitBtn = event.target.querySelector('button[type="submit"]');
+      if (submitBtn && submitBtn.disabled) {
+        console.log('⚠️ Already submitting, ignoring duplicate submit');
+        return;
+      }
+
+      const paymentId = document.getElementById('editPaymentId').value;
+      const amount = parseFloat(document.getElementById('editPaymentAmount').value);
+      const paymentDate = document.getElementById('editPaymentDate').value;
+      const method = document.getElementById('editPaymentMethod').value;
+      const notes = document.getElementById('editPaymentNotes').value;
+
+      if (!amount || amount <= 0) {
+        alert('⚠️ Lütfen geçerli bir ödeme tutarı girin!');
+        return;
+      }
+
+      try {
+        const user = auth.currentUser;
+        
+        // Show loading state
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = '⏳ Güncelleniyor...';
+        }
+
+        await updateDoc(doc(db, 'payment_records', paymentId), {
+          amount,
+          paymentDate: Timestamp.fromDate(new Date(paymentDate)),
+          method,
+          notes: notes.trim(),
+          updatedAt: Timestamp.now(),
+          updatedBy: user.uid,
+          updatedByEmail: user.email
+        });
+
+        const methodNames = {
+          'bank_transfer': 'Banka Havalesi',
+          'check': 'Çek',
+          'cash': 'Nakit',
+          'credit_card': 'Kredi Kartı',
+          'promissory_note': 'Senet'
+        };
+
+        alert(
+          `✅ Ödeme başarıyla güncellendi!\n\n` +
+          `💰 Yeni Tutar: ${formatCurrency(amount)}\n` +
+          `📅 Yeni Tarih: ${new Date(paymentDate).toLocaleDateString('tr-TR')}\n` +
+          `🏦 Yöntem: ${methodNames[method] || method}`
+        );
+        
+        closeEditPaymentModal();
+        await loadPayments();
+
+      } catch (error) {
+        console.error('❌ Error updating payment:', error);
+        alert('❌ Ödeme güncellenirken hata oluştu:\n\n' + error.message);
+        
+        // Reset button
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '💾 Güncelle';
+        }
+      }
+    };
+
+    window.deletePayment = async function(paymentId) {
+      const payment = payments.find(p => p.id === paymentId);
+      if (!payment) {
+        alert('❌ Ödeme kaydı bulunamadı');
+        return;
+      }
+
+      const hakedis = progressPayments.find(h => h.id === payment.progressPaymentId);
+      let hakedisLabel = 'Bu ödeme';
+      if (hakedis) {
+        const paymentNo = hakedis.paymentNo || `#${progressPayments.indexOf(hakedis) + 1}`;
+        const period = hakedis.period || hakedis.periodName || '';
+        hakedisLabel = period ? `${paymentNo} - ${period}` : paymentNo;
+      }
+
+      const paymentDate = payment.paymentDate?.toDate ? payment.paymentDate.toDate() : new Date(payment.paymentDate);
+      
+      const confirmDelete = confirm(
+        `⚠️ UYARI: Ödeme kaydını silmek istediğinize emin misiniz?\n\n` +
+        `📌 Hakediş: ${hakedisLabel}\n` +
+        `💰 Tutar: ${formatCurrency(payment.amount)}\n` +
+        `📅 Tarih: ${paymentDate.toLocaleDateString('tr-TR')}\n\n` +
+        `Bu işlem geri alınamaz!`
+      );
+
+      if (!confirmDelete) return;
+
+      try {
+        await updateDoc(doc(db, 'payment_records', paymentId), {
+          isDeleted: true,
+          deletedAt: Timestamp.now(),
+          deletedBy: auth.currentUser.uid
+        });
+
+        alert('✅ Ödeme kaydı silindi!');
+        await loadPayments();
+
+      } catch (error) {
+        console.error('❌ Error deleting payment:', error);
+        alert('❌ Ödeme silinirken hata oluştu:\n\n' + error.message);
+      }
+    };
 
     function formatCurrency(amount) {
       return new Intl.NumberFormat('tr-TR', {
