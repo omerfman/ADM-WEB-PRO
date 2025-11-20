@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sözleşme - ADM İnşaat Proje Yönetim Sistemi</title>
-  <link rel="stylesheet" href="../css/style.css?v=9">
+  <link rel="stylesheet" href="../css/style.css?v=10">
 </head>
 <body>
   <div class="dashboard-layout">
@@ -185,74 +185,80 @@
         <div class="card">
           <h2 style="margin: 0 0 1.5rem 0;">📋 Sözleşme Bilgileri</h2>
           
-          <div class="detail-row">
-            <div class="detail-label">Sözleşme Türü:</div>
-            <div class="detail-value">
-              <select id="contractType" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px;">
-                <option value="fixed">Götürü Bedel</option>
-                <option value="unit">Birim Fiyat</option>
-                <option value="cost_plus">Maliyet + Kâr</option>
-              </select>
+          <!-- Genel Bilgiler -->
+          <div style="margin-bottom: 2rem;">
+            <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem; color: var(--text-secondary); font-weight: 600;">Genel Bilgiler</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+              
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>Sözleşme Türü</label>
+                <select id="contractType">
+                  <option value="fixed">Götürü Bedel</option>
+                  <option value="unit">Birim Fiyat</option>
+                  <option value="cost_plus">Maliyet + Kâr</option>
+                </select>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>İşveren (Müşteri)</label>
+                <div style="padding: 0.875rem; background: var(--bg-secondary); border: 1.5px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-weight: 600;" id="clientName">-</div>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>Yüklenici (Firma)</label>
+                <div style="padding: 0.875rem; background: var(--bg-secondary); border: 1.5px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-weight: 600;" id="companyName">-</div>
+              </div>
+
             </div>
           </div>
 
-          <div class="detail-row">
-            <div class="detail-label">İşveren (Müşteri):</div>
-            <div class="detail-value" id="clientName">-</div>
-          </div>
+          <!-- Tarih ve Süre Bilgileri -->
+          <div style="margin-bottom: 2rem;">
+            <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem; color: var(--text-secondary); font-weight: 600;">Tarih ve Süre Bilgileri</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+              
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>Sözleşme Tarihi</label>
+                <input type="date" id="contractDate">
+              </div>
 
-          <div class="detail-row">
-            <div class="detail-label">Yüklenici (Firma):</div>
-            <div class="detail-value" id="companyName">-</div>
-          </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>İşe Başlama Tarihi</label>
+                <input type="date" id="workStartDate">
+              </div>
 
-          <div class="detail-row">
-            <div class="detail-label">Sözleşme Tarihi:</div>
-            <div class="detail-value">
-              <input type="date" id="contractDate" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>Tamamlanma Süresi (Gün)</label>
+                <input type="number" id="durationDays" placeholder="Gün sayısı" min="1">
+              </div>
+
             </div>
           </div>
 
-          <div class="detail-row">
-            <div class="detail-label">İşe Başlama Tarihi:</div>
-            <div class="detail-value">
-              <input type="date" id="workStartDate" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px;">
+          <!-- Ceza ve Kabul Süreleri -->
+          <div style="margin-bottom: 2rem;">
+            <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem; color: var(--text-secondary); font-weight: 600;">Ceza ve Kabul Süreleri</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+              
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>Gecikme Cezası Oranı (‰)</label>
+                <input type="number" id="penaltyRate" value="0.001" step="0.0001" min="0" max="0.01" placeholder="Örn: 0.001">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>Geçici Kabul Süresi (Gün)</label>
+                <input type="number" id="provisionalAcceptance" value="15" min="1" placeholder="Örn: 15">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label>Kesin Kabul Süresi (Gün)</label>
+                <input type="number" id="finalAcceptance" value="365" min="1" placeholder="Örn: 365">
+              </div>
+
             </div>
           </div>
 
-          <div class="detail-row">
-            <div class="detail-label">Tamamlanma Süresi:</div>
-            <div class="detail-value">
-              <input type="number" id="durationDays" placeholder="Gün sayısı" min="1" style="width: 150px; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px;">
-              <span style="margin-left: 0.5rem;">gün</span>
-            </div>
-          </div>
-
-          <div class="detail-row">
-            <div class="detail-label">Gecikme Cezası:</div>
-            <div class="detail-value">
-              <input type="number" id="penaltyRate" value="0.001" step="0.0001" min="0" max="0.01" style="width: 150px; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px;">
-              <span style="margin-left: 0.5rem;">günlük oran (‰)</span>
-            </div>
-          </div>
-
-          <div class="detail-row">
-            <div class="detail-label">Geçici Kabul Süresi:</div>
-            <div class="detail-value">
-              <input type="number" id="provisionalAcceptance" value="15" min="1" style="width: 150px; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px;">
-              <span style="margin-left: 0.5rem;">gün</span>
-            </div>
-          </div>
-
-          <div class="detail-row">
-            <div class="detail-label">Kesin Kabul Süresi:</div>
-            <div class="detail-value">
-              <input type="number" id="finalAcceptance" value="365" min="1" style="width: 150px; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px;">
-              <span style="margin-left: 0.5rem;">gün</span>
-            </div>
-          </div>
-
-          <button class="btn btn-primary" onclick="saveContractDetails()" style="margin-top: 1.5rem;">
+          <button class="btn btn-primary" onclick="saveContractDetails()">
             💾 Bilgileri Kaydet
           </button>
         </div>
@@ -301,54 +307,73 @@
 
         <!-- Payment Terms -->
         <div class="card" style="margin-top: 1.5rem;">
-          <h3 style="margin: 0 0 1rem 0;">💰 Ödeme Şartları</h3>
-          <div class="form-grid">
-            <div class="form-group">
+          <h2 style="margin: 0 0 1.5rem 0;">💰 Ödeme Şartları</h2>
+          
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+            
+            <div class="form-group" style="margin-bottom: 0;">
               <label>Ödeme Tipi</label>
-              <select id="paymentType" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px;">
+              <select id="paymentType">
                 <option value="progress">Hakediş Sistemli</option>
                 <option value="milestone">Kilometre Taşı</option>
                 <option value="advance">Peşin Ödeme</option>
               </select>
             </div>
-            <div class="form-group">
+            
+            <div class="form-group" style="margin-bottom: 0;">
               <label>Avans Oranı (%)</label>
-              <input type="number" id="advancePayment" value="0" min="0" max="100" step="1" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px;">
+              <input type="number" id="advancePayment" value="0" min="0" max="100" step="1" placeholder="Örn: 20">
             </div>
-            <div class="form-group">
+            
+            <div class="form-group" style="margin-bottom: 0;">
               <label>Hakediş Kesinti Oranı (%)</label>
-              <input type="number" id="retentionRate" value="10" min="0" max="100" step="1" style="padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px;">
+              <input type="number" id="retentionRate" value="10" min="0" max="100" step="1" placeholder="Örn: 10">
             </div>
+            
           </div>
-          <div class="form-group" style="margin-top: 1rem;">
+          
+          <div class="form-group" style="margin-bottom: 0;">
             <label>Ödeme Şartları Detayı</label>
-            <textarea id="paymentTerms" rows="4" style="width: 100%; padding: 1rem; border: 1px solid var(--border-color); border-radius: 6px;" placeholder="Ödeme dönemleri, şartlar, bankalar vb..."></textarea>
+            <textarea id="paymentTerms" rows="4" placeholder="Ödeme dönemleri, şartlar, bankalar vb..."></textarea>
           </div>
         </div>
 
         <!-- Contract Clauses -->
         <div class="card" style="margin-top: 1.5rem;">
-          <h3 style="margin: 0 0 1rem 0;">📜 Sözleşme Maddeleri</h3>
-          <textarea id="contractClauses" rows="10" style="width: 100%; padding: 1rem; border: 1px solid var(--border-color); border-radius: 6px; font-family: inherit;" placeholder="Sözleşme maddeleri, özel şartlar, sorumluluklar..."></textarea>
-          <button class="btn btn-primary" onclick="saveContractClauses()" style="margin-top: 1rem;">
+          <h2 style="margin: 0 0 1.5rem 0;">📜 Sözleşme Maddeleri</h2>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label>Özel Şartlar ve Maddeler</label>
+            <textarea id="contractClauses" rows="12" placeholder="Sözleşme maddeleri, özel şartlar, sorumluluklar..."></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="saveContractClauses()">
             💾 Maddeleri Kaydet
           </button>
         </div>
 
         <!-- Signatures -->
-        <div class="signature-section">
-          <h3 style="margin: 0 0 1rem 0;">✍️ İmzalar</h3>
-          <div class="signature-box">
-            <div class="signature-item">
-              <h4>İŞVEREN</h4>
-              <div class="signature-placeholder" id="clientSignature">İmza Bekleniyor</div>
-              <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-secondary);" id="clientSignDate">-</div>
+        <div class="card" style="margin-top: 1.5rem;">
+          <h2 style="margin: 0 0 1.5rem 0;">✍️ İmzalar</h2>
+          
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+            
+            <!-- İşveren İmzası -->
+            <div style="background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 12px; padding: 1.5rem; text-align: center;">
+              <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem;">İŞVEREN</div>
+              <div style="background: white; border: 2px dashed var(--border-color); border-radius: 8px; padding: 3rem 1rem; min-height: 120px; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: var(--text-secondary); margin-bottom: 1rem;" id="clientSignature">
+                İmza Bekleniyor
+              </div>
+              <div style="font-size: 0.85rem; color: var(--text-secondary);" id="clientSignDate">-</div>
             </div>
-            <div class="signature-item">
-              <h4>YÜKLENİCİ</h4>
-              <div class="signature-placeholder" id="contractorSignature">İmza Bekleniyor</div>
-              <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-secondary);" id="contractorSignDate">-</div>
+
+            <!-- Yüklenici İmzası -->
+            <div style="background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 12px; padding: 1.5rem; text-align: center;">
+              <div style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem;">YÜKLENİCİ</div>
+              <div style="background: white; border: 2px dashed var(--border-color); border-radius: 8px; padding: 3rem 1rem; min-height: 120px; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: var(--text-secondary); margin-bottom: 1rem;" id="contractorSignature">
+                İmza Bekleniyor
+              </div>
+              <div style="font-size: 0.85rem; color: var(--text-secondary);" id="contractorSignDate">-</div>
             </div>
+            
           </div>
         </div>
       </section>
@@ -539,11 +564,19 @@
 
           // Show signatures
           if (contractData.clientSignedAt) {
-            document.getElementById('clientSignature').innerHTML = '<strong>✅ İmzalandı</strong>';
+            const clientSigDiv = document.getElementById('clientSignature');
+            clientSigDiv.innerHTML = '<div style="font-size: 2.5rem; margin-bottom: 0.5rem;">✅</div><strong style="color: var(--success-color); font-size: 1.1rem;">İmzalandı</strong>';
+            clientSigDiv.style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%)';
+            clientSigDiv.style.borderColor = 'var(--success-color)';
+            clientSigDiv.style.borderStyle = 'solid';
             document.getElementById('clientSignDate').textContent = contractData.clientSignedAt.toDate().toLocaleString('tr-TR');
           }
           if (contractData.contractorSignedAt) {
-            document.getElementById('contractorSignature').innerHTML = '<strong>✅ İmzalandı</strong>';
+            const contractorSigDiv = document.getElementById('contractorSignature');
+            contractorSigDiv.innerHTML = '<div style="font-size: 2.5rem; margin-bottom: 0.5rem;">✅</div><strong style="color: var(--success-color); font-size: 1.1rem;">İmzalandı</strong>';
+            contractorSigDiv.style.background = 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%)';
+            contractorSigDiv.style.borderColor = 'var(--success-color)';
+            contractorSigDiv.style.borderStyle = 'solid';
             document.getElementById('contractorSignDate').textContent = contractData.contractorSignedAt.toDate().toLocaleString('tr-TR');
           }
         }
