@@ -336,6 +336,13 @@ function formatCurrency(amount) {
   }).format(amount || 0);
 }
 
+function formatNumber(value, decimals = 2) {
+  return new Intl.NumberFormat('tr-TR', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
+  }).format(value || 0);
+}
+
 function formatDate(timestamp) {
   if (!timestamp) return '-';
   const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
@@ -841,6 +848,43 @@ function closeCreateProgressPaymentModal() {
 async function loadBoqItemsForPayment() {
   const container = document.getElementById('paymentItemsContainer');
   if (!container) return;
+  
+  // Show loading state
+  container.innerHTML = `
+    <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+      <div style="font-size: 2rem; margin-bottom: 0.5rem;">⏳</div>
+      <p>Metraj kalemleri yükleniyor...</p>
+    </div>
+  `;
+  
+  // If boqItems is empty, try to load it
+  if (boqItems.length === 0 && currentProjectId) {
+    try {
+      console.log('📋 Loading BOQ items for payment...');
+      const boqQuery = query(
+        collection(db, 'boq_items'),
+        where('projectId', '==', currentProjectId),
+        where('isDeleted', '==', false),
+        orderBy('pozNo', 'asc')
+      );
+      const boqSnap = await getDocs(boqQuery);
+      boqItems = [];
+      boqSnap.forEach(doc => {
+        boqItems.push({ id: doc.id, ...doc.data() });
+      });
+      console.log(`✅ Loaded ${boqItems.length} BOQ items`);
+    } catch (error) {
+      console.error('❌ Error loading BOQ items:', error);
+      container.innerHTML = `
+        <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+          <div style="font-size: 2rem; margin-bottom: 0.5rem;">❌</div>
+          <p>Metraj kalemleri yüklenirken hata oluştu</p>
+          <p style="font-size: 0.85rem; color: #e74c3c;">${error.message}</p>
+        </div>
+      `;
+      return;
+    }
+  }
   
   if (boqItems.length === 0) {
     container.innerHTML = `
