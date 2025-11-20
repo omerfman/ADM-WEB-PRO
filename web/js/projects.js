@@ -253,8 +253,115 @@ function switchTab(tabName) {
  * Load project logs (moved to project-detail.js)
  */
 async function loadProjectLogs(projectId) {
-  console.log('loadProjectLogs called - now handled in project-detail.js');
-  return Promise.resolve();
+  if (!projectId) {
+    console.error('❌ loadProjectLogs: projectId is required');
+    return;
+  }
+
+  const logsListDiv = document.getElementById('logsList');
+  if (!logsListDiv) {
+    console.warn('⚠️ logsList element not found');
+    return;
+  }
+
+  try {
+    logsListDiv.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-secondary);">⏳ Günlükler yükleniyor...</div>';
+
+    const logsRef = collection(db, 'projects', projectId, 'logs');
+    const logsQuery = query(logsRef, orderBy('createdAt', 'desc'));
+    const logsSnap = await getDocs(logsQuery);
+
+    if (logsSnap.empty) {
+      logsListDiv.innerHTML = `
+        <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">📔</div>
+          <p style="font-size: 1.1rem; margin: 0;">Henüz günlük kaydı bulunmuyor</p>
+          <p style="font-size: 0.9rem; margin-top: 0.5rem; opacity: 0.7;">Yukarıdaki "Günlük Ekle" butonunu kullanarak yeni kayıt ekleyebilirsiniz</p>
+        </div>
+      `;
+      return;
+    }
+
+    let logsHTML = '<div style="display: grid; gap: 1rem;">';
+    
+    logsSnap.forEach((docSnap) => {
+      const log = docSnap.data();
+      const logId = docSnap.id;
+      
+      // Format date
+      let dateStr = 'Tarih belirtilmemiş';
+      if (log.date) {
+        const date = log.date.toDate ? log.date.toDate() : new Date(log.date);
+        dateStr = date.toLocaleDateString('tr-TR', { 
+          day: '2-digit', 
+          month: 'long', 
+          year: 'numeric' 
+        });
+      } else if (log.createdAt) {
+        const date = log.createdAt.toDate();
+        dateStr = date.toLocaleDateString('tr-TR', { 
+          day: '2-digit', 
+          month: 'long', 
+          year: 'numeric' 
+        });
+      }
+
+      const performedBy = log.performedBy || log.createdBy || 'Bilinmiyor';
+      const description = log.description || 'Açıklama yok';
+      const photoUrl = log.photoUrl || '';
+
+      logsHTML += `
+        <div class="card" style="padding: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; align-items: start; gap: 1rem; margin-bottom: 1rem;">
+            <div style="flex: 1;">
+              <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                <span style="font-size: 1.5rem;">📅</span>
+                <h4 style="margin: 0; color: var(--brand-red);">${dateStr}</h4>
+              </div>
+              <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                👷 Yapan: <strong>${performedBy}</strong>
+              </div>
+            </div>
+            <button 
+              class="btn btn-danger" 
+              style="padding: 0.5rem 1rem; font-size: 0.85rem;"
+              onclick="deleteLog('${projectId}', '${logId}')">
+              🗑️ Sil
+            </button>
+          </div>
+          
+          <div style="background: var(--card-bg); padding: 1rem; border-radius: 6px; border-left: 3px solid var(--brand-red); margin-bottom: ${photoUrl ? '1rem' : '0'};">
+            <p style="margin: 0; white-space: pre-wrap; line-height: 1.6;">${description}</p>
+          </div>
+          
+          ${photoUrl ? `
+            <div style="margin-top: 1rem;">
+              <img 
+                src="${photoUrl}" 
+                alt="Günlük fotoğrafı" 
+                style="width: 100%; max-width: 500px; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
+                onclick="window.open('${photoUrl}', '_blank')"
+              />
+            </div>
+          ` : ''}
+        </div>
+      `;
+    });
+
+    logsHTML += '</div>';
+    logsListDiv.innerHTML = logsHTML;
+
+    console.log(`✅ Loaded ${logsSnap.size} logs for project ${projectId}`);
+
+  } catch (error) {
+    console.error('❌ Error loading logs:', error);
+    logsListDiv.innerHTML = `
+      <div style="text-align: center; padding: 2rem; color: var(--danger);">
+        <p>❌ Günlükler yüklenirken hata oluştu</p>
+        <p style="font-size: 0.9rem; opacity: 0.7;">${error.message}</p>
+      </div>
+    `;
+  }
 }
 
 /**
@@ -400,15 +507,20 @@ function closeAddLogModal() {
 async function handleAddLog(event) {
   event.preventDefault();
   
-  const title = document.getElementById('logTitle').value;
-  const description = document.getElementById('logDescription').value;
-  const worker = document.getElementById('logWorker').value;
-  const photoFile = document.getElementById('logPhoto').files[0];
+  const date = document.getElementById('logDate')?.value;
+  const performedBy = document.getElementById('logPerformedBy')?.value;
+  const description = document.getElementById('logDescription')?.value;
+  const photoFile = document.getElementById('logPhoto')?.files[0];
+
+  if (!date || !performedBy || !description) {
+    showAlert('⚠️ Lütfen tüm zorunlu alanları doldurun', 'warning');
+    return;
+  }
 
   try {
     const user = auth.currentUser;
     if (!user || !currentProjectId) {
-      showAlert('Hata: Proje seçilmemiş', 'danger');
+      showAlert('❌ Hata: Proje seçilmemiş', 'danger');
       return;
     }
 
@@ -417,12 +529,12 @@ async function handleAddLog(event) {
     // Upload photo to ImgBB if selected
     if (photoFile) {
       try {
-        showAlert('Fotoğraf yükleniyor...', 'warning');
+        showAlert('📸 Fotoğraf yükleniyor...', 'info');
         photoUrl = await uploadPhotoToImgBB(photoFile, currentProjectId);
         console.log('✅ Photo uploaded to ImgBB:', photoUrl);
       } catch (error) {
         console.error('❌ Photo upload failed:', error);
-        showAlert('Fotoğraf yüklenemedi, günlük fotoğrafsız kaydedilecek', 'warning');
+        showAlert('⚠️ Fotoğraf yüklenemedi, günlük fotoğrafsız kaydedilecek', 'warning');
         // Continue without photo
       }
     }
@@ -430,21 +542,24 @@ async function handleAddLog(event) {
     // Create log entry
     const logsRef = collection(db, 'projects', currentProjectId, 'logs');
     await addDoc(logsRef, {
-      title,
+      date: new Date(date),
+      title: `Günlük - ${date}`,
       description,
-      createdBy: worker,
+      performedBy,
+      createdBy: performedBy,
       userId: user.uid,
+      userEmail: user.email,
       createdAt: serverTimestamp(),
       photoUrl: photoUrl,
       status: 'completed'
     });
 
-    showAlert('✅ Günlük kaydı eklendi!', 'success');
+    showAlert('✅ Şantiye günlüğü başarıyla eklendi!', 'success');
     closeAddLogModal();
     await loadProjectLogs(currentProjectId);
   } catch (error) {
     console.error('❌ Log eklenemedi:', error);
-    showAlert('Log eklenirken hata: ' + error.message, 'danger');
+    showAlert('❌ Günlük eklenirken hata: ' + error.message, 'danger');
   }
 }
 
@@ -1348,6 +1463,7 @@ window.switchTab = switchTab;
 window.openCreateProjectModal = openCreateProjectModal;
 window.closeCreateProjectModal = closeCreateProjectModal;
 window.handleCreateProject = handleCreateProject;
+window.loadProjectLogs = loadProjectLogs;
 window.addLog = addLog;
 window.addStock = addStock;
 window.addPayment = addPayment;

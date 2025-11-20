@@ -191,10 +191,36 @@
   </div>
 
   <!-- Load JS modules -->
-  <script type="module" src="../js/auth.js?v=6"></script>
-  <script type="module" src="../js/projects.js?v=6"></script>
-  <script type="module" src="../js/upload.js?v=6"></script>
-  <script type="module" src="../js/app.js?v=6"></script>
+  <script type="module" src="../js/auth.js?v=7"></script>
+  <script type="module" src="../js/projects.js?v=7"></script>
+  <script type="module" src="../js/upload.js?v=7"></script>
+  <script type="module" src="../js/app.js?v=7"></script>
+  <script type="module">
+    import { db } from '../js/firebase-config.js';
+    import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+
+    // Load project info
+    async function loadProjectInfo() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectId = urlParams.get('id');
+      
+      if (!projectId) return;
+
+      try {
+        const projectDoc = await getDoc(doc(db, 'projects', projectId));
+        if (projectDoc.exists()) {
+          const project = projectDoc.data();
+          document.getElementById('projectName').textContent = project.name || 'Proje';
+          document.getElementById('projectNameBreadcrumb').textContent = project.name || 'Proje';
+        }
+      } catch (error) {
+        console.error('❌ Error loading project info:', error);
+      }
+    }
+
+    // Call on page load
+    window.addEventListener('DOMContentLoaded', loadProjectInfo);
+  </script>
 
   <script>
     // Mobile menu toggle
@@ -256,15 +282,31 @@
         logDate.valueAsDate = new Date();
       }
       
+      // Get projectId from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const projectId = urlParams.get('id');
+      
+      if (!projectId) {
+        console.error('❌ Project ID not found in URL');
+        const logsListDiv = document.getElementById('logsList');
+        if (logsListDiv) {
+          logsListDiv.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--danger);">❌ Proje ID\'si bulunamadı. Lütfen projeler sayfasından bir proje seçin.</div>';
+        }
+        return;
+      }
+      
+      // Store projectId globally
+      window.currentProjectId = projectId;
+      
       // Wait for modules to load
       setTimeout(() => {
         if (window.loadProjectLogs) {
-          console.log('✅ Calling loadProjectLogs');
-          window.loadProjectLogs();
+          console.log('✅ Calling loadProjectLogs with projectId:', projectId);
+          window.loadProjectLogs(projectId);
         } else {
           console.warn('⚠️ loadProjectLogs not available yet');
         }
-      }, 200);
+      }, 300);
     });
   </script>
 </body>
