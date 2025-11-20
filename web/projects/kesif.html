@@ -566,12 +566,13 @@
         const kesifDoc = await getDoc(kesifDocRef);
         
         if (!kesifDoc.exists()) {
-          await updateDoc(kesifDocRef, {
+          await setDoc(kesifDocRef, {
             projectId: currentProjectId,
             profitMargin: 0.20,
             status: 'draft',
             createdAt: Timestamp.now(),
-            createdBy: user.uid
+            createdBy: user.uid,
+            updatedAt: Timestamp.now()
           });
         }
 
