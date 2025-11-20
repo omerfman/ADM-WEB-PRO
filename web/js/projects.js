@@ -810,17 +810,30 @@ async function handleUseStock(event) {
 
   try {
     const user = auth.currentUser;
-    if (!user || !currentProjectId) {
-      showAlert('Hata: Proje seçilmemiş', 'danger');
+    const projectId = window.currentProjectId;
+    
+    if (!user) {
+      showAlert('❌ Hata: Kullanıcı oturumu bulunamadı', 'danger');
+      return;
+    }
+    
+    if (!projectId) {
+      showAlert('❌ Hata: Proje ID\'si bulunamadı. Lütfen sayfayı yenileyin.', 'danger');
+      console.error('currentProjectId not found. window.currentProjectId:', window.currentProjectId);
+      return;
+    }
+
+    if (!stockId) {
+      showAlert('❌ Hata: Stok ID\'si bulunamadı', 'danger');
       return;
     }
 
     // Get current stock data
-    const stockRef = doc(db, 'projects', currentProjectId, 'stocks', stockId);
+    const stockRef = doc(db, 'projects', projectId, 'stocks', stockId);
     const stockSnap = await getDoc(stockRef);
     
     if (!stockSnap.exists()) {
-      showAlert('Stok bulunamadı', 'danger');
+      showAlert('❌ Stok bulunamadı', 'danger');
       return;
     }
 
@@ -830,7 +843,12 @@ async function handleUseStock(event) {
 
     // Validate quantity
     if (quantity > remaining) {
-      showAlert(`Hata: Yetersiz stok! Kalan miktar: ${remaining} ${stockData.unit}`, 'danger');
+      showAlert(`❌ Hata: Yetersiz stok! Kalan miktar: ${remaining} ${stockData.unit}`, 'danger');
+      return;
+    }
+
+    if (quantity <= 0) {
+      showAlert('⚠️ Lütfen geçerli bir miktar girin', 'warning');
       return;
     }
 
@@ -841,7 +859,7 @@ async function handleUseStock(event) {
     });
 
     // Create usage record
-    const usageRef = collection(db, 'projects', currentProjectId, 'stocks', stockId, 'usage');
+    const usageRef = collection(db, 'projects', projectId, 'stocks', stockId, 'usage');
     await addDoc(usageRef, {
       quantity,
       usageDate: new Date(usageDate),
@@ -849,26 +867,29 @@ async function handleUseStock(event) {
       location: location || '',
       notes: notes || '',
       recordedBy: user.uid,
+      userEmail: user.email,
       createdAt: serverTimestamp()
     });
 
-    showAlert('Stok kullanımı kaydedildi!', 'success');
+    showAlert('✅ Stok kullanımı başarıyla kaydedildi!', 'success');
     if (window.closeUseStockModal) window.closeUseStockModal();
-    await loadProjectStocks(currentProjectId);
+    await loadProjectStocks(projectId);
   } catch (error) {
     console.error('❌ Stok kullanımı kaydedilemedi:', error);
-    showAlert('Kayıt hatası: ' + error.message, 'danger');
+    showAlert('❌ Kayıt hatası: ' + error.message, 'danger');
   }
 }
 
 async function loadStockUsageHistory(stockId) {
   try {
-    if (!currentProjectId) {
+    const projectId = window.currentProjectId;
+    
+    if (!projectId) {
       console.warn('⚠️ currentProjectId not set');
       return;
     }
 
-    const usageRef = collection(db, 'projects', currentProjectId, 'stocks', stockId, 'usage');
+    const usageRef = collection(db, 'projects', projectId, 'stocks', stockId, 'usage');
     const q = query(usageRef, orderBy('usageDate', 'desc'));
     const usageSnap = await getDocs(q);
 
