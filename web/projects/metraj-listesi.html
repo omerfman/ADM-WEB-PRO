@@ -183,6 +183,21 @@
           </div>
         </div>
 
+        <!-- Action Buttons -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0;">📋 Metraj Listesi (BOQ)</h3>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn btn-success" onclick="loadFromContract()" id="loadFromContractBtn">
+                📥 Sözleşmeden Yükle
+              </button>
+              <button class="btn btn-primary" onclick="addNewBoqItemInline()">
+                ➕ Yeni Kalem Ekle
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- BOQ Table Container -->
         <div id="boqTableContainer">
           <!-- BOQ table will be rendered here by JavaScript -->
