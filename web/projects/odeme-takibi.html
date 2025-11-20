@@ -696,6 +696,10 @@
         return;
       }
 
+      // Get filter values
+      const searchTerm = document.getElementById('searchPayment')?.value.toLowerCase() || '';
+      const statusFilter = document.getElementById('statusFilter')?.value || '';
+
       const statusBadges = {
         pending: { class: 'status-pending', text: '⏳ Bekleyen' },
         partial: { class: 'status-partial', text: '🔵 Kısmi' },
@@ -707,18 +711,16 @@
       let totalAmount = 0;
       let totalPaid = 0;
       let totalRemaining = 0;
+      let displayedCount = 0;
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
       progressPayments.forEach(hakedis => {
         const netAmount = hakedis.netAmount || hakedis.netPayable || 0;
-        totalAmount += netAmount;
 
         const paidRecords = payments.filter(p => p.progressPaymentId === hakedis.id);
         const paidAmount = paidRecords.reduce((sum, p) => sum + (p.amount || 0), 0);
         const remaining = netAmount - paidAmount;
-        totalPaid += paidAmount;
-        totalRemaining += remaining;
 
         let status = 'pending';
         // Use tolerance for floating-point comparison (0.01 TL)
@@ -737,6 +739,22 @@
             status = 'overdue';
           }
         }
+
+        // Apply filters
+        const paymentNo = (hakedis.paymentNo || '').toString().toLowerCase();
+        const period = (hakedis.period || hakedis.periodName || '').toLowerCase();
+        const matchesSearch = !searchTerm || paymentNo.includes(searchTerm) || period.includes(searchTerm);
+        const matchesStatus = !statusFilter || status === statusFilter;
+
+        if (!matchesSearch || !matchesStatus) {
+          return; // Skip this item
+        }
+
+        // Count for totals
+        displayedCount++;
+        totalAmount += netAmount;
+        totalPaid += paidAmount;
+        totalRemaining += remaining;
 
         const statusBadge = statusBadges[status];
 
@@ -779,6 +797,21 @@
           </tr>
         `;
       });
+
+      // Check if any items match filters
+      if (displayedCount === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
+              <p style="margin: 0; font-size: 1rem;">Filtre kriterlerine uygun sonuç bulunamadı</p>
+              <p style="margin: 0.5rem 0 0 0; font-size: 0.85rem;">Filtreleri değiştirip tekrar deneyin</p>
+            </td>
+          </tr>
+        `;
+        footer.style.display = 'none';
+        return;
+      }
 
       tbody.innerHTML = html;
       footer.style.display = 'table-footer-group';
@@ -1303,8 +1336,14 @@
       loadPayments();
     }, 200);
 
-    // Filter
-    document.getElementById('statusFilter')?.addEventListener('change', () => loadPayments());
+    // Filter event listeners
+    document.getElementById('statusFilter')?.addEventListener('change', () => {
+      renderPaymentsTable();
+    });
+
+    document.getElementById('searchPayment')?.addEventListener('input', () => {
+      renderPaymentsTable();
+    });
   </script>
 </body>
 </html>
