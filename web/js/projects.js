@@ -906,38 +906,86 @@ async function loadStockUsageHistory(stockId) {
       return;
     }
 
-    let html = '';
+    let html = '<div style="overflow-x: auto;"><table style="width: 100%; border-collapse: collapse; min-width: 600px;">';
+    html += `
+      <thead>
+        <tr style="background: var(--bg-secondary); border-bottom: 2px solid var(--border-color);">
+          <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: var(--text-secondary); font-size: 0.85rem;">TARİH</th>
+          <th style="padding: 0.75rem; text-align: right; font-weight: 600; color: var(--text-secondary); font-size: 0.85rem;">MİKTAR</th>
+          <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: var(--text-secondary); font-size: 0.85rem;">KULLANAN</th>
+          <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: var(--text-secondary); font-size: 0.85rem;">LOKASYON</th>
+          <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: var(--text-secondary); font-size: 0.85rem;">NOTLAR</th>
+        </tr>
+      </thead>
+      <tbody>
+    `;
+    
     usageSnap.forEach(docSnap => {
       const usage = docSnap.data();
       const date = usage.usageDate?.toDate?.() || new Date();
+      const dateStr = date.toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' });
       
       html += `
-        <div class="card" style="margin-bottom: 1rem; border-left: 4px solid var(--brand-red);">
-          <div style="display: flex; justify-content: space-between; align-items: start; gap: 1rem; flex-wrap: wrap;">
-            <div style="flex: 1;">
-              <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
-                <strong style="color: var(--brand-red); font-size: 1.2rem;">${usage.quantity}</strong>
-                <span style="color: var(--text-secondary); font-size: 0.9rem; align-self: center;">birim kullanıldı</span>
-              </div>
-              <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
-                📅 ${date.toLocaleDateString('tr-TR')}
-              </div>
-              ${usage.usedBy ? `<div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
-                👤 ${usage.usedBy}
-              </div>` : ''}
-              ${usage.location ? `<div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
-                📍 ${usage.location}
-              </div>` : ''}
-              ${usage.notes ? `<div style="margin-top: 0.5rem; padding: 0.5rem; background: var(--bg-tertiary); border-radius: 4px; font-size: 0.9rem;">
-                ${usage.notes}
-              </div>` : ''}
-            </div>
-          </div>
-        </div>
+        <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.2s;" onmouseover="this.style.background='var(--bg-secondary)'" onmouseout="this.style.background='transparent'">
+          <td style="padding: 0.75rem; white-space: nowrap;">
+            <span style="font-size: 0.9rem;">📅 ${dateStr}</span>
+          </td>
+          <td style="padding: 0.75rem; text-align: right;">
+            <strong style="color: var(--brand-red); font-size: 1.1rem;">${usage.quantity}</strong>
+          </td>
+          <td style="padding: 0.75rem;">
+            <span style="font-size: 0.9rem;">${usage.usedBy ? '👤 ' + usage.usedBy : '-'}</span>
+          </td>
+          <td style="padding: 0.75rem;">
+            <span style="font-size: 0.9rem;">${usage.location ? '📍 ' + usage.location : '-'}</span>
+          </td>
+          <td style="padding: 0.75rem; max-width: 250px;">
+            <span style="font-size: 0.9rem; color: var(--text-secondary);">${usage.notes || '-'}</span>
+          </td>
+        </tr>
       `;
     });
 
-    historyList.innerHTML = html;
+    html += '</tbody></table></div>';
+    
+    // Mobile responsive cards for small screens
+    html += `
+      <style>
+        @media (max-width: 768px) {
+          .stock-usage-table { display: none; }
+          .stock-usage-mobile { display: block; }
+        }
+        @media (min-width: 769px) {
+          .stock-usage-table { display: block; }
+          .stock-usage-mobile { display: none; }
+        }
+      </style>
+    `;
+    
+    historyList.innerHTML = '<div class="stock-usage-table">' + html + '</div>';
+    
+    // Add mobile view
+    let mobileHtml = '<div class="stock-usage-mobile">';
+    usageSnap.forEach(docSnap => {
+      const usage = docSnap.data();
+      const date = usage.usageDate?.toDate?.() || new Date();
+      const dateStr = date.toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' });
+      
+      mobileHtml += `
+        <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color);">
+            <span style="font-size: 0.85rem; color: var(--text-secondary);">📅 ${dateStr}</span>
+            <strong style="color: var(--brand-red); font-size: 1.2rem;">${usage.quantity}</strong>
+          </div>
+          ${usage.usedBy ? `<div style="margin-bottom: 0.5rem; font-size: 0.9rem;">👤 ${usage.usedBy}</div>` : ''}
+          ${usage.location ? `<div style="margin-bottom: 0.5rem; font-size: 0.9rem;">📍 ${usage.location}</div>` : ''}
+          ${usage.notes ? `<div style="margin-top: 0.75rem; padding: 0.75rem; background: var(--bg-tertiary); border-radius: 6px; font-size: 0.85rem; color: var(--text-secondary);">${usage.notes}</div>` : ''}
+        </div>
+      `;
+    });
+    mobileHtml += '</div>';
+    
+    historyList.innerHTML += mobileHtml;
   } catch (error) {
     console.error('❌ Kullanım geçmişi yüklenemedi:', error);
     const historyList = document.getElementById('stockUsageHistoryList');
