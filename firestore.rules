@@ -393,10 +393,13 @@ service cloud.firestore {
       // Clients can read attachments if they have project access
       allow read: if isSignedIn() && (
         !isClient() ||
-        (exists(/databases/$(database)/documents/projects/$(resource.data.projectId)) &&
+        (resource.data.projectId != null &&
+         exists(/databases/$(database)/documents/projects/$(resource.data.projectId)) &&
          request.auth.uid in get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.get('allowedClients', []))
       );
-      allow create: if isSignedIn() && !isClient() && (isCompanyAdmin() || isCompanyUser() || isSuperAdmin());
+      allow create: if isSignedIn() && !isClient() && 
+                       request.resource.data.projectId != null &&
+                       (isCompanyAdmin() || isCompanyUser() || isSuperAdmin());
       allow delete: if isSignedIn() && !isClient() && (isCompanyAdmin() || isSuperAdmin());
     }
 
