@@ -634,17 +634,18 @@
           const paidAmount = paidRecords.reduce((sum, p) => sum + (p.amount || 0), 0);
           const remaining = netAmount - paidAmount;
 
-          if (paidAmount >= netAmount) {
-            // Fully paid
+          // Use tolerance for floating-point comparison (0.01 TL)
+          if (remaining <= 0.01 && remaining >= -0.01) {
+            // Fully paid - use netAmount to avoid rounding issues
             totalCollected += netAmount;
           } else {
             const expectedDate = hakedis.expectedPaymentDate ? 
               (hakedis.expectedPaymentDate.toDate ? hakedis.expectedPaymentDate.toDate() : new Date(hakedis.expectedPaymentDate)) : 
               null;
             
-            if (expectedDate && expectedDate < today) {
+            if (expectedDate && expectedDate < today && remaining > 0.01) {
               totalOverdue += remaining;
-            } else {
+            } else if (remaining > 0.01) {
               totalPending += remaining;
             }
             
@@ -720,11 +721,15 @@
         totalRemaining += remaining;
 
         let status = 'pending';
-        if (paidAmount >= netAmount) {
+        // Use tolerance for floating-point comparison (0.01 TL)
+        if (remaining <= 0.01 && remaining >= -0.01) {
+          // Fully paid (with small tolerance for floating-point errors)
           status = 'paid';
-        } else if (paidAmount > 0) {
+        } else if (paidAmount > 0.01) {
+          // Partially paid
           status = 'partial';
         } else {
+          // Not paid yet - check if overdue
           const expectedDate = hakedis.expectedPaymentDate ? 
             (hakedis.expectedPaymentDate.toDate ? hakedis.expectedPaymentDate.toDate() : new Date(hakedis.expectedPaymentDate)) : 
             null;
