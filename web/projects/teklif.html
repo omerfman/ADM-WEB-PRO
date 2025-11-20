@@ -308,7 +308,7 @@
 
   <script type="module">
     import { db, auth } from '../js/firebase-config.js';
-    import { doc, getDoc, collection, query, where, getDocs, addDoc, setDoc, orderBy, Timestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { doc, getDoc, collection, query, where, getDocs, addDoc, setDoc, updateDoc, deleteDoc, orderBy, Timestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
     // Make functions available globally
     window.db = db;
@@ -321,6 +321,8 @@
     window.getDocs = getDocs;
     window.addDoc = addDoc;
     window.setDoc = setDoc;
+    window.updateDoc = updateDoc;
+    window.deleteDoc = deleteDoc;
     window.orderBy = orderBy;
     window.Timestamp = Timestamp;
   </script>
@@ -393,11 +395,23 @@
         const contractDocRef = doc(db, 'contracts', projectId);
         const contractDoc = await getDoc(contractDocRef);
         
-        if (contractDoc.exists()) {
-          if (confirm('Bu proje için zaten bir sözleşme mevcut. Sözleşme sayfasına gitmek ister misiniz?')) {
+        let contractExists = contractDoc.exists();
+        let contractStatus = contractExists ? contractDoc.data().status : null;
+
+        // If contract is signed or active, don't allow update
+        if (contractExists && (contractStatus === 'signed' || contractStatus === 'active' || contractStatus === 'completed')) {
+          alert('⚠️ Bu sözleşme imzalanmış veya aktif durumda. Güncelleme yapılamaz.\n\nDurum: ' + contractStatus);
+          if (confirm('Sözleşme sayfasını görüntülemek ister misiniz?')) {
             window.location.href = `sozlesme.html?id=${projectId}`;
           }
           return;
+        }
+
+        // If contract exists in draft status, ask for update
+        if (contractExists && contractStatus === 'draft') {
+          if (!confirm('Bu proje için taslak bir sözleşme mevcut.\n\nMevcut sözleşme güncellensin mi?\n\n✅ Evet: Sözleşme güncellenecek\n❌ Hayır: İşlem iptal edilecek')) {
+            return;
+          }
         }
 
         // Get proposal items
@@ -424,7 +438,20 @@
         const proposalDoc = await getDoc(proposalDocRef);
         let totalAmount = 0;
 
-        // Create contract items
+        // If updating existing contract, delete old items first
+        if (contractExists) {
+          const existingItemsQuery = query(
+            collection(db, 'contract_items'),
+            where('projectId', '==', projectId)
+          );
+          const existingItemsSnap = await getDocs(existingItemsQuery);
+          
+          for (const itemDoc of existingItemsSnap.docs) {
+            await deleteDoc(doc(db, 'contract_items', itemDoc.id));
+          }
+        }
+
+        // Create/Update contract items
         for (const item of proposalItems) {
           const itemTotal = (item.quantity || 0) * (item.unitPrice || 0);
           totalAmount += itemTotal;
@@ -446,11 +473,10 @@
           });
         }
 
-        // Create contract metadata
+        // Create or update contract metadata
         const proposalMetadata = proposalDoc.exists() ? proposalDoc.data() : {};
-        await setDoc(contractDocRef, {
+        const contractData = {
           projectId: projectId,
-          contractNo: `SZL-${Date.now()}`,
           contractAmount: totalAmount,
           contractType: 'fixed',
           penaltyRate: 0.001,
@@ -462,11 +488,23 @@
           status: 'draft',
           fromProposalId: projectId,
           proposalData: proposalMetadata,
-          createdAt: Timestamp.now(),
-          createdBy: auth.currentUser.uid
-        });
+          updatedAt: Timestamp.now(),
+          updatedBy: auth.currentUser.uid
+        };
 
-        alert('✅ Sözleşme başarıyla oluşturuldu!');
+        if (contractExists) {
+          // Update existing contract
+          await updateDoc(contractDocRef, contractData);
+          alert('✅ Sözleşme başarıyla güncellendi!');
+        } else {
+          // Create new contract
+          contractData.contractNo = `SZL-${Date.now()}`;
+          contractData.createdAt = Timestamp.now();
+          contractData.createdBy = auth.currentUser.uid;
+          await setDoc(contractDocRef, contractData);
+          alert('✅ Sözleşme başarıyla oluşturuldu!');
+        }
+
         window.location.href = `sozlesme.html?id=${projectId}&from=proposal`;
 
       } catch (error) {
