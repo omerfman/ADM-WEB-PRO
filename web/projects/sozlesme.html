@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sözleşme - ADM İnşaat Proje Yönetim Sistemi</title>
-  <link rel="stylesheet" href="../css/style.css?v=10">
+  <link rel="stylesheet" href="../css/style.css?v=11">
 </head>
 <body>
   <div class="dashboard-layout">
@@ -273,15 +273,15 @@
           </div>
 
           <div class="table-responsive">
-            <table class="data-table" id="contractTable" style="width: 100%; min-width: 800px;">
+            <table class="boq-table" id="contractTable">
               <thead>
                 <tr>
-                  <th style="min-width: 50px;">Poz</th>
-                  <th style="min-width: 250px;">İş Kalemi</th>
-                  <th style="min-width: 80px;">Birim</th>
-                  <th style="text-align: right; min-width: 100px;">Sözleşme Miktarı</th>
-                  <th style="text-align: right; min-width: 120px;">Birim Fiyat</th>
-                  <th style="text-align: right; min-width: 120px;">Toplam</th>
+                  <th class="th-pozno">Poz No</th>
+                  <th class="th-description">İş Kalemi</th>
+                  <th class="th-unit">Birim</th>
+                  <th class="th-quantity">Sözleşme Miktarı</th>
+                  <th class="th-unitprice">Birim Fiyat</th>
+                  <th class="th-total">Toplam</th>
                 </tr>
               </thead>
               <tbody id="contractTableBody">
@@ -298,7 +298,7 @@
               <tfoot id="contractTableFooter" style="display: none;">
                 <tr style="background: var(--bg-secondary); font-weight: bold;">
                   <td colspan="5" style="text-align: right; padding: 1rem;">TOPLAM SÖZLEŞME BEDELİ:</td>
-                  <td style="text-align: right; color: var(--brand-red); font-size: 1.2rem;" id="footerTotal">₺0.00</td>
+                  <td class="td-total" style="color: var(--brand-red); font-size: 1.2rem;" id="footerTotal">₺0.00</td>
                 </tr>
               </tfoot>
             </table>
@@ -685,16 +685,16 @@
         totalAmount += total;
 
         html += `
-          <tr>
-            <td>${item.pozNo}</td>
-            <td>
+          <tr class="boq-data-row">
+            <td class="td-pozno">${item.pozNo}</td>
+            <td class="td-description">
               <strong>${item.name}</strong>
               ${item.description ? `<br><small style="color: var(--text-secondary);">${item.description}</small>` : ''}
             </td>
-            <td>${item.unit}</td>
-            <td style="text-align: right;">${formatNumber(item.contractQuantity)}</td>
-            <td style="text-align: right;">${formatCurrency(item.unitPrice)}</td>
-            <td style="text-align: right;"><strong>${formatCurrency(total)}</strong></td>
+            <td class="td-unit">${item.unit}</td>
+            <td class="td-quantity">${formatNumber(item.contractQuantity)}</td>
+            <td class="td-unitprice">${formatCurrency(item.unitPrice)}</td>
+            <td class="td-total"><strong>${formatCurrency(total)}</strong></td>
           </tr>
         `;
       });
