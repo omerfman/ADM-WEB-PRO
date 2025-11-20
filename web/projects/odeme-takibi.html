@@ -749,11 +749,19 @@
         const paymentDate = payment.paymentDate ? 
           (payment.paymentDate.toDate ? payment.paymentDate.toDate() : new Date(payment.paymentDate)).toLocaleDateString('tr-TR') : 
           '-';
+        
+        // Get payment number and period
+        let hakedisLabel = 'Hakediş Bilinmiyor';
+        if (hakedis) {
+          const paymentNo = hakedis.paymentNo || `#${progressPayments.indexOf(hakedis) + 1}`;
+          const period = hakedis.period || hakedis.periodName || '';
+          hakedisLabel = period ? `${paymentNo} - ${period}` : paymentNo;
+        }
 
         html += `
           <div style="padding: 1rem; background: white; border-radius: 8px; border-left: 4px solid #27ae60;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-              <strong>${hakedis ? `HAK-${hakedis.periodNo}` : 'Hakediş Bilinmiyor'}</strong>
+              <strong>${hakedisLabel}</strong>
               <span style="color: #27ae60; font-weight: bold;">${formatCurrency(payment.amount)}</span>
             </div>
             <div style="font-size: 0.85rem; color: var(--text-secondary);">
