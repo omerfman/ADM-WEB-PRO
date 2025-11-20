@@ -424,6 +424,12 @@ async function loadProjectStocks(projectId) {
     const stocksQuery = query(stocksRef, orderBy('createdAt', 'desc'));
     const stocksSnap = await getDocs(stocksQuery);
 
+    // Calculate summary statistics
+    let totalItems = 0;
+    let totalValue = 0;
+    let totalUsedValue = 0;
+    let remainingValue = 0;
+
     if (stocksSnap.empty) {
       stocksListDiv.innerHTML = `
         <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
@@ -432,6 +438,9 @@ async function loadProjectStocks(projectId) {
           <p style="font-size: 0.9rem; margin-top: 0.5rem; opacity: 0.7;">Yukarıdaki "Stok Ekle" butonunu kullanarak yeni ürün ekleyebilirsiniz</p>
         </div>
       `;
+      
+      // Update summary cards with zeros
+      updateStockSummaryCards(0, 0, 0, 0);
       return;
     }
 
@@ -447,7 +456,15 @@ async function loadProjectStocks(projectId) {
       const usedQuantity = stock.usedQuantity || 0;
       const remaining = quantity - usedQuantity;
       const unitPrice = stock.unitPrice || 0;
-      const totalValue = remaining * unitPrice;
+      const itemTotalValue = quantity * unitPrice;
+      const itemUsedValue = usedQuantity * unitPrice;
+      const itemRemainingValue = remaining * unitPrice;
+      
+      // Accumulate totals
+      totalItems++;
+      totalValue += itemTotalValue;
+      totalUsedValue += itemUsedValue;
+      remainingValue += itemRemainingValue;
       
       const statusColor = remaining > 0 ? 'var(--success)' : 'var(--danger)';
       const statusText = remaining > 0 ? 'Stokta' : 'Tükendi';
@@ -467,7 +484,7 @@ async function loadProjectStocks(projectId) {
                 </div>
                 <div>
                   💰 Birim Fiyat: <strong>${unitPrice.toLocaleString('tr-TR')} ₺</strong>
-                  | Toplam Değer: <strong>${totalValue.toLocaleString('tr-TR')} ₺</strong>
+                  | Toplam Değer: <strong>${itemRemainingValue.toLocaleString('tr-TR')} ₺</strong>
                 </div>
                 <div style="color: ${statusColor}; font-weight: 600;">
                   Durum: ${statusText}
@@ -504,6 +521,9 @@ async function loadProjectStocks(projectId) {
     stocksHTML += '</div>';
     stocksListDiv.innerHTML = stocksHTML;
 
+    // Update summary cards
+    updateStockSummaryCards(totalItems, totalValue, totalUsedValue, remainingValue);
+
     console.log(`✅ Loaded ${stocksSnap.size} stocks for project ${projectId}`);
 
   } catch (error) {
@@ -515,6 +535,21 @@ async function loadProjectStocks(projectId) {
       </div>
     `;
   }
+}
+
+/**
+ * Update stock summary cards
+ */
+function updateStockSummaryCards(totalItems, totalValue, totalUsedValue, remainingValue) {
+  const totalItemsEl = document.getElementById('totalStockItems');
+  const totalValueEl = document.getElementById('totalStockValue');
+  const totalUsedValueEl = document.getElementById('totalUsedValue');
+  const remainingValueEl = document.getElementById('remainingStockValue');
+
+  if (totalItemsEl) totalItemsEl.textContent = totalItems;
+  if (totalValueEl) totalValueEl.textContent = '₺' + totalValue.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (totalUsedValueEl) totalUsedValueEl.textContent = '₺' + totalUsedValue.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (remainingValueEl) remainingValueEl.textContent = '₺' + remainingValue.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 /**
