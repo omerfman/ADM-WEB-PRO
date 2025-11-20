@@ -388,6 +388,18 @@ service cloud.firestore {
       allow delete: if isSignedIn() && !isClient() && (isCompanyAdmin() || isSuperAdmin());
     }
 
+    // Contract Attachments (Sözleşme Ekleri - Signed documents, specs, etc.)
+    match /contract_attachments/{attachmentId} {
+      // Clients can read attachments if they have project access
+      allow read: if isSignedIn() && (
+        !isClient() ||
+        (exists(/databases/$(database)/documents/projects/$(resource.data.projectId)) &&
+         request.auth.uid in get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.get('allowedClients', []))
+      );
+      allow create: if isSignedIn() && !isClient() && (isCompanyAdmin() || isCompanyUser() || isSuperAdmin());
+      allow delete: if isSignedIn() && !isClient() && (isCompanyAdmin() || isSuperAdmin());
+    }
+
     // Payment Records (Ödeme Kayıtları)
     match /payment_records/{recordId} {
       // Clients can read payment records if they have project access and visibility is enabled

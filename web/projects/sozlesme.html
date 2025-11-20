@@ -350,6 +350,39 @@
           </button>
         </div>
 
+        <!-- Attachments -->
+        <div class="card" style="margin-top: 1.5rem;">
+          <h2 style="margin: 0 0 1.5rem 0;">📎 Sözleşme Ekleri</h2>
+          
+          <div style="background: var(--bg-secondary); border: 2px dashed var(--border-color); border-radius: 12px; padding: 2rem; margin-bottom: 1.5rem; text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.7;">📄</div>
+            <h3 style="margin: 0 0 0.5rem 0; color: var(--text-primary);">Dosya Yükle</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">
+              İmzalı sözleşme, teknik şartname, ek belgeler vb.
+            </p>
+            
+            <div class="form-group" style="margin-bottom: 1rem;">
+              <label>Dosya Açıklaması</label>
+              <input type="text" id="attachmentDescription" placeholder="Örn: İmzalı Sözleşme, Teknik Şartname, Ek-1..." style="width: 100%; padding: 0.75rem; border: 1.5px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+            </div>
+            
+            <input type="file" id="contractAttachment" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" style="display: none;" onchange="handleAttachmentUpload(event)">
+            <button class="btn btn-primary" onclick="document.getElementById('contractAttachment').click()">
+              📁 Dosya Seç ve Yükle
+            </button>
+            <div style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--text-secondary);">
+              Desteklenen formatlar: PDF, Word, Excel, Resim (Max 32MB)
+            </div>
+          </div>
+
+          <div id="attachmentsList" style="background: var(--bg-secondary); border-radius: 8px; padding: 1rem;">
+            <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">📭</div>
+              <p>Henüz ek yüklenmemiş</p>
+            </div>
+          </div>
+        </div>
+
         <!-- Signatures -->
         <div class="card" style="margin-top: 1.5rem;">
           <h2 style="margin: 0 0 1.5rem 0;">✍️ İmzalar</h2>
@@ -465,12 +498,19 @@
       }
     }
 
+    function handleAttachmentUpload(event) {
+      if (window.uploadContractAttachment) {
+        window.uploadContractAttachment(event);
+      }
+    }
+
     updateNavLinks();
   </script>
 
   <script type="module">
     import { db, auth } from '../js/firebase-config.js';
-    import { doc, getDoc, collection, query, where, getDocs, addDoc, updateDoc, setDoc, orderBy, Timestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { doc, getDoc, collection, query, where, getDocs, addDoc, updateDoc, setDoc, orderBy, deleteDoc, Timestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { IMGBB_API_KEY, IMGBB_UPLOAD_URL, MAX_FILE_SIZE } from '../js/imgbb-config.js';
 
     let currentProjectId = null;
     let contractItems = [];
@@ -601,6 +641,9 @@
         console.error('❌ Error loading contract:', error);
         alert('Sözleşme verileri yüklenirken hata: ' + error.message);
       }
+
+      // Load attachments
+      loadContractAttachments();
     }
 
     async function importProposalData(proposalData) {
@@ -858,6 +901,243 @@
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
       }).format(num || 0);
+    }
+
+    // ============================================
+    // ATTACHMENT MANAGEMENT
+    // ============================================
+
+    /**
+     * Upload contract attachment to ImgBB
+     */
+    window.uploadContractAttachment = async function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const description = document.getElementById('attachmentDescription').value.trim();
+      if (!description) {
+        alert('⚠️ Lütfen dosya açıklaması girin');
+        return;
+      }
+
+      // Check API key
+      if (!IMGBB_API_KEY || IMGBB_API_KEY === 'YOUR_IMGBB_API_KEY') {
+        alert('❌ ImgBB API key ayarlanmamış!\n\n1. https://api.imgbb.com/ adresinden ücretsiz hesap oluşturun\n2. API key\'inizi alın\n3. web/js/imgbb-config.js dosyasında IMGBB_API_KEY değerini güncelleyin');
+        return;
+      }
+
+      // Check file size (max 32MB for ImgBB free)
+      if (file.size > MAX_FILE_SIZE) {
+        alert('❌ Dosya boyutu 32MB\'dan küçük olmalıdır');
+        return;
+      }
+
+      try {
+        showAlert('📤 Dosya yükleniyor...', 'warning');
+
+        // Create form data for ImgBB
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('name', `contract_${currentProjectId}_${Date.now()}`);
+
+        // Upload to ImgBB
+        const response = await fetch(`${IMGBB_UPLOAD_URL}?key=${IMGBB_API_KEY}`, {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error?.message || 'Upload failed');
+        }
+
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error('Upload failed');
+        }
+
+        const imageData = result.data;
+        const downloadURL = imageData.url;
+
+        // Save metadata to Firestore
+        await addDoc(collection(db, 'contract_attachments'), {
+          projectId: currentProjectId,
+          fileName: file.name,
+          description: description,
+          downloadURL: downloadURL,
+          deleteURL: imageData.delete_url,
+          thumbURL: imageData.thumb?.url || downloadURL,
+          size: file.size,
+          contentType: file.type,
+          uploadedBy: auth.currentUser.uid,
+          uploadedByEmail: auth.currentUser.email,
+          uploadedAt: Timestamp.now(),
+          provider: 'imgbb'
+        });
+
+        showAlert('✅ Dosya başarıyla yüklendi!', 'success');
+
+        // Clear input
+        document.getElementById('attachmentDescription').value = '';
+        event.target.value = '';
+
+        // Reload attachments
+        loadContractAttachments();
+
+      } catch (error) {
+        console.error('❌ Error uploading attachment:', error);
+        showAlert('❌ Yükleme hatası: ' + error.message, 'danger');
+      }
+    };
+
+    /**
+     * Load and display contract attachments
+     */
+    async function loadContractAttachments() {
+      try {
+        const attachmentsQuery = query(
+          collection(db, 'contract_attachments'),
+          where('projectId', '==', currentProjectId),
+          orderBy('uploadedAt', 'desc')
+        );
+        const attachmentsSnap = await getDocs(attachmentsQuery);
+
+        const attachmentsList = document.getElementById('attachmentsList');
+        
+        if (attachmentsSnap.empty) {
+          attachmentsList.innerHTML = `
+            <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">📭</div>
+              <p>Henüz ek yüklenmemiş</p>
+            </div>
+          `;
+          return;
+        }
+
+        let html = '';
+        attachmentsSnap.forEach(docSnap => {
+          const attachment = docSnap.data();
+          const uploadDate = attachment.uploadedAt?.toDate ? attachment.uploadedAt.toDate().toLocaleString('tr-TR') : '-';
+          const fileSize = (attachment.size / 1024).toFixed(2);
+          const fileIcon = getFileIcon(attachment.fileName);
+
+          html += `
+            <div style="
+              display: flex;
+              gap: 1rem;
+              padding: 1rem;
+              border-bottom: 1px solid var(--border-color);
+              align-items: center;
+            ">
+              <div style="font-size: 2.5rem; flex-shrink: 0;">${fileIcon}</div>
+              <div style="flex: 1; min-width: 0;">
+                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem; word-break: break-word;">
+                  ${attachment.description}
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                  📄 ${attachment.fileName}
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                  📅 ${uploadDate} • 👤 ${attachment.uploadedByEmail || 'Bilinmeyen'} • 📦 ${fileSize} KB
+                </div>
+              </div>
+              <div style="display: flex; gap: 0.5rem; flex-shrink: 0;">
+                <button onclick="window.open('${attachment.downloadURL}', '_blank')" 
+                        class="btn btn-secondary" 
+                        style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+                  👁️ Görüntüle
+                </button>
+                <button onclick="deleteContractAttachment('${docSnap.id}')" 
+                        class="btn btn-secondary" 
+                        style="padding: 0.5rem 1rem; font-size: 0.85rem; background: var(--brand-red);">
+                  🗑️ Sil
+                </button>
+              </div>
+            </div>
+          `;
+        });
+
+        attachmentsList.innerHTML = html;
+
+      } catch (error) {
+        console.error('❌ Error loading attachments:', error);
+        const attachmentsList = document.getElementById('attachmentsList');
+        if (attachmentsList) {
+          attachmentsList.innerHTML = `
+            <div style="text-align: center; padding: 2rem; color: var(--brand-red);">
+              <p>❌ Ekler yüklenirken hata oluştu</p>
+            </div>
+          `;
+        }
+      }
+    }
+
+    /**
+     * Delete contract attachment
+     */
+    window.deleteContractAttachment = async function(attachmentId) {
+      if (!confirm('Bu eki silmek istediğinizden emin misiniz?')) {
+        return;
+      }
+
+      try {
+        await deleteDoc(doc(db, 'contract_attachments', attachmentId));
+        showAlert('✅ Ek silindi', 'success');
+        loadContractAttachments();
+      } catch (error) {
+        console.error('❌ Error deleting attachment:', error);
+        showAlert('❌ Silme hatası: ' + error.message, 'danger');
+      }
+    };
+
+    /**
+     * Get file icon based on file extension
+     */
+    function getFileIcon(fileName) {
+      const ext = fileName.split('.').pop().toLowerCase();
+      const icons = {
+        'pdf': '📕',
+        'doc': '📘',
+        'docx': '📘',
+        'xls': '📗',
+        'xlsx': '📗',
+        'jpg': '🖼️',
+        'jpeg': '🖼️',
+        'png': '🖼️',
+        'gif': '🖼️',
+        'zip': '📦',
+        'rar': '📦'
+      };
+      return icons[ext] || '📄';
+    }
+
+    /**
+     * Show alert message
+     */
+    function showAlert(message, type = 'info') {
+      const alertContainer = document.getElementById('alertContainer');
+      if (!alertContainer) return;
+
+      const alertDiv = document.createElement('div');
+      alertDiv.className = `alert alert-${type}`;
+      alertDiv.style.cssText = `
+        padding: 1rem 1.5rem;
+        margin-bottom: 1rem;
+        border-radius: 8px;
+        background: ${type === 'success' ? '#4caf50' : type === 'danger' ? '#f44336' : '#ff9800'};
+        color: white;
+        animation: slideIn 0.3s ease;
+      `;
+      alertDiv.textContent = message;
+
+      alertContainer.appendChild(alertDiv);
+
+      // Auto remove after 4 seconds
+      setTimeout(() => {
+        alertDiv.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => alertDiv.remove(), 300);
+      }, 4000);
     }
 
     setTimeout(() => {
