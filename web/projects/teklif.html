@@ -231,6 +231,9 @@
 
         <!-- Action Buttons -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+          <button class="btn" style="background: #e74c3c; color: white;" onclick="exportToPDF()">
+            📄 PDF İndir
+          </button>
           <button class="btn" style="background: #27ae60; color: white;" onclick="exportToExcel()">
             📊 Excel İndir
           </button>
@@ -305,6 +308,10 @@
   <script type="module" src="../js/auth.js?v=6"></script>
   <script type="module" src="../js/teklif.js?v=1"></script>
   <script type="module" src="../js/app.js?v=6"></script>
+  
+  <!-- jsPDF for PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
   <script type="module">
     import { db, auth } from '../js/firebase-config.js';
@@ -514,6 +521,230 @@
       } catch (error) {
         console.error('❌ Error creating contract:', error);
         alert('Sözleşme oluşturulurken hata: ' + error.message);
+      }
+    }
+
+    async function exportToPDF() {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const projectId = urlParams.get('id');
+
+        if (!projectId) {
+          alert('❌ Proje ID bulunamadı');
+          return;
+        }
+
+        // Get project data
+        const projectDoc = await getDoc(doc(db, 'projects', projectId));
+        if (!projectDoc.exists()) {
+          alert('❌ Proje bulunamadı');
+          return;
+        }
+        const project = projectDoc.data();
+
+        // Get proposal items
+        const itemsQuery = query(
+          collection(db, 'teklif_items'),
+          where('projectId', '==', projectId),
+          where('isDeleted', '==', false)
+        );
+        const itemsSnap = await getDocs(itemsQuery);
+        
+        if (itemsSnap.empty) {
+          alert('❌ Teklif kalemleri bulunamadı');
+          return;
+        }
+
+        const items = [];
+        itemsSnap.forEach(docSnap => {
+          items.push(docSnap.data());
+        });
+        items.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+        // Get proposal metadata
+        const metadataDoc = await getDoc(doc(db, 'teklif_metadata', projectId));
+        const metadata = metadataDoc.exists() ? metadataDoc.data() : {};
+
+        // Calculate totals
+        let subtotal = 0;
+        items.forEach(item => {
+          subtotal += (item.quantity || 0) * (item.unitPrice || 0);
+        });
+
+        const overhead = metadata.overhead || 0;
+        const profit = metadata.profit || 0;
+        const vat = metadata.vat || 20;
+        
+        const overheadAmount = subtotal * (overhead / 100);
+        const profitAmount = (subtotal + overheadAmount) * (profit / 100);
+        const totalBeforeVat = subtotal + overheadAmount + profitAmount;
+        const vatAmount = totalBeforeVat * (vat / 100);
+        const grandTotal = totalBeforeVat + vatAmount;
+
+        // Create PDF
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+
+        // Colors
+        const primaryColor = [211, 47, 47]; // Brand red
+        const darkGray = [51, 51, 51];
+        const lightGray = [128, 128, 128];
+
+        // Header - Company Info
+        doc.setFillColor(...primaryColor);
+        doc.rect(0, 0, 210, 40, 'F');
+        
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(24);
+        doc.setFont('helvetica', 'bold');
+        doc.text('ADM İNŞAAT', 15, 20);
+        
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Proje Yönetim Sistemi', 15, 27);
+        doc.text('Tel: +90 XXX XXX XX XX | info@adm.com', 15, 33);
+
+        // Title
+        doc.setTextColor(...darkGray);
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'bold');
+        doc.text('FİYAT TEKLİFİ', 105, 55, { align: 'center' });
+
+        // Project Info Box
+        doc.setDrawColor(...lightGray);
+        doc.setLineWidth(0.5);
+        doc.rect(15, 65, 180, 35);
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...darkGray);
+        doc.text('PROJE BİLGİLERİ', 20, 72);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.text(`Proje Adı: ${project.name || '-'}`, 20, 78);
+        doc.text(`Müşteri: ${project.clientName || '-'}`, 20, 84);
+        doc.text(`Firma: ${project.companyName || '-'}`, 20, 90);
+        doc.text(`Teklif Tarihi: ${new Date().toLocaleDateString('tr-TR')}`, 20, 96);
+
+        // Table
+        const tableData = items.map((item, index) => [
+          (index + 1).toString(),
+          item.name || '-',
+          item.category || '-',
+          item.unit || '-',
+          new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2 }).format(item.quantity || 0),
+          new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(item.unitPrice || 0),
+          new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format((item.quantity || 0) * (item.unitPrice || 0))
+        ]);
+
+        doc.autoTable({
+          startY: 110,
+          head: [['#', 'İş Kalemi', 'Kategori', 'Birim', 'Miktar', 'Birim Fiyat', 'Toplam']],
+          body: tableData,
+          theme: 'striped',
+          headStyles: {
+            fillColor: primaryColor,
+            textColor: [255, 255, 255],
+            fontSize: 9,
+            fontStyle: 'bold',
+            halign: 'center'
+          },
+          bodyStyles: {
+            fontSize: 8,
+            textColor: darkGray
+          },
+          columnStyles: {
+            0: { halign: 'center', cellWidth: 10 },
+            1: { halign: 'left', cellWidth: 50 },
+            2: { halign: 'center', cellWidth: 30 },
+            3: { halign: 'center', cellWidth: 15 },
+            4: { halign: 'right', cellWidth: 20 },
+            5: { halign: 'right', cellWidth: 30 },
+            6: { halign: 'right', cellWidth: 30 }
+          },
+          alternateRowStyles: {
+            fillColor: [245, 245, 245]
+          }
+        });
+
+        // Summary Box
+        const finalY = doc.lastAutoTable.finalY + 10;
+        
+        doc.setDrawColor(...lightGray);
+        doc.setLineWidth(0.5);
+        doc.rect(120, finalY, 75, 50);
+
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...darkGray);
+
+        let yPos = finalY + 8;
+        doc.text('Ara Toplam:', 125, yPos);
+        doc.text(new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(subtotal), 190, yPos, { align: 'right' });
+
+        if (overhead > 0) {
+          yPos += 6;
+          doc.text(`Genel Giderler (%${overhead}):`, 125, yPos);
+          doc.text(new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(overheadAmount), 190, yPos, { align: 'right' });
+        }
+
+        if (profit > 0) {
+          yPos += 6;
+          doc.text(`Kâr (%${profit}):`, 125, yPos);
+          doc.text(new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(profitAmount), 190, yPos, { align: 'right' });
+        }
+
+        yPos += 6;
+        doc.setLineWidth(0.3);
+        doc.line(125, yPos - 2, 190, yPos - 2);
+        doc.text('KDV Hariç Toplam:', 125, yPos);
+        doc.text(new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(totalBeforeVat), 190, yPos, { align: 'right' });
+
+        yPos += 6;
+        doc.text(`KDV (%${vat}):`, 125, yPos);
+        doc.text(new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(vatAmount), 190, yPos, { align: 'right' });
+
+        yPos += 6;
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.rect(120, yPos - 5, 75, 8, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.text('GENEL TOPLAM:', 125, yPos);
+        doc.text(new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(grandTotal), 190, yPos, { align: 'right' });
+
+        // Terms & Conditions
+        if (metadata.terms) {
+          const termsY = finalY + 65;
+          if (termsY < 260) {
+            doc.setTextColor(...darkGray);
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'bold');
+            doc.text('ŞARTLAR VE KOŞULLAR:', 15, termsY);
+            
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            const splitTerms = doc.splitTextToSize(metadata.terms, 180);
+            doc.text(splitTerms, 15, termsY + 6);
+          }
+        }
+
+        // Footer
+        doc.setFontSize(8);
+        doc.setTextColor(...lightGray);
+        doc.setFont('helvetica', 'italic');
+        doc.text('Bu teklif ADM Web Pro sistemi ile oluşturulmuştur.', 105, 285, { align: 'center' });
+
+        // Save PDF
+        const fileName = `Teklif_${project.name || 'Proje'}_${new Date().toLocaleDateString('tr-TR').replace(/\./g, '-')}.pdf`;
+        doc.save(fileName);
+
+        alert('✅ PDF başarıyla indirildi!');
+
+      } catch (error) {
+        console.error('❌ PDF export error:', error);
+        alert('PDF oluşturulurken hata: ' + error.message);
       }
     }
 
