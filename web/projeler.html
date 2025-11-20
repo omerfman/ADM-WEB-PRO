@@ -81,7 +81,12 @@
       <section id="projectsSection" class="content-section">
         <div class="section-header">
           <h3>Tüm Projeler</h3>
-          <button class="btn btn-primary" id="createProjectBtn" onclick="openCreateProjectModal()" style="display: none;">+ Yeni Proje</button>
+          <div style="display: flex; gap: 0.75rem;">
+            <button class="btn btn-secondary" id="createDemoProjectBtn" onclick="createDemoProject()" style="display: none;">
+              <span style="font-size: 1.1rem;">🎯</span> Örnek Proje Oluştur
+            </button>
+            <button class="btn btn-primary" id="createProjectBtn" onclick="openCreateProjectModal()" style="display: none;">+ Yeni Proje</button>
+          </div>
         </div>
         
         <!-- Project Filters -->

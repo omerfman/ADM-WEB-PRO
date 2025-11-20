@@ -95,6 +95,134 @@ h1, h2, h3, h4, h5, h6 {
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
+/* ========== KESIF ACTION BUTTONS ========== */
+.kesif-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.btn-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-action::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s ease, height 0.4s ease;
+}
+
+.btn-action:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.btn-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-action:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.btn-action-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+  z-index: 1;
+}
+
+.btn-action-text {
+  z-index: 1;
+  white-space: nowrap;
+}
+
+/* Button Variants */
+.btn-action-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-action-primary:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #63408b 100%);
+}
+
+.btn-action-secondary {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.btn-action-secondary:hover {
+  background: linear-gradient(135deg, #d97ee0 0%, #de4458 100%);
+}
+
+.btn-action-success {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: white;
+}
+
+.btn-action-success:hover {
+  background: linear-gradient(135deg, #3891e3 0%, #00d6e3 100%);
+}
+
+.btn-action-info {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  color: white;
+}
+
+.btn-action-info:hover {
+  background: linear-gradient(135deg, #2ed066 0%, #1fdec2 100%);
+}
+
+.btn-action-warning {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  color: white;
+}
+
+.btn-action-warning:hover {
+  background: linear-gradient(135deg, #e55985 0%, #e5c62b 100%);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .kesif-actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .kesif-actions-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .btn-action {
+    padding: 0.75rem 1rem;
+  }
+}
+
 /* ========== HEADER ========== */
 header {
   background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-red-dark) 100%);
@@ -1247,9 +1375,63 @@ header nav button:hover {
 
 .table-responsive {
   overflow-x: auto;
-  margin: 0 -1rem;
-  padding: 0 1rem;
+  margin: 0;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Data Table Styles */
+.data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--card-bg);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  table-layout: fixed;
+}
+
+.data-table thead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.data-table th {
+  padding: 1rem 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  border-bottom: 2px solid #764ba2;
+  position: sticky;
+  top: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  z-index: 10;
+}
+
+.data-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.9rem;
+  word-wrap: break-word;
+}
+
+.data-table tbody tr:hover {
+  background-color: var(--bg-secondary);
+}
+
+.data-table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.data-table tfoot {
+  background: var(--bg-secondary);
+  font-weight: bold;
+}
+
+.data-table tfoot td {
+  border-top: 2px solid var(--brand-red);
+  border-bottom: none;
 }
 
 .boq-table {
@@ -1510,6 +1692,110 @@ header nav button:hover {
   
   .th-description, .td-description {
     min-width: 150px;
+  }
+}
+
+/* ========== PROFIT MARGIN MODAL ========== */
+#profitMarginModal .modal-content {
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Range Slider Styling */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  border-radius: 5px;
+  background: linear-gradient(to right, #27ae60 0%, #f39c12 50%, #e74c3c 100%);
+  outline: none;
+  opacity: 0.9;
+  transition: opacity 0.2s;
+}
+
+input[type="range"]:hover {
+  opacity: 1;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--brand-red);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--brand-red);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border: none;
+  transition: transform 0.2s;
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+  transform: scale(1.2);
+}
+
+/* Action Buttons Container - Responsive */
+@media (max-width: 768px) {
+  #profitMarginModal .modal-content {
+    margin: 1rem;
+    max-width: calc(100% - 2rem) !important;
+  }
+  
+  /* Stack action buttons on mobile */
+  .content-section > div[style*="display: flex"] {
+    flex-direction: column !important;
+  }
+  
+  .content-section > div[style*="display: flex"] button {
+    width: 100% !important;
+    min-width: unset !important;
+  }
+  
+  /* Stack summary cards on mobile */
+  .content-section > div[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Smaller slider on very small screens */
+  input[type="range"]::-webkit-slider-thumb {
+    width: 20px;
+    height: 20px;
+  }
+  
+  input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+  }
+  
+  #profitMarginValue {
+    font-size: 1.2rem !important;
   }
 }
 

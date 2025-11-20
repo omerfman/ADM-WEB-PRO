@@ -2,7 +2,7 @@
 import { auth, db } from "./firebase-config.js";
 import {
   collection, query, where, orderBy, limit, getDocs,
-  doc, getDoc, addDoc, deleteDoc, updateDoc, serverTimestamp
+  doc, getDoc, addDoc, deleteDoc, updateDoc, setDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { uploadPhotoToImgBB } from "./upload.js";
 
@@ -116,11 +116,22 @@ async function loadProjects() {
     
     // Show create project button for admins and users (not clients)
     const createProjectBtn = document.getElementById('createProjectBtn');
+    const createDemoProjectBtn = document.getElementById('createDemoProjectBtn');
+    
     if (createProjectBtn) {
       if (userRole === 'super_admin' || userRole === 'company_admin' || userRole === 'user') {
         createProjectBtn.style.display = 'inline-block';
       } else {
         createProjectBtn.style.display = 'none';
+      }
+    }
+    
+    // Show demo project button for admins and users
+    if (createDemoProjectBtn) {
+      if (userRole === 'super_admin' || userRole === 'company_admin' || userRole === 'user') {
+        createDemoProjectBtn.style.display = 'inline-block';
+      } else {
+        createDemoProjectBtn.style.display = 'none';
       }
     }
     
@@ -1048,6 +1059,287 @@ async function deleteProject(projectId, projectName) {
   }
 }
 
+/**
+ * Create Demo Project - "Deniz Manzaralı Villa"
+ * Creates a complete demo project with all workflow stages filled
+ */
+async function createDemoProject() {
+  if (!confirm('🎯 Örnek proje oluşturmak istediğinize emin misiniz?\n\n"Deniz Manzaralı Villa" adlı tamamlanmış bir demo proje oluşturulacak ve tüm aşamaları (Keşif, Teklif, Sözleşme, Metraj, Hakediş, Ödeme) doldurulacak.')) {
+    return;
+  }
+
+  const loadingMsg = showAlert('🏗️ Demo proje oluşturuluyor... Lütfen bekleyin.', 'info', 0);
+
+  try {
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error('Kullanıcı giriş yapmamış');
+    }
+
+    // Get user's company ID
+    const userDocRef = doc(db, 'users', user.uid);
+    const userDocSnap = await getDoc(userDocRef);
+    const userData = userDocSnap.data() || {};
+    const companyId = userData.companyId || 'default-company';
+
+    console.log('🏗️ Demo proje oluşturuluyor, şirket:', companyId);
+
+    // ========================================================================
+    // 1. CREATE PROJECT
+    // ========================================================================
+    const projectId = `demo-villa-${Date.now()}`;
+    const projectRef = doc(db, 'projects', projectId);
+    
+    await setDoc(projectRef, {
+      id: projectId,
+      companyId: companyId,
+      name: 'Deniz Manzaralı Villa (Demo)',
+      description: 'Bodrum\'da deniz manzaralı lüks villa inşaatı. 250 m² brüt alan, modern tasarım. (Demo Proje)',
+      client: {
+        name: 'Ahmet Yılmaz',
+        email: 'ahmet.yilmaz@example.com',
+        phone: '+90 532 111 22 33',
+        tcNo: '12345678901',
+        address: 'İstanbul',
+      },
+      location: 'Gümbet Mahallesi, Deniz Sokak No:15, Bodrum, Muğla',
+      coordinates: {
+        latitude: 37.0333,
+        longitude: 27.4289,
+      },
+      area: {
+        gross: 250,
+        net: 220,
+        plot: 450,
+        unit: 'm²',
+      },
+      status: 'completed',
+      startDate: serverTimestamp(),
+      plannedEndDate: serverTimestamp(),
+      actualEndDate: serverTimestamp(),
+      budget: {
+        estimated: 437375,
+        contract: 489246,
+        actual: 412000,
+        currency: 'TRY',
+      },
+      progress: 100,
+      tags: ['demo', 'villa', 'residential', 'luxury', 'completed'],
+      team: {
+        projectManager: userData.name || 'Proje Müdürü',
+        siteManager: 'Ali Kaya',
+        accountant: 'Fatma Şahin',
+      },
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      createdBy: user.email,
+    });
+
+    console.log('✅ Proje oluşturuldu:', projectId);
+
+    // ========================================================================
+    // 2. CREATE KESIF ITEMS
+    // ========================================================================
+    const kesifItems = [
+      { name: 'Temel Kazısı', description: 'Eğimli arazide temel kazı işleri', category: 'earthwork', unit: 'm³', quantity: 180, unitPrice: 45, riskLevel: 'medium', order: 0 },
+      { name: 'Temel Betonu C25', description: 'Hazır beton dökümü, vibrasyon dahil', category: 'concrete', unit: 'm³', quantity: 42, unitPrice: 850, riskLevel: 'high', order: 1 },
+      { name: 'Demir Donatı', description: 'Nervürlü demir, kesim büküm montaj', category: 'steel', unit: 'Kg', quantity: 8500, unitPrice: 18, riskLevel: 'medium', order: 2 },
+      { name: 'Duvar Örme', description: 'Briket duvar örme işleri', category: 'masonry', unit: 'm²', quantity: 420, unitPrice: 95, riskLevel: 'low', order: 3 },
+      { name: 'İç Sıva', description: 'Alçı sıva uygulaması', category: 'plaster', unit: 'm²', quantity: 680, unitPrice: 35, riskLevel: 'low', order: 4 },
+      { name: 'Elektrik Tesisatı', description: 'Komple elektrik tesisatı, malzeme dahil', category: 'electrical', unit: 'Adet', quantity: 1, unitPrice: 28000, riskLevel: 'high', order: 5 },
+      { name: 'Sıhhi Tesisat', description: 'Su tesisatı ve kanalizasyon', category: 'plumbing', unit: 'Adet', quantity: 1, unitPrice: 32000, riskLevel: 'high', order: 6 },
+      { name: 'Seramik Kaplama', description: 'İthal seramik kaplama işçilik', category: 'finishing', unit: 'm²', quantity: 245, unitPrice: 120, riskLevel: 'low', order: 7 },
+    ];
+
+    for (const item of kesifItems) {
+      await addDoc(collection(db, 'kesif_items'), {
+        ...item,
+        projectId: projectId,
+        isDeleted: false,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+    }
+
+    await setDoc(doc(db, 'kesif_metadata', projectId), {
+      projectId: projectId,
+      profitMargin: 0.25,
+      notes: 'Demo proje: Eğimli arazi, ekstra hafriyat gerekebilir.',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    console.log('✅ Keşif verileri eklendi');
+
+    // ========================================================================
+    // 3. CREATE TEKLIF ITEMS
+    // ========================================================================
+    for (const item of kesifItems) {
+      await addDoc(collection(db, 'teklif_items'), {
+        ...item,
+        projectId: projectId,
+        isDeleted: false,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+    }
+
+    await setDoc(doc(db, 'teklif_metadata', projectId), {
+      projectId: projectId,
+      proposalNumber: `DEMO-${Date.now()}`,
+      validUntil: serverTimestamp(),
+      paymentTerms: '%30 Avans, %40 Kaba İnşaat, %30 Teslim',
+      discount: 0.05,
+      taxRate: 0.18,
+      notes: 'Demo teklif',
+      status: 'accepted',
+      acceptedDate: serverTimestamp(),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    console.log('✅ Teklif verileri eklendi');
+
+    // ========================================================================
+    // 4. CREATE SOZLESME
+    // ========================================================================
+    await setDoc(doc(db, 'sozlesme_metadata', projectId), {
+      projectId: projectId,
+      contractNumber: `SZL-DEMO-${Date.now()}`,
+      contractDate: serverTimestamp(),
+      contractAmount: 489246,
+      currency: 'TRY',
+      paymentPlan: [
+        { name: 'Avans', percentage: 30, amount: 146774, status: 'paid' },
+        { name: 'Kaba İnşaat', percentage: 40, amount: 195698, status: 'paid' },
+        { name: 'Teslim', percentage: 30, amount: 146774, status: 'paid' },
+      ],
+      status: 'completed',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    console.log('✅ Sözleşme verileri eklendi');
+
+    // ========================================================================
+    // 5. CREATE METRAJ (BOQ) ITEMS
+    // ========================================================================
+    const metrajItems = [
+      { name: 'Temel Kazısı', category: 'earthwork', unit: 'm³', quantity: 195, unitPrice: 45, progress: 100, order: 0 },
+      { name: 'Temel Betonu C25', category: 'concrete', unit: 'm³', quantity: 42, unitPrice: 850, progress: 100, order: 1 },
+      { name: 'Demir Donatı', category: 'steel', unit: 'Kg', quantity: 8200, unitPrice: 18, progress: 100, order: 2 },
+      { name: 'Duvar Örme', category: 'masonry', unit: 'm²', quantity: 425, unitPrice: 95, progress: 100, width: 25.5, height: 16.7, order: 3 },
+      { name: 'İç Sıva', category: 'plaster', unit: 'm²', quantity: 685, unitPrice: 35, progress: 100, width: 45, height: 15.2, order: 4 },
+      { name: 'Elektrik Tesisatı', category: 'electrical', unit: 'Adet', quantity: 1, unitPrice: 28000, progress: 100, order: 5 },
+      { name: 'Sıhhi Tesisat', category: 'plumbing', unit: 'Adet', quantity: 1, unitPrice: 32000, progress: 100, order: 6 },
+      { name: 'Seramik Kaplama', category: 'finishing', unit: 'm²', quantity: 248, unitPrice: 120, progress: 100, width: 15.5, height: 16, order: 7 },
+    ];
+
+    for (const item of metrajItems) {
+      await addDoc(collection(db, 'boq_items'), {
+        ...item,
+        projectId: projectId,
+        description: 'Demo metraj',
+        location: 'Demo',
+        isDeleted: false,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+    }
+
+    console.log('✅ Metraj verileri eklendi');
+
+    // ========================================================================
+    // 6. CREATE HAKEDIS ITEMS
+    // ========================================================================
+    const hakedisItems = [
+      { itemName: 'Temel Kazısı', category: 'earthwork', unit: 'm³', contractQuantity: 180, currentQuantity: 195, unitPrice: 45, order: 0 },
+      { itemName: 'Temel Betonu C25', category: 'concrete', unit: 'm³', contractQuantity: 42, currentQuantity: 42, unitPrice: 850, order: 1 },
+      { itemName: 'Demir Donatı', category: 'steel', unit: 'Kg', contractQuantity: 8500, currentQuantity: 8200, unitPrice: 18, order: 2 },
+      { itemName: 'Duvar Örme', category: 'masonry', unit: 'm²', contractQuantity: 420, currentQuantity: 425, unitPrice: 95, order: 3 },
+      { itemName: 'Elektrik Tesisatı', category: 'electrical', unit: 'Adet', contractQuantity: 1, currentQuantity: 1, unitPrice: 28000, order: 4 },
+      { itemName: 'Sıhhi Tesisat', category: 'plumbing', unit: 'Adet', contractQuantity: 1, currentQuantity: 1, unitPrice: 32000, order: 5 },
+    ];
+
+    for (const item of hakedisItems) {
+      const currentAmount = item.currentQuantity * item.unitPrice;
+      await addDoc(collection(db, 'hakedis_items'), {
+        ...item,
+        projectId: projectId,
+        period: 'demo-period',
+        periodName: 'Demo Hakediş',
+        previousQuantity: 0,
+        totalQuantity: item.currentQuantity,
+        previousAmount: 0,
+        currentAmount: currentAmount,
+        totalAmount: currentAmount,
+        progress: (item.currentQuantity / item.contractQuantity) * 100,
+        isDeleted: false,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+    }
+
+    await setDoc(doc(db, 'hakedis_metadata', `${projectId}-demo-period`), {
+      projectId: projectId,
+      period: 'demo-period',
+      periodName: 'Demo Hakediş',
+      grossAmount: 271650,
+      deductions: { tax: 8150, other: 0 },
+      netAmount: 263500,
+      status: 'approved',
+      approvedDate: serverTimestamp(),
+      notes: 'Demo hakediş',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    console.log('✅ Hakediş verileri eklendi');
+
+    // ========================================================================
+    // 7. CREATE PAYMENT TRACKING
+    // ========================================================================
+    const payments = [
+      { type: 'income', category: 'advance', description: 'Avans Ödemesi', amount: 146774, status: 'completed', paymentMethod: 'bank_transfer' },
+      { type: 'income', category: 'progress_payment', description: 'Hakediş', amount: 263500, status: 'completed', paymentMethod: 'check' },
+      { type: 'income', category: 'final_payment', description: 'Teslim Ödemesi', amount: 146774, status: 'completed', paymentMethod: 'bank_transfer' },
+      { type: 'expense', category: 'material', description: 'Demir Alımı', amount: 155000, status: 'completed', paymentMethod: 'bank_transfer', supplier: 'Demir A.Ş.' },
+      { type: 'expense', category: 'material', description: 'Tuğla & Beton', amount: 87500, status: 'completed', paymentMethod: 'check', supplier: 'İnşaat Malz.' },
+      { type: 'expense', category: 'labor', description: 'İşçi Maaşları', amount: 62000, status: 'completed', paymentMethod: 'cash' },
+    ];
+
+    for (const payment of payments) {
+      await addDoc(collection(db, 'payment_tracking'), {
+        ...payment,
+        projectId: projectId,
+        currency: 'TRY',
+        invoiceNumber: `DEMO-${Math.floor(Math.random() * 1000)}`,
+        dueDate: serverTimestamp(),
+        paidDate: serverTimestamp(),
+        notes: 'Demo ödeme',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+    }
+
+    console.log('✅ Ödeme takibi verileri eklendi');
+
+    // ========================================================================
+    // DONE
+    // ========================================================================
+    hideAlert(loadingMsg);
+    showAlert('🎉 Demo proje başarıyla oluşturuldu!\n\n"Deniz Manzaralı Villa" projesi tüm aşamalarıyla birlikte hazır. Keşif, Teklif, Sözleşme, Metraj, Hakediş ve Ödeme Takibi sayfalarını inceleyebilirsiniz.', 'success', 8000);
+    
+    // Reload projects
+    await loadProjects();
+
+  } catch (error) {
+    console.error('❌ Demo proje oluşturma hatası:', error);
+    hideAlert(loadingMsg);
+    showAlert(`❌ Demo proje oluşturulamadı: ${error.message}`, 'error');
+  }
+}
+
 // Export functions for global use
 window.loadProjects = loadProjects;
 window.openProjectDetail = openProjectDetail;
@@ -1079,3 +1371,4 @@ window.openEditProjectModal = openEditProjectModal;
 window.closeEditProjectModal = closeEditProjectModal;
 window.deleteProject = deleteProject;
 window.handleUpdateProject = handleUpdateProject;
+window.createDemoProject = createDemoProject;

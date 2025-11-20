@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Keşif - ADM İnşaat Proje Yönetim Sistemi</title>
   <link rel="stylesheet" href="../css/style.css?v=9">
+  <!-- SheetJS for Excel Import/Export -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
   <div class="dashboard-layout">
@@ -164,10 +166,10 @@
             <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.5rem;">Ön bütçe</div>
           </div>
 
-          <div class="card" style="background: linear-gradient(135deg, #27ae60 0%, #229954 100%); color: white; border-left: 4px solid #229954;">
+          <div class="card" style="background: linear-gradient(135deg, #27ae60 0%, #229954 100%); color: white; border-left: 4px solid #229954; cursor: pointer;" onclick="window.openProfitMarginModal()" title="Kar marjını düzenlemek için tıklayın">
             <h3 style="margin: 0 0 0.5rem 0; font-size: 0.85rem; opacity: 0.9;">📊 Kar Marjı</h3>
             <div style="font-size: 2rem; font-weight: bold;" id="profitMargin">%20</div>
-            <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.5rem;">Hedef kâr oranı</div>
+            <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 0.5rem;">Hedef kâr oranı <span style="font-size: 1.2rem;">✏️</span></div>
           </div>
 
           <div class="card" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white; border-left: 4px solid #2980b9;">
@@ -177,66 +179,41 @@
           </div>
         </div>
 
-        <!-- Kesif Items Table -->
-        <div class="card">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h2 style="margin: 0;">📋 Keşif Kalemleri</h2>
-            <div style="display: flex; gap: 1rem;">
-              <input type="text" id="searchKesif" placeholder="🔍 Ara..." style="padding: 0.5rem 1rem; border: 1px solid var(--border-color); border-radius: 6px;">
-              <select id="categoryFilter" style="padding: 0.5rem 1rem; border: 1px solid var(--border-color); border-radius: 6px;">
-                <option value="">Tüm Kategoriler</option>
-                <option value="hafriyat">Hafriyat</option>
-                <option value="kaba">Kaba İnşaat</option>
-                <option value="ince">İnce İnşaat</option>
-                <option value="tesisat">Tesisat</option>
-                <option value="elektrik">Elektrik</option>
-                <option value="diger">Diğer</option>
-              </select>
-            </div>
-          </div>
+        <!-- Action Buttons -->
+        <div class="kesif-actions-grid">
+          <button class="btn-action btn-action-primary" onclick="window.convertToProposal()">
+            <span class="btn-action-icon">💼</span>
+            <span class="btn-action-text">Teklife Dönüştür</span>
+          </button>
+          <button class="btn-action btn-action-secondary" onclick="window.openProfitMarginModal()">
+            <span class="btn-action-icon">📊</span>
+            <span class="btn-action-text">Kar Marjı Ayarla</span>
+          </button>
+          <button class="btn-action btn-action-success" onclick="window.exportKesifToExcel()">
+            <span class="btn-action-icon">📥</span>
+            <span class="btn-action-text">Excel'e Aktar</span>
+          </button>
+          <button class="btn-action btn-action-info" onclick="window.exportKesifTemplate()">
+            <span class="btn-action-icon">📋</span>
+            <span class="btn-action-text">Şablon İndir</span>
+          </button>
+          <button class="btn-action btn-action-warning" onclick="document.getElementById('excelFileInput').click()">
+            <span class="btn-action-icon">📤</span>
+            <span class="btn-action-text">İçe Aktar</span>
+          </button>
+          <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display: none;" onchange="window.importKesifFromExcel(event)">
+        </div>
 
-          <div style="overflow-x: auto;">
-            <table class="data-table" id="kesifTable">
-              <thead>
-                <tr>
-                  <th style="width: 80px;">Sıra</th>
-                  <th style="min-width: 200px;">İş Kalemi</th>
-                  <th style="min-width: 120px;">Kategori</th>
-                  <th style="min-width: 80px;">Birim</th>
-                  <th style="text-align: right; min-width: 100px;">Tahmini Miktar</th>
-                  <th style="text-align: right; min-width: 120px;">Tahmini Birim Fiyat</th>
-                  <th style="text-align: right; min-width: 130px;">Toplam</th>
-                  <th style="min-width: 100px;">Risk</th>
-                  <th style="min-width: 100px;">İşlemler</th>
-                </tr>
-              </thead>
-              <tbody id="kesifTableBody">
-                <tr>
-                  <td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
-                    <p>Henüz keşif kalemi eklenmemiş</p>
-                    <button class="btn btn-primary" onclick="openAddKesifItemModal()" style="margin-top: 1rem;">
-                      ➕ İlk Kalemi Ekle
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-              <tfoot id="kesifTableFooter" style="display: none;">
-                <tr style="background: var(--bg-secondary); font-weight: bold;">
-                  <td colspan="6" style="text-align: right; padding: 1rem;">TOPLAM TAHMİNİ MALİYET:</td>
-                  <td style="text-align: right; color: var(--brand-red); font-size: 1.2rem;" id="footerTotal">₺0.00</td>
-                  <td colspan="2"></td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
+        <!-- Kesif Items Table -->
+        <div class="card" id="kesifTableContainer">
+          <!-- Table will be rendered by kesif.js -->
         </div>
 
         <!-- Notes Section -->
         <div class="card" style="margin-top: 1.5rem;">
           <h3 style="margin: 0 0 1rem 0;">📝 Keşif Notları ve Risk Analizi</h3>
-          <textarea id="kesifNotes" rows="5" style="width: 100%; padding: 1rem; border: 1px solid var(--border-color); border-radius: 6px; font-family: inherit;" placeholder="Önemli notlar, varsayımlar, risk faktörleri..."></textarea>
-          <button class="btn btn-primary" onclick="saveKesifNotes()" style="margin-top: 1rem;">
+          <textarea id="kesifNotes" rows="5" style="width: 100%; padding: 1rem; border: 1px solid var(--border-color); border-radius: 6px; font-family: inherit; background: var(--input-bg); color: var(--text-primary); resize: vertical;" placeholder="Önemli notlar, varsayımlar, risk faktörleri..."></textarea>
+          <button class="btn btn-primary" onclick="window.updateKesifNotes()" style="margin-top: 1rem; width: 100%;">
             💾 Notları Kaydet
           </button>
         </div>
@@ -244,70 +221,63 @@
     </main>
   </div>
 
-  <!-- Add Kesif Item Modal -->
-  <div id="addKesifItemModal" class="modal">
-    <div class="modal-content" style="max-width: 700px;">
+  <!-- Profit Margin Modal -->
+  <div id="profitMarginModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 500px;">
       <div class="modal-header">
-        <h2>➕ Keşif Kalemi Ekle</h2>
-        <button class="close-modal" onclick="closeAddKesifItemModal()">&times;</button>
+        <h2>📊 Kar Marjı Ayarla</h2>
+        <button class="close-modal" onclick="window.closeProfitMarginModal()">&times;</button>
       </div>
-      <form id="addKesifItemForm" onsubmit="handleAddKesifItem(event)">
-        <div class="form-grid">
-          <div class="form-group">
-            <label>İş Kalemi Adı *</label>
-            <input type="text" id="itemName" required placeholder="Örn: Kazı İşleri">
-          </div>
-          <div class="form-group">
-            <label>Kategori *</label>
-            <select id="itemCategory" required>
-              <option value="">Seçin</option>
-              <option value="hafriyat">Hafriyat</option>
-              <option value="kaba">Kaba İnşaat</option>
-              <option value="ince">İnce İnşaat</option>
-              <option value="tesisat">Tesisat</option>
-              <option value="elektrik">Elektrik</option>
-              <option value="diger">Diğer</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Birim *</label>
-            <select id="itemUnit" required>
-              <option value="">Seçin</option>
-              <option value="m²">m² (Metrekare)</option>
-              <option value="m³">m³ (Metreküp)</option>
-              <option value="m">m (Metre)</option>
-              <option value="Adet">Adet</option>
-              <option value="Kg">Kg (Kilogram)</option>
-              <option value="Ton">Ton</option>
-              <option value="Lt">Lt (Litre)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Tahmini Miktar *</label>
-            <input type="number" id="itemQuantity" required min="0" step="0.01" placeholder="0.00">
-          </div>
-          <div class="form-group">
-            <label>Tahmini Birim Fiyat (₺) *</label>
-            <input type="number" id="itemUnitPrice" required min="0" step="0.01" placeholder="0.00">
-          </div>
-          <div class="form-group">
-            <label>Risk Seviyesi</label>
-            <select id="itemRisk">
-              <option value="low">Düşük</option>
-              <option value="medium" selected>Orta</option>
-              <option value="high">Yüksek</option>
-            </select>
-          </div>
-        </div>
+      <div class="modal-body">
+        <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">
+          Teklif tutarı hesaplanırken kullanılacak kar marjını belirleyin.
+        </p>
+        
         <div class="form-group">
-          <label>Açıklama</label>
-          <textarea id="itemDescription" rows="3" placeholder="Detaylı açıklama, varsayımlar..."></textarea>
+          <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">
+            Kar Marjı (%)
+          </label>
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <input 
+              type="range" 
+              id="profitMarginSlider" 
+              min="0" 
+              max="50" 
+              step="1" 
+              value="20"
+              style="flex: 1;"
+              oninput="document.getElementById('profitMarginValue').textContent = this.value"
+            >
+            <div style="min-width: 60px; text-align: center; font-size: 1.5rem; font-weight: bold; color: var(--brand-red);">
+              %<span id="profitMarginValue">20</span>
+            </div>
+          </div>
         </div>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" onclick="closeAddKesifItemModal()">İptal</button>
-          <button type="submit" class="btn btn-primary">💾 Kaydet</button>
+
+        <div style="margin-top: 1.5rem; padding: 1rem; background: var(--card-bg); border-radius: 8px; border-left: 4px solid var(--brand-red);">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+            <span style="color: var(--text-secondary);">Tahmini Maliyet:</span>
+            <strong id="modalEstimatedCost">₺0.00</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+            <span style="color: var(--text-secondary);">Kar Marjı:</span>
+            <strong style="color: var(--brand-red);" id="modalProfitAmount">₺0.00</strong>
+          </div>
+          <hr style="border: none; border-top: 1px solid var(--border-color); margin: 0.75rem 0;">
+          <div style="display: flex; justify-content: space-between;">
+            <span style="font-weight: 600;">Teklif Tutarı:</span>
+            <strong style="font-size: 1.2rem; color: var(--brand-red);" id="modalProposalAmount">₺0.00</strong>
+          </div>
         </div>
-      </form>
+
+        <div style="margin-top: 1rem; padding: 0.75rem; background: #fff3cd; color: #856404; border-radius: 6px; font-size: 0.9rem;">
+          💡 <strong>İpucu:</strong> Sektör ortalaması %15-25 arasındadır.
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="window.closeProfitMarginModal()">İptal</button>
+        <button class="btn btn-primary" onclick="window.saveProfitMargin()">💾 Kaydet</button>
+      </div>
     </div>
   </div>
 
@@ -315,6 +285,7 @@
   <script type="module" src="../js/firebase-config.js"></script>
   <script type="module" src="../js/auth.js?v=9"></script>
   <script type="module" src="../js/app.js?v=9"></script>
+  <script type="module" src="../js/kesif.js?v=1"></script>
 
   <script>
     // Mobile menu toggle
@@ -355,16 +326,7 @@
       }
     }
 
-    function openAddKesifItemModal() {
-      document.getElementById('addKesifItemModal').style.display = 'block';
-    }
-
-    function closeAddKesifItemModal() {
-      document.getElementById('addKesifItemModal').style.display = 'none';
-      document.getElementById('addKesifItemForm').reset();
-    }
-
-    function saveKesifNotes() {
+    function createTeklifFromKesif() {
       const notes = document.getElementById('kesifNotes').value;
       if (window.updateKesifNotes) {
         window.updateKesifNotes(notes);
@@ -388,301 +350,5 @@
     updateNavLinks();
   </script>
 
-  <script type="module">
-    import { db, auth } from '../js/firebase-config.js';
-    import { doc, getDoc, collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, setDoc, orderBy, Timestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-
-    let currentProjectId = null;
-    let kesifItems = [];
-
-    async function loadKesif() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const projectId = urlParams.get('id');
-      
-      if (!projectId) {
-        window.location.href = '../projeler.html';
-        return;
-      }
-
-      currentProjectId = projectId;
-
-      try {
-        const projectDoc = await getDoc(doc(db, 'projects', projectId));
-        if (!projectDoc.exists()) {
-          alert('❌ Proje bulunamadı');
-          window.location.href = '../projeler.html';
-          return;
-        }
-
-        const project = { id: projectDoc.id, ...projectDoc.data() };
-        document.getElementById('projectName').textContent = project.name || 'Proje';
-        document.getElementById('projectNameBreadcrumb').textContent = project.name || 'Proje';
-
-        // Load kesif data
-        const kesifQuery = query(
-          collection(db, 'kesif_items'),
-          where('projectId', '==', projectId),
-          where('isDeleted', '==', false),
-          orderBy('order', 'asc')
-        );
-        const kesifSnap = await getDocs(kesifQuery);
-        kesifItems = [];
-        let totalCost = 0;
-
-        kesifSnap.forEach(docSnap => {
-          const item = { id: docSnap.id, ...docSnap.data() };
-          kesifItems.push(item);
-          totalCost += (item.quantity * item.unitPrice) || 0;
-        });
-
-        // Load kesif metadata
-        const kesifDocRef = doc(db, 'kesif_metadata', projectId);
-        const kesifDoc = await getDoc(kesifDocRef);
-        const kesifData = kesifDoc.exists() ? kesifDoc.data() : {};
-
-        const profitMargin = kesifData.profitMargin || 0.20;
-        const proposalAmount = totalCost * (1 + profitMargin);
-
-        document.getElementById('totalKesifItems').textContent = kesifItems.length;
-        document.getElementById('estimatedCost').textContent = formatCurrency(totalCost);
-        document.getElementById('profitMargin').textContent = `%${(profitMargin * 100).toFixed(0)}`;
-        document.getElementById('proposalAmount').textContent = formatCurrency(proposalAmount);
-
-        if (kesifData.notes) {
-          document.getElementById('kesifNotes').value = kesifData.notes;
-        }
-
-        if (kesifData.createdAt) {
-          document.getElementById('kesifDate').textContent = kesifData.createdAt.toDate().toLocaleDateString('tr-TR');
-        }
-
-        renderKesifTable();
-
-      } catch (error) {
-        console.error('❌ Error loading kesif:', error);
-        alert('Keşif verileri yüklenirken hata: ' + error.message);
-      }
-    }
-
-    function renderKesifTable() {
-      const tbody = document.getElementById('kesifTableBody');
-      const footer = document.getElementById('kesifTableFooter');
-
-      if (kesifItems.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
-              <div style="font-size: 3rem; margin-bottom: 1rem;">🔍</div>
-              <p>Henüz keşif kalemi eklenmemiş</p>
-              <button class="btn btn-primary" onclick="openAddKesifItemModal()" style="margin-top: 1rem;">
-                ➕ İlk Kalemi Ekle
-              </button>
-            </td>
-          </tr>
-        `;
-        footer.style.display = 'none';
-        return;
-      }
-
-      const categoryNames = {
-        hafriyat: 'Hafriyat',
-        kaba: 'Kaba İnşaat',
-        ince: 'İnce İnşaat',
-        tesisat: 'Tesisat',
-        elektrik: 'Elektrik',
-        diger: 'Diğer'
-      };
-
-      const riskBadges = {
-        low: { class: 'status-approved', text: '🟢 Düşük' },
-        medium: { class: 'status-sent', text: '🟡 Orta' },
-        high: { class: 'status-rejected', text: '🔴 Yüksek' }
-      };
-
-      let html = '';
-      let totalCost = 0;
-
-      kesifItems.forEach((item, index) => {
-        const total = (item.quantity || 0) * (item.unitPrice || 0);
-        totalCost += total;
-        const risk = riskBadges[item.risk || 'medium'];
-
-        html += `
-          <tr>
-            <td>${index + 1}</td>
-            <td>
-              <strong>${item.name}</strong>
-              ${item.description ? `<br><small style="color: var(--text-secondary);">${item.description}</small>` : ''}
-            </td>
-            <td>${categoryNames[item.category] || item.category}</td>
-            <td>${item.unit}</td>
-            <td style="text-align: right;">${formatNumber(item.quantity)}</td>
-            <td style="text-align: right;">${formatCurrency(item.unitPrice)}</td>
-            <td style="text-align: right;"><strong>${formatCurrency(total)}</strong></td>
-            <td><span class="status-badge ${risk.class}">${risk.text}</span></td>
-            <td>
-              <button class="btn btn-secondary" style="padding: 0.5rem;" onclick="deleteKesifItem('${item.id}')">🗑️</button>
-            </td>
-          </tr>
-        `;
-      });
-
-      tbody.innerHTML = html;
-      footer.style.display = 'table-footer-group';
-      document.getElementById('footerTotal').textContent = formatCurrency(totalCost);
-    }
-
-    async function handleAddKesifItem(event) {
-      event.preventDefault();
-
-      const name = document.getElementById('itemName').value;
-      const category = document.getElementById('itemCategory').value;
-      const unit = document.getElementById('itemUnit').value;
-      const quantity = parseFloat(document.getElementById('itemQuantity').value);
-      const unitPrice = parseFloat(document.getElementById('itemUnitPrice').value);
-      const risk = document.getElementById('itemRisk').value;
-      const description = document.getElementById('itemDescription').value;
-
-      try {
-        const user = auth.currentUser;
-
-        await addDoc(collection(db, 'kesif_items'), {
-          projectId: currentProjectId,
-          name,
-          category,
-          unit,
-          quantity,
-          unitPrice,
-          risk,
-          description,
-          order: kesifItems.length,
-          isDeleted: false,
-          createdAt: Timestamp.now(),
-          createdBy: user.uid
-        });
-
-        // Update or create metadata
-        const kesifDocRef = doc(db, 'kesif_metadata', currentProjectId);
-        const kesifDoc = await getDoc(kesifDocRef);
-        
-        if (!kesifDoc.exists()) {
-          await setDoc(kesifDocRef, {
-            projectId: currentProjectId,
-            profitMargin: 0.20,
-            status: 'draft',
-            createdAt: Timestamp.now(),
-            createdBy: user.uid,
-            updatedAt: Timestamp.now()
-          });
-        }
-
-        alert('✅ Keşif kalemi eklendi!');
-        closeAddKesifItemModal();
-        loadKesif();
-
-      } catch (error) {
-        console.error('❌ Error adding kesif item:', error);
-        alert('Keşif kalemi eklenirken hata: ' + error.message);
-      }
-    }
-
-    window.deleteKesifItem = async function(itemId) {
-      if (!confirm('Bu keşif kalemini silmek istediğinize emin misiniz?')) return;
-      
-      try {
-        await updateDoc(doc(db, 'kesif_items', itemId), {
-          isDeleted: true
-        });
-        alert('✅ Keşif kalemi silindi');
-        loadKesif();
-      } catch (error) {
-        console.error('❌ Error deleting kesif item:', error);
-        alert('Silme hatası: ' + error.message);
-      }
-    };
-
-    window.updateKesifNotes = async function(notes) {
-      try {
-        const kesifDocRef = doc(db, 'kesif_metadata', currentProjectId);
-        const kesifDoc = await getDoc(kesifDocRef);
-        
-        if (kesifDoc.exists()) {
-          await updateDoc(kesifDocRef, { notes });
-        } else {
-          await setDoc(kesifDocRef, {
-            projectId: currentProjectId,
-            notes,
-            profitMargin: 0.20,
-            status: 'draft',
-            createdAt: Timestamp.now(),
-            createdBy: auth.currentUser.uid
-          });
-        }
-        
-        alert('✅ Notlar kaydedildi');
-      } catch (error) {
-        console.error('❌ Error saving notes:', error);
-        alert('Not kaydetme hatası: ' + error.message);
-      }
-    };
-
-    window.generateProposal = async function() {
-      try {
-        if (kesifItems.length === 0) {
-          alert('❌ Önce keşif kalemleri ekleyin!');
-          return;
-        }
-
-        // Create proposal from kesif
-        const proposalItems = kesifItems.map(item => ({
-          name: item.name,
-          category: item.category,
-          unit: item.unit,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          description: item.description,
-          fromKesifId: item.id
-        }));
-
-        // Redirect to teklif page with data
-        sessionStorage.setItem('kesifToProposal', JSON.stringify({
-          projectId: currentProjectId,
-          items: proposalItems
-        }));
-
-        window.location.href = `teklif.html?id=${currentProjectId}&from=kesif`;
-
-      } catch (error) {
-        console.error('❌ Error generating proposal:', error);
-        alert('Teklif oluşturma hatası: ' + error.message);
-      }
-    };
-
-    window.handleAddKesifItem = handleAddKesifItem;
-
-    function formatCurrency(amount) {
-      return new Intl.NumberFormat('tr-TR', {
-        style: 'currency',
-        currency: 'TRY',
-        minimumFractionDigits: 2
-      }).format(amount || 0);
-    }
-
-    function formatNumber(num) {
-      return new Intl.NumberFormat('tr-TR', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      }).format(num || 0);
-    }
-
-    // Load on ready
-    setTimeout(() => {
-      loadKesif();
-    }, 200);
-
-    // Filters
-    document.getElementById('searchKesif')?.addEventListener('input', () => loadKesif());
-    document.getElementById('categoryFilter')?.addEventListener('change', () => loadKesif());
-  </script>
 </body>
 </html>
