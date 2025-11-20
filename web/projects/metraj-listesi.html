@@ -493,71 +493,7 @@
       if (searchInput) searchInput.addEventListener('input', applyBoqFilters);
       if (categoryFilter) categoryFilter.addEventListener('change', applyBoqFilters);
       if (sortFilter) sortFilter.addEventListener('change', applyBoqFilters);
-      
-      // Wait for modules to load
-      setTimeout(() => {
-        if (window.loadBoqItems) {
-          console.log('✅ Calling loadBoqItems');
-          window.loadBoqItems();
-        } else {
-          console.warn('⚠️ loadBoqItems not available yet');
-        }
-      }, 200);
     });
-
-    // Filtreleme fonksiyonları
-    function applyBoqFilters() {
-      if (window.loadBoqItems) {
-        window.loadBoqItems();
-      }
-    }
-
-    function clearBoqFilters() {
-      document.getElementById('boqSearchInput').value = '';
-      document.getElementById('boqCategoryFilter').value = '';
-      document.getElementById('boqSortFilter').value = 'poz-asc';
-      applyBoqFilters();
-    }
-
-    // Modal functions
-    function openAddBoqItemModal() {
-      document.getElementById('addBoqItemModal').style.display = 'block';
-    }
-
-    function closeAddBoqItemModal() {
-      document.getElementById('addBoqItemModal').style.display = 'none';
-      document.getElementById('addBoqItemForm').reset();
-      // Reset total price display
-      const totalPrice = document.getElementById('boqTotalPrice');
-      if (totalPrice) totalPrice.textContent = '₺0,00';
-    }
-
-    function openEditBoqItemModal() {
-      document.getElementById('editBoqItemModal').style.display = 'block';
-    }
-
-    function closeEditBoqItemModal() {
-      document.getElementById('editBoqItemModal').style.display = 'none';
-      document.getElementById('editBoqItemForm').reset();
-    }
-
-    function saveBoqItem() {
-      if (window.addBoqItem) {
-        const form = document.getElementById('addBoqItemForm');
-        const formData = new FormData(form);
-        const data = Object.fromEntries(formData);
-        window.addBoqItem(data);
-      }
-    }
-
-    function updateBoqItem() {
-      if (window.editBoqItem) {
-        const form = document.getElementById('editBoqItemForm');
-        const formData = new FormData(form);
-        const data = Object.fromEntries(formData);
-        window.editBoqItem(data);
-      }
-    }
 
     // Close modals when clicking outside
     window.addEventListener('click', function(event) {
@@ -565,16 +501,6 @@
         event.target.style.display = 'none';
       }
     });
-
-    // Export functions to window
-    window.applyBoqFilters = applyBoqFilters;
-    window.clearBoqFilters = clearBoqFilters;
-    window.openAddBoqItemModal = openAddBoqItemModal;
-    window.closeAddBoqItemModal = closeAddBoqItemModal;
-    window.openEditBoqItemModal = openEditBoqItemModal;
-    window.closeEditBoqItemModal = closeEditBoqItemModal;
-    window.saveBoqItem = saveBoqItem;
-    window.updateBoqItem = updateBoqItem;
   </script>
 </body>
 </html>
