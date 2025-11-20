@@ -418,13 +418,12 @@
         const itemsQuery = query(
           collection(db, 'teklif_items'),
           where('projectId', '==', projectId),
-          where('isDeleted', '==', false),
-          orderBy('pozNo', 'asc')
+          where('isDeleted', '==', false)
         );
         const itemsSnap = await getDocs(itemsQuery);
         
         if (itemsSnap.empty) {
-          alert('❌ Teklif kalemleri bulunamadı');
+          alert('❌ Teklif kalemleri bulunamadı.\n\nLütfen önce teklif kalemlerini ekleyin.');
           return;
         }
 
@@ -432,6 +431,9 @@
         itemsSnap.forEach(docSnap => {
           proposalItems.push({ id: docSnap.id, ...docSnap.data() });
         });
+
+        // Sort by order field
+        proposalItems.sort((a, b) => (a.order || 0) - (b.order || 0));
 
         // Get proposal metadata
         const proposalDocRef = doc(db, 'teklif_metadata', projectId);
@@ -452,15 +454,16 @@
         }
 
         // Create/Update contract items
+        let pozCounter = 1;
         for (const item of proposalItems) {
           const itemTotal = (item.quantity || 0) * (item.unitPrice || 0);
           totalAmount += itemTotal;
 
           await addDoc(collection(db, 'contract_items'), {
             projectId: projectId,
-            pozNo: item.pozNo,
+            pozNo: pozCounter,
             name: item.name,
-            category: item.category,
+            category: item.category || 'Diğer',
             unit: item.unit,
             contractQuantity: item.quantity,
             unitPrice: item.unitPrice,
@@ -471,6 +474,7 @@
             createdAt: Timestamp.now(),
             createdBy: auth.currentUser.uid
           });
+          pozCounter++;
         }
 
         // Create or update contract metadata
