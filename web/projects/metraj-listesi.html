@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Metraj Listesi (BOQ) - ADM İnşaat Proje Yönetim Sistemi</title>
-  <link rel="stylesheet" href="../css/style.css?v=6">
+  <link rel="stylesheet" href="../css/style.css?v=9">
 </head>
 <body>
   <div class="dashboard-layout">
@@ -143,7 +143,7 @@
           </div>
         </div>
 
-        <!-- BOQ Özet Kartları -->
+        <!-- BOQ Özet Kartları - Responsive Grid -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
           <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
             <div style="font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.9;">Toplam İş Kalemi</div>
@@ -163,9 +163,9 @@
           </div>
         </div>
 
-        <!-- Tamamlanma Progress Bar -->
+        <!-- Tamamlanma Progress Bar - Responsive -->
         <div class="card" style="margin-bottom: 1.5rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; gap: 1rem; flex-wrap: wrap;">
             <h3 style="margin: 0;">Proje Tamamlanma Durumu</h3>
             <span id="completionPercentage" style="font-size: 1.5rem; font-weight: bold; color: var(--brand-red);">0%</span>
           </div>
@@ -175,54 +175,7 @@
           </div>
         </div>
 
-        <!-- Metraj Listesi Content -->
-        <div class="section-header">
-          <h3>📋 Metraj Listesi (Bill of Quantities)</h3>
-          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <button class="btn btn-primary" id="addBoqItemBtn">+ İş Kalemi Ekle</button>
-            <button class="btn" style="background: #27ae60; color: white;" id="exportBoqBtn">📤 Excel İndir</button>
-          </div>
-        </div>
-
-        <!-- Filtreleme ve Kategori -->
-        <div class="card" style="margin-bottom: 1.5rem;">
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-            <div>
-              <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600;">🔍 Arama</label>
-              <input type="text" id="boqSearchInput" placeholder="İş kalemi adı..." style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--input-bg); color: var(--text-primary);">
-            </div>
-            <div>
-              <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600;">📁 Kategori</label>
-              <select id="boqCategoryFilter" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--input-bg); color: var(--text-primary);">
-                <option value="">Tümü</option>
-                <option value="Hafriyat ve Temel">Hafriyat ve Temel</option>
-                <option value="Kaba İnşaat">Kaba İnşaat</option>
-                <option value="İnce İşler">İnce İşler</option>
-                <option value="Tesisat">Tesisat</option>
-                <option value="Elektrik">Elektrik</option>
-                <option value="Dış Cephe">Dış Cephe</option>
-                <option value="Çevre Düzenlemesi">Çevre Düzenlemesi</option>
-                <option value="Diğer">Diğer</option>
-              </select>
-            </div>
-            <div>
-              <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600;">🔢 Sıralama</label>
-              <select id="boqSortFilter" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--input-bg); color: var(--text-primary);">
-                <option value="poz-asc">Poz No (A → Z)</option>
-                <option value="poz-desc">Poz No (Z → A)</option>
-                <option value="name-asc">İsim (A → Z)</option>
-                <option value="name-desc">İsim (Z → A)</option>
-                <option value="value-desc">Tutar (Yüksek → Düşük)</option>
-                <option value="value-asc">Tutar (Düşük → Yüksek)</option>
-              </select>
-            </div>
-            <div style="display: flex; align-items: flex-end;">
-              <button class="btn btn-secondary" id="clearBoqFiltersBtn" style="width: 100%;">🔄 Temizle</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Kategori Bazlı Özet -->
+        <!-- Kategori Bazlı Özet - Responsive -->
         <div class="card" style="margin-bottom: 1.5rem;">
           <h3 style="margin-bottom: 1rem;">📊 Kategorilere Göre Dağılım</h3>
           <div id="categoryBreakdown" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
@@ -230,9 +183,9 @@
           </div>
         </div>
 
-        <!-- BOQ Items List -->
-        <div id="boqItemsList" style="margin-top: 1rem;">
-          <!-- BOQ items will be loaded here -->
+        <!-- BOQ Table Container -->
+        <div id="boqTableContainer">
+          <!-- BOQ table will be rendered here by JavaScript -->
         </div>
       </section>
     </main>
@@ -243,10 +196,10 @@
     <div class="modal-content">
       <div class="modal-header">
         <h2>İş Kalemi Ekle</h2>
-        <button class="modal-close" onclick="closeAddBoqItemModal()">&times;</button>
+        <button class="modal-close" id="closeAddBoqModalBtn">&times;</button>
       </div>
       <div class="modal-body">
-        <form id="addBoqItemForm" onsubmit="handleAddBoqItem(event)">
+        <form id="addBoqItemForm">
           <div class="form-group">
             <label for="boqPozNo">Poz Numarası *</label>
             <input type="text" id="boqPozNo" placeholder="Örn: 01.01.001" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
@@ -282,6 +235,7 @@
                 <option value="m²">Metrekare (m²)</option>
                 <option value="m³">Metreküp (m³)</option>
                 <option value="m">Metre (m)</option>
+                <option value="mtül">Metretül (mtül)</option>
                 <option value="Adet">Adet</option>
                 <option value="Kg">Kilogram (Kg)</option>
                 <option value="Ton">Ton</option>
@@ -307,7 +261,7 @@
           </div>
           <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
             <button type="submit" class="btn btn-primary" style="flex: 1;">💾 Kaydet</button>
-            <button type="button" class="btn btn-secondary" onclick="closeAddBoqItemModal()" style="flex: 1;">❌ İptal</button>
+            <button type="button" class="btn btn-secondary" id="cancelAddBoqBtn" style="flex: 1;">❌ İptal</button>
           </div>
         </form>
       </div>
@@ -319,11 +273,11 @@
     <div class="modal-content">
       <div class="modal-header">
         <h2>İş Kalemi Düzenle</h2>
-        <button class="modal-close" onclick="closeEditBoqItemModal()">&times;</button>
+        <button class="modal-close" id="closeEditBoqModalBtn">&times;</button>
       </div>
       <div class="modal-body">
-        <form id="editBoqItemForm" onsubmit="handleEditBoqItem(event)">
-          <input type="hidden" id="editBoqItemId">
+        <form id="editBoqItemForm">
+          <input type="hidden" id="editBoqId">
           <div class="form-group">
             <label for="editBoqPozNo">Poz Numarası *</label>
             <input type="text" id="editBoqPozNo" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
@@ -331,23 +285,19 @@
           <div class="form-group">
             <label for="editBoqCategory">Kategori *</label>
             <select id="editBoqCategory" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
-              <option value="Hafriyat ve Temel">Hafriyat ve Temel</option>
-              <option value="Kaba İnşaat">Kaba İnşaat</option>
-              <option value="İnce İşler">İnce İşler</option>
-              <option value="Tesisat">Tesisat</option>
+              <option value="Kazı">Kazı</option>
+              <option value="Beton">Beton</option>
+              <option value="Demir">Demir</option>
+              <option value="Duvar">Duvar</option>
+              <option value="Sıva">Sıva</option>
               <option value="Elektrik">Elektrik</option>
-              <option value="Dış Cephe">Dış Cephe</option>
-              <option value="Çevre Düzenlemesi">Çevre Düzenlemesi</option>
+              <option value="Tesisat">Tesisat</option>
               <option value="Diğer">Diğer</option>
             </select>
           </div>
           <div class="form-group">
-            <label for="editBoqName">İş Kalemi Adı *</label>
-            <input type="text" id="editBoqName" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
-          </div>
-          <div class="form-group">
-            <label for="editBoqDescription">Açıklama</label>
-            <textarea id="editBoqDescription" rows="2" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary); resize: vertical;"></textarea>
+            <label for="editBoqDescription">Açıklama *</label>
+            <textarea id="editBoqDescription" rows="3" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary); resize: vertical;"></textarea>
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div class="form-group">
@@ -356,6 +306,7 @@
                 <option value="m²">Metrekare (m²)</option>
                 <option value="m³">Metreküp (m³)</option>
                 <option value="m">Metre (m)</option>
+                <option value="mtül">Metretül (mtül)</option>
                 <option value="Adet">Adet</option>
                 <option value="Kg">Kilogram (Kg)</option>
                 <option value="Ton">Ton</option>
@@ -389,10 +340,10 @@
   </div>
 
   <!-- Load JS modules -->
-  <script type="module" src="../js/auth.js?v=6"></script>
-  <script type="module" src="../js/projects.js?v=6"></script>
-  <script type="module" src="../js/boq.js?v=6"></script>
-  <script type="module" src="../js/app.js?v=6"></script>
+  <script type="module" src="../js/firebase-config.js"></script>
+  <script type="module" src="../js/auth.js?v=9"></script>
+  <script type="module" src="../js/metraj-listesi.js?v=9"></script>
+  <script type="module" src="../js/app.js?v=9"></script>
 
   <script>
     // Mobile menu toggle
@@ -446,83 +397,10 @@
       }
     }
 
-    // Auto-calculate total price for BOQ form
+    // Initialize on load
     document.addEventListener('DOMContentLoaded', function() {
-      // Update navigation links
+      console.log('📋 Metraj listesi DOM yüklendi');
       updateNavLinks();
-      
-      // Add BOQ form calculations
-      const boqQuantity = document.getElementById('boqQuantity');
-      const boqUnitPrice = document.getElementById('boqUnitPrice');
-      const boqTotalPrice = document.getElementById('boqTotalPrice');
-      
-      function updateBoqTotal() {
-        const quantity = parseFloat(boqQuantity?.value) || 0;
-        const unitPrice = parseFloat(boqUnitPrice?.value) || 0;
-        const total = quantity * unitPrice;
-        if (boqTotalPrice) {
-          boqTotalPrice.textContent = '₺' + total.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        }
-      }
-      
-      if (boqQuantity) boqQuantity.addEventListener('input', updateBoqTotal);
-      if (boqUnitPrice) boqUnitPrice.addEventListener('input', updateBoqTotal);
-
-      // Edit BOQ form calculations
-      const editBoqQuantity = document.getElementById('editBoqQuantity');
-      const editBoqUnitPrice = document.getElementById('editBoqUnitPrice');
-      const editBoqTotalPrice = document.getElementById('editBoqTotalPrice');
-      
-      function updateEditBoqTotal() {
-        const quantity = parseFloat(editBoqQuantity?.value) || 0;
-        const unitPrice = parseFloat(editBoqUnitPrice?.value) || 0;
-        const total = quantity * unitPrice;
-        if (editBoqTotalPrice) {
-          editBoqTotalPrice.textContent = '₺' + total.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        }
-      }
-      
-      if (editBoqQuantity) editBoqQuantity.addEventListener('input', updateEditBoqTotal);
-      if (editBoqUnitPrice) editBoqUnitPrice.addEventListener('input', updateEditBoqTotal);
-
-      // Filtreleme event listeners - wait for module to load
-      setTimeout(() => {
-        const searchInput = document.getElementById('boqSearchInput');
-        const categoryFilter = document.getElementById('boqCategoryFilter');
-        const sortFilter = document.getElementById('boqSortFilter');
-
-        if (searchInput && window.applyBoqFilters) {
-          searchInput.addEventListener('input', () => window.applyBoqFilters());
-        }
-        if (categoryFilter && window.applyBoqFilters) {
-          categoryFilter.addEventListener('change', () => window.applyBoqFilters());
-        }
-        if (sortFilter && window.applyBoqFilters) {
-          sortFilter.addEventListener('change', () => window.applyBoqFilters());
-        }
-      }, 1000);
-    });
-
-    // Setup button event listeners after DOM loads
-    document.addEventListener('DOMContentLoaded', function() {
-      // Wait for module to load then attach button listeners
-      setTimeout(() => {
-        const addBoqBtn = document.getElementById('addBoqItemBtn');
-        const exportBoqBtn = document.getElementById('exportBoqBtn');
-        const clearFiltersBtn = document.getElementById('clearBoqFiltersBtn');
-        
-        if (addBoqBtn && window.openAddBoqItemModal) {
-          addBoqBtn.addEventListener('click', () => window.openAddBoqItemModal());
-        }
-        
-        if (exportBoqBtn && window.exportBoqToExcel) {
-          exportBoqBtn.addEventListener('click', () => window.exportBoqToExcel());
-        }
-        
-        if (clearFiltersBtn && window.clearBoqFilters) {
-          clearFiltersBtn.addEventListener('click', () => window.clearBoqFilters());
-        }
-      }, 1000);
     });
 
     // Close modals when clicking outside

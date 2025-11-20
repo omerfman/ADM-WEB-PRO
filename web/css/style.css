@@ -1162,8 +1162,21 @@ header nav button:hover {
   }
 }
 
+@keyframes highlightPulse {
+  0%, 100% {
+    background-color: var(--bg-secondary);
+  }
+  50% {
+    background-color: rgba(211, 47, 47, 0.1);
+  }
+}
+
 .boq-edit-row {
   animation: slideIn 0.3s ease-out;
+}
+
+.boq-edit-row.highlight-new {
+  animation: highlightPulse 1.5s ease-in-out 2;
 }
 
 .boq-edit-row input,
@@ -1179,3 +1192,324 @@ header nav button:hover {
   box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
   outline: none;
 }
+
+/* ========== BOQ TABLE RESPONSIVE DESIGN ========== */
+.boq-header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.boq-info h3 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.boq-info p {
+  margin: 0.5rem 0 0 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.boq-action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.boq-filters {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1.5fr auto;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.filter-input,
+.filter-select {
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.9rem;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+  outline: none;
+  border-color: var(--brand-red);
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
+}
+
+.table-responsive {
+  overflow-x: auto;
+  margin: 0 -1rem;
+  padding: 0 1rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.boq-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--card-bg);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.boq-table thead {
+  background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-red-dark) 100%);
+  color: white;
+}
+
+.boq-table th {
+  padding: 1rem 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  border-bottom: 2px solid var(--brand-red-dark);
+}
+
+.boq-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.9rem;
+}
+
+.boq-data-row:hover {
+  background-color: var(--bg-secondary);
+}
+
+.boq-data-row td {
+  transition: background-color 0.2s ease;
+}
+
+/* Column specific styles */
+.th-pozno, .td-pozno { min-width: 100px; }
+.th-category, .td-category { min-width: 120px; }
+.th-description, .td-description { min-width: 250px; text-align: left; }
+.th-unit, .td-unit { min-width: 80px; text-align: center; }
+.th-quantity, .td-quantity { min-width: 100px; text-align: right; }
+.th-unitprice, .td-unitprice { min-width: 120px; text-align: right; }
+.th-total, .td-total { min-width: 130px; text-align: right; }
+.th-actions, .td-actions { min-width: 100px; text-align: center; white-space: nowrap; }
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: var(--brand-red);
+  color: white;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-secondary);
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.total-row {
+  background: var(--bg-secondary);
+  font-weight: bold;
+  border-top: 2px solid var(--brand-red);
+}
+
+.total-label {
+  text-align: right;
+  padding-right: 1rem;
+}
+
+.total-quantity,
+.total-amount {
+  text-align: right;
+  color: var(--brand-red);
+  font-size: 1.1rem;
+}
+
+/* Inline editing inputs */
+.inline-input,
+.inline-select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.inline-input:focus,
+.inline-select:focus {
+  border-color: var(--brand-red);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
+}
+
+.inline-input-sm {
+  padding: 0.4rem;
+  font-size: 0.8rem;
+}
+
+.inline-number {
+  text-align: right;
+}
+
+.inline-total {
+  color: var(--brand-red);
+  font-size: 1rem;
+}
+
+/* Icon buttons */
+.btn-icon {
+  background: none;
+  border: none;
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+  font-size: 1.1rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  margin: 0 0.2rem;
+}
+
+.btn-icon:hover {
+  transform: scale(1.1);
+}
+
+.btn-edit {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.btn-edit:hover {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.btn-delete {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.btn-delete:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.btn-save {
+  background: rgba(16, 185, 129, 0.9);
+  color: white;
+  font-weight: bold;
+}
+
+.btn-save:hover {
+  background: rgba(16, 185, 129, 1);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.btn-cancel {
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+  font-weight: bold;
+}
+
+.btn-cancel:hover {
+  background: rgba(239, 68, 68, 1);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+/* Responsive breakpoints */
+@media (max-width: 1200px) {
+  .boq-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .filter-input {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .boq-header-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .boq-action-buttons {
+    justify-content: stretch;
+  }
+  
+  .boq-action-buttons .btn {
+    flex: 1;
+  }
+  
+  .boq-filters {
+    grid-template-columns: 1fr;
+  }
+  
+  .table-responsive {
+    margin: 0 -1.5rem;
+    padding: 0 1.5rem;
+  }
+  
+  .boq-table {
+    font-size: 0.85rem;
+  }
+  
+  .boq-table th,
+  .boq-table td {
+    padding: 0.6rem 0.4rem;
+  }
+  
+  .th-description, .td-description {
+    min-width: 200px;
+  }
+  
+  .btn-icon {
+    padding: 0.3rem 0.5rem;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .boq-info h3 {
+    font-size: 1.2rem;
+  }
+  
+  .boq-table {
+    font-size: 0.8rem;
+  }
+  
+  .boq-table th,
+  .boq-table td {
+    padding: 0.5rem 0.3rem;
+  }
+  
+  .badge {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.5rem;
+  }
+  
+  .inline-input,
+  .inline-select {
+    font-size: 0.8rem;
+    padding: 0.4rem;
+  }
+  
+  .th-description, .td-description {
+    min-width: 150px;
+  }
+}
+
