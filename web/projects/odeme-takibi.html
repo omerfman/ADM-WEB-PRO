@@ -763,21 +763,49 @@
         console.log('🔄 Hakediş senkronizasyonu başlatılıyor...');
         console.log('📍 Project ID:', currentProjectId);
         
-        // Try without isDeleted filter first
+        if (!currentProjectId) {
+          alert('⚠️ Proje ID bulunamadı. Lütfen sayfayı yenileyin.');
+          return;
+        }
+        
+        // Query without orderBy to avoid index requirements
         const hakedisQuery = query(
           collection(db, 'progress_payments'),
-          where('projectId', '==', currentProjectId),
-          orderBy('periodNo', 'asc')
+          where('projectId', '==', currentProjectId)
         );
         
         console.log('📊 Sorgu çalıştırılıyor...');
+        console.log('📌 Sorgu detayı:', {
+          collection: 'progress_payments',
+          projectId: currentProjectId
+        });
+        
         const hakedisSnap = await getDocs(hakedisQuery);
         
         console.log('📦 Bulunan hakediş sayısı:', hakedisSnap.size);
         
+        if (!hakedisSnap.empty) {
+          console.log('✅ Bulunan hakediş kayıtları:');
+          hakedisSnap.forEach(doc => {
+            const data = doc.data();
+            console.log('  -', {
+              id: doc.id,
+              paymentNo: data.paymentNo,
+              period: data.period,
+              grossAmount: data.grossAmount,
+              netAmount: data.netAmount,
+              status: data.status
+            });
+          });
+        }
+        
         if (hakedisSnap.empty) {
-          alert('❌ Bu proje için hakediş kaydı bulunamadı.\n\nLütfen önce "Hakediş Takibi" sayfasından hakediş oluşturun.');
-          // Navigate to hakedis page
+          console.warn('⚠️ Hakediş kaydı bulunamadı');
+          alert('❌ Bu proje için hakediş kaydı bulunamadı.\n\n' +
+                'Firestore\'da progress_payments collection\'ında bu proje ID ile kayıt yok.\n\n' +
+                'Proje ID: ' + currentProjectId + '\n\n' +
+                'Lütfen önce "Hakediş Takibi" sayfasından hakediş oluşturun.');
+          
           const shouldNavigate = confirm('Hakediş sayfasına gitmek ister misiniz?');
           if (shouldNavigate) {
             window.location.href = `hakedis-takibi.html?id=${currentProjectId}`;
@@ -785,12 +813,20 @@
           return;
         }
 
-        alert(`✅ ${hakedisSnap.size} hakediş kaydı bulundu ve senkronize edildi!`);
+        alert(`✅ ${hakedisSnap.size} hakediş kaydı bulundu!\n\n` +
+              'Hakediş verileri ödeme listesine senkronize edildi.');
         loadPayments();
 
       } catch (error) {
-        console.error('❌ Error syncing from hakedis:', error);
-        alert('Senkronizasyon hatası: ' + error.message + '\n\nDetaylar console\'da görülebilir.');
+        console.error('❌ Hakediş senkronizasyon hatası:', error);
+        console.error('Hata detayı:', {
+          message: error.message,
+          code: error.code,
+          stack: error.stack
+        });
+        alert('❌ Senkronizasyon hatası:\n\n' + error.message + 
+              '\n\nFirestore hatası: ' + (error.code || 'Bilinmeyen') +
+              '\n\nDetaylar console\'da (F12) görülebilir.');
       }
     };
 
