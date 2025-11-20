@@ -11,10 +11,8 @@
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <div class="logo">
-          <span class="logo-icon">🏗️</span>
-          <span class="logo-text">ADM Proje</span>
-        </div>
+        <img src="../assets/adm_logo.png" alt="ADM Studio" class="sidebar-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+        <h1 style="display: none;">🏗️ ADM İnşaat</h1>
       </div>
 
       <nav class="sidebar-nav">
@@ -92,16 +90,26 @@
       </nav>
 
       <div class="sidebar-footer">
-        <div class="user-profile">
-          <div class="user-avatar">A</div>
-          <div class="user-info">
-            <div class="user-name" id="sidebarUserName">Admin</div>
-            <div class="user-role" id="sidebarUserRole">Yönetici</div>
+        <div class="user-info">
+          <div class="user-avatar">👤</div>
+          <div class="user-details">
+            <div class="user-name" id="sidebarUserName">Yükleniyor...</div>
+            <div class="user-role" id="sidebarUserRole">...</div>
           </div>
         </div>
-        <button class="btn btn-secondary" style="width: 100%; margin-top: 1rem;" onclick="handleLogout()">
-          🚪 Çıkış Yap
-        </button>
+        <div class="sidebar-actions">
+          <button id="sidebarThemeToggle" class="theme-toggle-btn" onclick="toggleTheme()">
+            <span class="theme-option light-option">
+              <span class="theme-circle">⚪</span>
+              <span class="theme-label">Light</span>
+            </span>
+            <span class="theme-option dark-option active">
+              <span class="theme-circle">⚫</span>
+              <span class="theme-label">Dark</span>
+            </span>
+          </button>
+          <button id="logoutBtn" class="logout-btn" onclick="handleLogout()">Çıkış Yap</button>
+        </div>
       </div>
     </aside>
 
