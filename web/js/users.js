@@ -304,7 +304,8 @@ async function deleteUser(userId) {
   }
 
   try {
-    const response = await fetch(`/api/users/${userId}`, {
+    const apiUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000/api/users' : '/api/users';
+    const response = await fetch(`${apiUrl}/${userId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': 'Bearer ' + (await auth.currentUser.getIdToken())
@@ -312,7 +313,8 @@ async function deleteUser(userId) {
     });
 
     if (!response.ok) {
-      alert('Hata: Kullanıcı silinemedi');
+      const errorData = await response.json().catch(() => ({}));
+      alert('Hata: ' + (errorData.error || 'Kullanıcı silinemedi'));
       return;
     }
 

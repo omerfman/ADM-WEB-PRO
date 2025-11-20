@@ -476,25 +476,36 @@ async function deleteEmployee(employeeId, employeeName) {
   if (!confirm(confirmMsg)) return;
 
   // Double confirmation for critical action
-  const doubleConfirm = confirm('⚠️ SON UYARI: Bu kullanıcı Firestore\'dan silinecektir. Devam edilsin mi?');
+  const doubleConfirm = confirm('⚠️ SON UYARI: Bu kullanıcı Firebase Authentication ve Firestore\'dan tamamen silinecektir. Devam edilsin mi?');
   if (!doubleConfirm) return;
 
   try {
     console.log('🗑️ Deleting employee:', employeeId);
 
-    // Delete from Firestore users collection
-    await deleteDoc(doc(db, 'users', employeeId));
+    // Delete from Firebase Auth and Firestore via backend API
+    const idToken = await auth.currentUser.getIdToken();
+    const apiUrl = window.location.hostname === 'localhost' ? 'http://localhost:5000/api/users' : '/api/users';
     
-    console.log('✅ Employee deleted from Firestore:', employeeId);
+    const response = await fetch(`${apiUrl}/${employeeId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': 'Bearer ' + idToken
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Silme işlemi başarısız');
+    }
     
-    // Note: Firebase Auth user deletion requires backend API
-    alert('✅ Çalışan silindi.');
+    console.log('✅ Employee deleted from Firebase Auth and Firestore:', employeeId);
+    alert('✅ Çalışan başarıyla silindi.');
     
     loadEmployees();
   } catch (error) {
     console.error('❌ Error deleting employee:', error);
     
-    if (error.code === 'permission-denied') {
+    if (error.message.includes('permission')) {
       alert('Hata: Bu işlem için yetkiniz yok.');
     } else {
       alert('Hata: ' + error.message);
