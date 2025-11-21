@@ -284,20 +284,43 @@ onAuthStateChanged(auth, async (user) => {
   const isSirketlerPage = window.location.pathname.includes('sirketler.html');
   const isTemplatesPage = window.location.pathname.includes('templateler.html');
   const isClientPermissionsPage = window.location.pathname.includes('musteri-yetkileri.html');
+  const isClientDashboardPage = window.location.pathname.includes('musteri-dashboard.html');
   
   if (user) {
     console.log('👤 Kullanıcı oturum açık:', user.email);
     
-    // If on login page and logged in, redirect to anasayfa
+    // If on login page and logged in, redirect based on role
     if (isLoginPage) {
-      window.location.href = 'anasayfa.html';
+      // Load user data first to check role
+      await loadUserData();
+      
+      if (window.userRole === 'client') {
+        window.location.href = 'musteri-dashboard.html';
+      } else {
+        window.location.href = 'anasayfa.html';
+      }
       return;
     }
     
     // Load user data for all authenticated pages
     if (isDashboardPage || isProjectDetailPage || isAnasayfaPage || isProjelerPage || 
-        isCalisanlarPage || isMusterilerPage || isSirketlerPage || isTemplatesPage || isClientPermissionsPage) {
+        isCalisanlarPage || isMusterilerPage || isSirketlerPage || isTemplatesPage || 
+        isClientPermissionsPage || isClientDashboardPage) {
       await loadUserData();
+      
+      // CLIENT REDIRECT LOGIC: If client tries to access projeler.html, redirect to musteri-dashboard.html
+      if (isProjelerPage && window.userRole === 'client') {
+        console.log('🔄 Client kullanıcı projeler.html\'e erişmeye çalışıyor, müşteri dashboard\'a yönlendiriliyor...');
+        window.location.href = 'musteri-dashboard.html';
+        return;
+      }
+      
+      // ADMIN/USER REDIRECT LOGIC: If admin/user tries to access musteri-dashboard.html, redirect to projeler.html
+      if (isClientDashboardPage && window.userRole !== 'client') {
+        console.log('🔄 Admin/User kullanıcı müşteri dashboard\'a erişmeye çalışıyor, projeler sayfasına yönlendiriliyor...');
+        window.location.href = 'projeler.html';
+        return;
+      }
       
       // Remove auth-loading class to show dashboard content
       document.body.classList.remove('auth-loading');
@@ -318,9 +341,23 @@ onAuthStateChanged(auth, async (user) => {
       });
     }
     
+    if (isClientDashboardPage) {
+      waitForFunction('initClientDashboard', () => {
+        console.log('🎨 Loading client dashboard for musteri-dashboard.html');
+        window.initClientDashboard();
+      });
+    }
+    
     if (isCalisanlarPage) {
       waitForFunction('loadEmployees', () => {
         console.log('👷 Loading employees for calisanlar.html');
+        window.loadEmployees();
+      });
+    }
+    
+    if (isMusterilerPage) {
+      waitForFunction('initClients', () => {
+        console.log('👥 Loading clients for musteriler.html');
         window.loadEmployees();
       });
     }
