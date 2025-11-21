@@ -177,10 +177,13 @@ service cloud.firestore {
         // Read: All authenticated users (to check if client has access)
         allow read: if isSignedIn();
         
-        // Create/Delete: Only admins can grant/revoke project access
-        allow create, delete: if isSignedIn() && isAdminRole() &&
-                                 request.resource.data.userId != null &&
-                                 request.resource.data.projectId == projectId;
+        // Create: Only admins can grant project access
+        allow create: if isSignedIn() && isAdminRole() &&
+                         request.resource.data.userId != null &&
+                         request.resource.data.projectId == projectId;
+        
+        // Delete: Only admins can revoke project access
+        allow delete: if isSignedIn() && isAdminRole();
         
         // No updates - to change permission, delete and recreate
         allow update: if false;
