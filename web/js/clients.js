@@ -91,7 +91,6 @@ async function loadClients() {
       q = query(
         clientsRef,
         where('role', '==', 'client'),
-        where('isDeleted', '==', false),
         orderBy('createdAt', 'desc')
       );
     } else {
@@ -100,7 +99,6 @@ async function loadClients() {
         clientsRef,
         where('role', '==', 'client'),
         where('companyId', '==', currentCompanyId),
-        where('isDeleted', '==', false),
         orderBy('createdAt', 'desc')
       );
     }
@@ -109,7 +107,11 @@ async function loadClients() {
     
     clients = [];
     snapshot.forEach(docSnap => {
-      clients.push({ id: docSnap.id, ...docSnap.data() });
+      const data = docSnap.data();
+      // Filter out deleted clients manually (if isDeleted exists and is true)
+      if (data.isDeleted !== true) {
+        clients.push({ id: docSnap.id, ...data });
+      }
     });
 
     filteredClients = [...clients];
@@ -922,3 +924,10 @@ window.exportClientsToExcel = exportClientsToExcel;
 window.viewClientDetails = viewClientDetails;
 
 export { initClients };
+
+// Auto-initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initClients);
+} else {
+  initClients();
+}
