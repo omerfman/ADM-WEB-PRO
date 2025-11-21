@@ -389,6 +389,16 @@ onAuthStateChanged(auth, async (user) => {
         window.initClientPermissions();
       });
     }
+    
+    // Filter sidebar for client users on project detail pages
+    if (isProjectDetailPage && window.userRole === 'client') {
+      // Wait for sidebar to be rendered
+      setTimeout(() => {
+        if (typeof window.filterSidebarForClient === 'function') {
+          window.filterSidebarForClient();
+        }
+      }, 500);
+    }
 
     // Restore saved section or load overview as default (legacy dashboard.html support)
     if (isDashboardPage) {

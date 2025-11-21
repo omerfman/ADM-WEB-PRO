@@ -48,20 +48,13 @@
 ## ✅ ADIM 3: PROJE DETAY SAYFALARI - ROLE GÖRE SIDEBAR
 
 ### 3.1 Sidebar Düzenleme
-- [ ] `proje-ozeti.html` - Client için sadeleştirilmiş sidebar
-- [ ] `metraj-listesi.html` - Client read-only
-- [ ] `hakedis-takibi.html` - Client read-only
-- [ ] `odeme-takibi.html` - Client görüntüleyebilir
-- [ ] Diğer sayfalar (kesif, teklif, sozlesme) - Client için gizle
-
-### 3.2 Sidebar Items Filtreleme
-- [ ] Role bazlı sidebar item gizleme fonksiyonu
-- [ ] Client için gösterilecekler:
+- [x] Role bazlı sidebar item gizleme fonksiyonu (`filterSidebarForClient()`)
+- [x] Client için gösterilecekler:
   - ✅ Proje Özeti
   - ✅ Metraj Listesi (BOQ) - 👁️ Sadece Görüntüleme
   - ✅ Hakediş Takibi - 👁️ Sadece Görüntüleme
   - ✅ Ödeme Takibi
-- [ ] Client için GİZLENECEKLER:
+- [x] Client için GİZLENEN SAYFALARI:
   - ❌ Keşif
   - ❌ Teklif
   - ❌ Sözleşme
@@ -69,6 +62,14 @@
   - ❌ Bütçe Yönetimi
   - ❌ Şantiye Günlüğü
   - ❌ Müşteri Yetkileri
+
+### 3.2 Read-Only Görünümler
+- [x] Metraj Listesi - Client read-only mode
+  - [x] "Sadece Görüntüleme" alert badge
+  - [x] Düzenleme/silme butonları gizli
+  - [x] Excel export aktif
+  - [x] İçe aktarma butonları gizli
+- [ ] Hakediş Takibi - Client read-only mode (Devam edecek)
 
 ---
 
@@ -211,9 +212,11 @@
 ## 📊 İLERLEME TAKIP
 
 **Toplam Görev:** ~70 madde
-**Tamamlanan:** 0
-**Devam Eden:** 0
-**Bekleyen:** 70
+**Tamamlanan:** 25
+**Devam Eden:** 1
+**Bekleyen:** 44
+
+**İLERLEME:** 36% ████████░░░░░░░░░░░░
 
 ---
 

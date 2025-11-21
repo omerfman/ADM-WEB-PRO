@@ -67,11 +67,15 @@ function renderBoqTable() {
   const container = document.getElementById('boqTableContainer');
   if (!container) return;
 
+  // Check if user is a client (read-only mode)
+  const isClient = window.userRole === 'client';
+
   // Calculate totals
   const totalQuantity = boqItems.reduce((sum, item) => sum + (parseFloat(item.quantity) || 0), 0);
   const totalAmount = boqItems.reduce((sum, item) => sum + (parseFloat(item.totalPrice) || 0), 0);
 
   container.innerHTML = `
+    ${isClient ? '<div class="alert alert-info" style="margin-bottom: 1rem;"><strong>👁️ Sadece Görüntüleme Modu:</strong> Bu sayfayı görüntüleyebilirsiniz ancak düzenleme yapamazsınız.</div>' : ''}
     <div class="boq-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
       <div>
         <h3 style="margin: 0;">📋 Metraj Listesi</h3>
@@ -80,16 +84,16 @@ function renderBoqTable() {
         </p>
       </div>
       <div style="display: flex; gap: 0.5rem;">
-        <button class="btn btn-secondary" onclick="downloadBoqTemplate()">
+        <button class="btn btn-secondary" onclick="downloadBoqTemplate()" ${isClient ? 'style="display:none;"' : ''}>
           📥 Şablon İndir
         </button>
         <button class="btn btn-secondary" onclick="exportBoqToExcel()">
           📊 Excel İndir
         </button>
-        <button class="btn btn-secondary" onclick="openBoqImportModal()">
+        <button class="btn btn-secondary" onclick="openBoqImportModal()" ${isClient ? 'style="display:none;"' : ''}>
           📤 Excel İçe Aktar
         </button>
-        <button class="btn btn-primary" onclick="addInlineBoqRow()">
+        <button class="btn btn-primary" onclick="addInlineBoqRow()" ${isClient ? 'style="display:none;"' : ''}>
           ➕ Yeni Kalem Ekle
         </button>
       </div>
@@ -123,6 +127,7 @@ function renderBoqTable() {
                 <td style="text-align: right;">${formatCurrency(item.unitPrice)}</td>
                 <td style="text-align: right;"><strong>${formatCurrency(item.totalPrice)}</strong></td>
                 <td>
+                  ${!isClient ? `
                   <div style="display: flex; gap: 0.25rem; justify-content: center;">
                     <button 
                       class="btn btn-icon" 
@@ -135,6 +140,7 @@ function renderBoqTable() {
                       title="Sil"
                     >🗑️</button>
                   </div>
+                  ` : '-'}
                 </td>
               </tr>
             `).join('')

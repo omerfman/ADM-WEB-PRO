@@ -152,6 +152,57 @@ function openModal(modalId) {
   }
 }
 
+// ========== CLIENT SIDEBAR FILTER (For Project Pages) ==========
+function filterSidebarForClient() {
+  // Only run if user is a client
+  if (window.userRole !== 'client') return;
+  
+  console.log('🔒 Client kullanıcısı için sidebar filtreleniyor...');
+  
+  // Hide workflow items that clients shouldn't see
+  const hideItems = [
+    'navKesif',      // 1. Keşif
+    'navTeklif',     // 2. Teklif
+    'navSozlesme',   // 3. Sözleşme
+    'navStok',       // Stok Yönetimi
+    'navButce',      // Bütçe Yönetimi
+    'navGunluk',     // Şantiye Günlüğü
+    'navMusteri'     // Müşteri Yetkileri
+  ];
+  
+  hideItems.forEach(itemId => {
+    const element = document.getElementById(itemId);
+    if (element) {
+      element.style.display = 'none';
+      console.log(`🚫 Gizlendi: ${itemId}`);
+    }
+  });
+  
+  // Add read-only badges to allowed items
+  const readOnlyItems = [
+    { id: 'navMetraj', label: 'Metraj (BOQ)' },
+    { id: 'navHakedis', label: 'Hakediş' }
+  ];
+  
+  readOnlyItems.forEach(item => {
+    const element = document.getElementById(item.id);
+    if (element) {
+      const badge = document.createElement('span');
+      badge.style.cssText = 'background: #FF9800; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; margin-left: 0.5rem; font-weight: 600;';
+      badge.textContent = '👁️';
+      badge.title = 'Sadece Görüntüleme';
+      
+      // Check if badge doesn't already exist
+      if (!element.querySelector('span[title="Sadece Görüntüleme"]')) {
+        element.appendChild(badge);
+        console.log(`👁️ Read-only badge eklendi: ${item.label}`);
+      }
+    }
+  });
+  
+  console.log('✅ Sidebar client için filtrelendi');
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
   console.log('📄 DOM yüklendi');
@@ -239,3 +290,4 @@ window.switchSection = switchSection;
 window.toggleTheme = toggleTheme;
 window.closeModal = closeModal;
 window.openModal = openModal;
+window.filterSidebarForClient = filterSidebarForClient;
