@@ -473,21 +473,6 @@ function filterClients() {
 }
 
 /**
- * Clear Filters
- */
-function clearFilters() {
-  const searchInput = document.getElementById('searchInput');
-  const statusFilter = document.getElementById('statusFilter');
-  const sortBy = document.getElementById('sortBy');
-  
-  if (searchInput) searchInput.value = '';
-  if (statusFilter) statusFilter.value = '';
-  if (sortBy) sortBy.value = 'createdAt';
-  
-  filterClients();
-}
-
-/**
  * Open Add Client Modal
  */
 function openAddClientModal() {
