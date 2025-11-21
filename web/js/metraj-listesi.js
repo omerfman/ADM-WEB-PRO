@@ -199,8 +199,8 @@ async function loadBoqItems() {
 
     console.log(`✅ ${boqItems.length} BOQ kalemi yüklendi`);
     
-    // Update summary cards, progress bar, and category breakdown
-    updateBoqSummary();
+    // Update summary cards
+    updateBoqSummaryCards();
     
     // Apply filters if any
     applyBoqFilters();
@@ -212,123 +212,142 @@ async function loadBoqItems() {
 }
 
 /**
- * Update BOQ Summary Cards, Progress Bar, and Category Breakdown
+ * Update BOQ Summary Cards
  */
-function updateBoqSummary() {
-  console.log('📊 BOQ özet kartları güncelleniyor...');
-  
-  // Calculate totals
-  const totalItems = boqItems.length;
-  const totalContractValue = boqItems.reduce((sum, item) => sum + (parseFloat(item.totalPrice) || 0), 0);
-  const totalCompletedValue = boqItems.reduce((sum, item) => {
-    const itemTotal = parseFloat(item.totalPrice) || 0;
-    const completedPercentage = parseFloat(item.completedPercentage) || 0;
-    return sum + (itemTotal * completedPercentage / 100);
-  }, 0);
-  const totalRemainingValue = totalContractValue - totalCompletedValue;
-  const completionPercentage = totalContractValue > 0 ? (totalCompletedValue / totalContractValue * 100) : 0;
-  
-  // Update summary cards
-  const totalBoqItemsEl = document.getElementById('totalBoqItems');
-  const totalContractValueEl = document.getElementById('totalContractValue');
-  const totalCompletedValueEl = document.getElementById('totalCompletedValue');
-  const totalRemainingValueEl = document.getElementById('totalRemainingValue');
-  
-  if (totalBoqItemsEl) totalBoqItemsEl.textContent = totalItems.toLocaleString('tr-TR');
-  if (totalContractValueEl) totalContractValueEl.textContent = '₺' + totalContractValue.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  if (totalCompletedValueEl) totalCompletedValueEl.textContent = '₺' + totalCompletedValue.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  if (totalRemainingValueEl) totalRemainingValueEl.textContent = '₺' + totalRemainingValue.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  
-  // Update progress bar
-  const completionPercentageEl = document.getElementById('completionPercentage');
-  const completionProgressBarEl = document.getElementById('completionProgressBar');
-  
-  if (completionPercentageEl) {
-    completionPercentageEl.textContent = completionPercentage.toFixed(1) + '%';
+function updateBoqSummaryCards() {
+  if (boqItems.length === 0) {
+    // Reset all cards to 0
+    const totalItemsEl = document.getElementById('totalBoqItems');
+    const totalContractEl = document.getElementById('totalContractValue');
+    const totalCompletedEl = document.getElementById('totalCompletedValue');
+    const totalRemainingEl = document.getElementById('totalRemainingValue');
+    const completionPercentageEl = document.getElementById('completionPercentage');
+    const progressBar = document.getElementById('completionProgressBar');
+    
+    if (totalItemsEl) totalItemsEl.textContent = '0';
+    if (totalContractEl) totalContractEl.textContent = '₺0';
+    if (totalCompletedEl) totalCompletedEl.textContent = '₺0';
+    if (totalRemainingEl) totalRemainingEl.textContent = '₺0';
+    if (completionPercentageEl) completionPercentageEl.textContent = '0%';
+    if (progressBar) {
+      progressBar.style.width = '0%';
+      progressBar.textContent = '0%';
+    }
+    
+    // Clear category breakdown
+    const categoryBreakdownEl = document.getElementById('categoryBreakdown');
+    if (categoryBreakdownEl) {
+      categoryBreakdownEl.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 1rem;">Henüz BOQ kalemi eklenmemiş</p>';
+    }
+    
+    return;
   }
   
-  if (completionProgressBarEl) {
-    completionProgressBarEl.style.width = completionPercentage + '%';
-    completionProgressBarEl.textContent = completionPercentage >= 5 ? completionPercentage.toFixed(1) + '%' : '';
+  // Calculate totals
+  let totalContractValue = 0;
+  let totalCompletedValue = 0;
+  const categoryData = {};
+  
+  boqItems.forEach(item => {
+    const totalPrice = parseFloat(item.totalPrice) || 0;
+    const quantity = parseFloat(item.quantity) || 0;
+    const completedQty = parseFloat(item.completedQuantity) || 0;
+    const unitPrice = parseFloat(item.unitPrice) || 0;
+    const completedValue = completedQty * unitPrice;
+    
+    totalContractValue += totalPrice;
+    totalCompletedValue += completedValue;
+    
+    // Group by category
+    const category = item.category || 'Diğer';
+    if (!categoryData[category]) {
+      categoryData[category] = {
+        count: 0,
+        totalValue: 0,
+        completedValue: 0
+      };
+    }
+    
+    categoryData[category].count++;
+    categoryData[category].totalValue += totalPrice;
+    categoryData[category].completedValue += completedValue;
+  });
+  
+  const totalRemainingValue = totalContractValue - totalCompletedValue;
+  const completionPercentage = totalContractValue > 0 
+    ? ((totalCompletedValue / totalContractValue) * 100).toFixed(1)
+    : 0;
+  
+  // Update summary cards
+  const totalItemsEl = document.getElementById('totalBoqItems');
+  const totalContractEl = document.getElementById('totalContractValue');
+  const totalCompletedEl = document.getElementById('totalCompletedValue');
+  const totalRemainingEl = document.getElementById('totalRemainingValue');
+  const completionPercentageEl = document.getElementById('completionPercentage');
+  const progressBar = document.getElementById('completionProgressBar');
+  
+  if (totalItemsEl) totalItemsEl.textContent = boqItems.length.toString();
+  if (totalContractEl) totalContractEl.textContent = formatCurrency(totalContractValue);
+  if (totalCompletedEl) totalCompletedEl.textContent = formatCurrency(totalCompletedValue);
+  if (totalRemainingEl) totalRemainingEl.textContent = formatCurrency(totalRemainingValue);
+  if (completionPercentageEl) completionPercentageEl.textContent = completionPercentage + '%';
+  
+  if (progressBar) {
+    progressBar.style.width = completionPercentage + '%';
+    progressBar.textContent = completionPercentage + '%';
   }
   
   // Update category breakdown
   const categoryBreakdownEl = document.getElementById('categoryBreakdown');
   if (categoryBreakdownEl) {
-    const categoryStats = {};
-    
-    boqItems.forEach(item => {
-      const category = item.category || 'Diğer';
-      if (!categoryStats[category]) {
-        categoryStats[category] = {
-          itemCount: 0,
-          totalValue: 0,
-          completedValue: 0
-        };
-      }
-      
-      const itemTotal = parseFloat(item.totalPrice) || 0;
-      const completedPercentage = parseFloat(item.completedPercentage) || 0;
-      
-      categoryStats[category].itemCount++;
-      categoryStats[category].totalValue += itemTotal;
-      categoryStats[category].completedValue += (itemTotal * completedPercentage / 100);
-    });
-    
-    // Sort categories by total value
-    const sortedCategories = Object.entries(categoryStats).sort((a, b) => b[1].totalValue - a[1].totalValue);
-    
-    let categoryHTML = '';
-    
-    if (sortedCategories.length === 0) {
-      categoryHTML = `
-        <div style="grid-column: 1 / -1; text-align: center; padding: 2rem; color: var(--text-secondary);">
-          📊 Henüz kategori verisi yok
-        </div>
-      `;
-    } else {
-      sortedCategories.forEach(([category, stats]) => {
-        const completionPct = stats.totalValue > 0 ? (stats.completedValue / stats.totalValue * 100) : 0;
+    const categoryHTML = Object.entries(categoryData)
+      .sort((a, b) => b[1].totalValue - a[1].totalValue) // Sort by value descending
+      .map(([category, data]) => {
+        const categoryPercentage = totalContractValue > 0
+          ? ((data.completedValue / data.totalValue) * 100).toFixed(1)
+          : 0;
         
-        categoryHTML += `
-          <div class="card" style="padding: 1rem; background: var(--card-bg); border: 1px solid var(--border-color);">
-            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
-              <div>
-                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">${category}</div>
-                <div style="font-size: 0.75rem; color: var(--text-secondary);">${stats.itemCount} Kalem</div>
-              </div>
-              <div style="text-align: right;">
-                <div style="font-size: 1.1rem; font-weight: bold; color: var(--brand-red);">₺${stats.totalValue.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
-                <div style="font-size: 0.75rem; color: var(--text-secondary);">Toplam</div>
-              </div>
+        return `
+          <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <strong style="color: var(--text-primary);">${category}</strong>
+              <span style="font-size: 0.85rem; color: var(--text-secondary);">${data.count} kalem</span>
             </div>
-            <div style="margin-bottom: 0.5rem;">
-              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 0.25rem;">
-                <span style="color: var(--text-secondary);">Tamamlanma</span>
-                <span style="font-weight: 600; color: ${completionPct >= 50 ? '#10b981' : completionPct >= 25 ? '#f59e0b' : '#6b7280'};">${completionPct.toFixed(1)}%</span>
-              </div>
-              <div style="width: 100%; height: 6px; background: var(--bg-tertiary); border-radius: 3px; overflow: hidden;">
-                <div style="height: 100%; background: ${completionPct >= 75 ? '#10b981' : completionPct >= 50 ? '#3b82f6' : completionPct >= 25 ? '#f59e0b' : '#ef4444'}; width: ${completionPct}%; transition: width 0.3s;"></div>
-              </div>
+            <div style="font-size: 1.25rem; font-weight: bold; color: var(--brand-red); margin-bottom: 0.5rem;">
+              ${formatCurrency(data.totalValue)}
             </div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary);">
-              <span>Tamamlanan: ₺${stats.completedValue.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
-              <span>Kalan: ₺${(stats.totalValue - stats.completedValue).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; margin-bottom: 0.25rem;">
+              <span style="color: var(--text-secondary);">Tamamlanan:</span>
+              <span style="color: #43e97b; font-weight: 600;">${formatCurrency(data.completedValue)}</span>
+            </div>
+            <div style="width: 100%; height: 8px; background: var(--bg-tertiary); border-radius: 4px; overflow: hidden;">
+              <div style="height: 100%; background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%); width: ${categoryPercentage}%; transition: width 0.3s;"></div>
+            </div>
+            <div style="text-align: right; margin-top: 0.25rem; font-size: 0.75rem; color: var(--text-secondary);">
+              %${categoryPercentage}
             </div>
           </div>
         `;
-      });
-    }
+      }).join('');
     
     categoryBreakdownEl.innerHTML = categoryHTML;
   }
   
-  console.log('✅ BOQ özet kartları güncellendi', {
-    totalItems,
-    totalContractValue: totalContractValue.toFixed(2),
-    totalCompletedValue: totalCompletedValue.toFixed(2),
-    completionPercentage: completionPercentage.toFixed(1) + '%',
-    categories: Object.keys(categoryStats || {}).length
+  console.log('✅ BOQ özet kartları güncellendi:', {
+    totalItems: boqItems.length,
+    totalContractValue,
+    totalCompletedValue,
+    completionPercentage: completionPercentage + '%'
+  });
+}
+
+/**
+ * Format currency helper
+ */
+function formatCurrency(amount) {
+  return '₺' + parseFloat(amount || 0).toLocaleString('tr-TR', { 
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
   });
 }
 
@@ -1077,7 +1096,7 @@ function showAlert(message, type = 'info') {
 console.log('📋 Metraj modülü yükleniyor - fonksiyonlar export ediliyor...');
 window.initMetrajListesi = initMetrajListesi;
 window.loadBoqItems = loadBoqItems;
-window.updateBoqSummary = updateBoqSummary;
+window.updateBoqSummaryCards = updateBoqSummaryCards;
 window.loadFromContract = loadFromContract;
 window.applyBoqFilters = applyBoqFilters;
 window.clearBoqFilters = clearBoqFilters;
@@ -1097,7 +1116,7 @@ console.log('✅ Metraj modülü fonksiyonları export edildi:', {
   addNewBoqItemInline: !!window.addNewBoqItemInline,
   editBoqItemInline: !!window.editBoqItemInline,
   loadBoqItems: !!window.loadBoqItems,
-  updateBoqSummary: !!window.updateBoqSummary,
+  updateBoqSummaryCards: !!window.updateBoqSummaryCards,
   loadFromContract: !!window.loadFromContract,
   clearBoqFilters: !!window.clearBoqFilters
 });
