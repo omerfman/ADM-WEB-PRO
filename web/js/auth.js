@@ -120,6 +120,7 @@ async function loadUserData() {
     const activityNavBtn = document.getElementById('activityNavBtn');
     const usersNavBtn = document.getElementById('usersNavBtn');
     const companiesNavBtn = document.getElementById('companiesNavBtn');
+    const templatesNavBtn = document.getElementById('templatesNavBtn');
     
     // Clients have very limited UI access - only projects
     if (role === 'client') {
@@ -128,6 +129,7 @@ async function loadUserData() {
       if (activityNavBtn) activityNavBtn.classList.add('hidden');
       if (usersNavBtn) usersNavBtn.classList.add('hidden');
       if (companiesNavBtn) companiesNavBtn.classList.add('hidden');
+      if (templatesNavBtn) templatesNavBtn.classList.add('hidden');
       
       // Hide create project button
       const createProjectBtn = document.getElementById('createProjectBtn');
@@ -154,6 +156,7 @@ async function loadUserData() {
       if (role === 'company_admin') {
         if (employeesNavBtn) employeesNavBtn.classList.remove('hidden');
         if (activityNavBtn) activityNavBtn.classList.remove('hidden');
+        if (templatesNavBtn) templatesNavBtn.classList.remove('hidden');
       }
       
       // Super admin can see everything
@@ -162,6 +165,7 @@ async function loadUserData() {
         if (activityNavBtn) activityNavBtn.classList.remove('hidden');
         if (usersNavBtn) usersNavBtn.classList.remove('hidden');
         if (companiesNavBtn) companiesNavBtn.classList.remove('hidden');
+        if (templatesNavBtn) templatesNavBtn.classList.remove('hidden');
       }
     }
     

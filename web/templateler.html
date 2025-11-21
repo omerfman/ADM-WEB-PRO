@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Şablonlar & Ayarlar - ADM İnşaat Proje Yönetim Sistemi</title>
+  <link rel="stylesheet" href="css/style.css?v=9">
+</head>
+<body>
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="assets/adm_logo.png" alt="ADM Studio" class="sidebar-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+        <h1 style="display: none;">🏗️ ADM İnşaat</h1>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="anasayfa.html" class="nav-item">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Anasayfa</span>
+        </a>
+        <a href="projeler.html" class="nav-item">
+          <span class="nav-icon">🏗️</span>
+          <span class="nav-text">Projeler</span>
+        </a>
+        <a href="calisanlar.html" class="nav-item hidden" id="employeesNavBtn">
+          <span class="nav-icon">👷</span>
+          <span class="nav-text">Çalışanlar</span>
+        </a>
+        <a href="sirketler.html" class="nav-item hidden" id="companiesNavBtn">
+          <span class="nav-icon">🏢</span>
+          <span class="nav-text">Şirketler</span>
+        </a>
+        <a href="kullanicilar.html" class="nav-item hidden" id="usersNavBtn">
+          <span class="nav-icon">👥</span>
+          <span class="nav-text">Kullanıcılar</span>
+        </a>
+        <a href="templateler.html" class="nav-item active hidden" id="templatesNavBtn">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-text">Şablonlar & Ayarlar</span>
+        </a>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">👤</div>
+          <div class="user-details">
+            <div class="user-name" id="sidebarUserName">Kullanıcı</div>
+            <div class="user-role" id="sidebarUserRole">Rol</div>
+          </div>
+        </div>
+        <div class="sidebar-actions">
+          <button id="sidebarThemeToggle" class="theme-toggle-btn" onclick="toggleTheme()">
+            <span class="theme-option light-option">
+              <span class="theme-circle">⚪</span>
+              <span class="theme-label">Light</span>
+            </span>
+            <span class="theme-option dark-option active">
+              <span class="theme-circle">⚫</span>
+              <span class="theme-label">Dark</span>
+            </span>
+          </button>
+          <button id="logoutBtn" class="logout-btn" onclick="handleLogout()">Çıkış Yap</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <div class="topbar">
+        <button class="menu-toggle" id="menuToggle">☰</button>
+        <h2 id="pageTitle">⚙️ Şablonlar & Ayarlar</h2>
+        <div class="topbar-actions">
+          <span id="userNameDisplay" class="topbar-user"></span>
+        </div>
+      </div>
+
+      <div id="alertContainer"></div>
+
+      <!-- Info Banner -->
+      <div style="background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-red-dark) 100%); color: white; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+        <h3 style="margin: 0 0 0.5rem 0; font-size: 1.25rem;">📋 Şablon Yönetimi</h3>
+        <p style="margin: 0; opacity: 0.9; font-size: 0.9rem;">
+          Tüm dropdown menülerde kullanılan değerleri buradan merkezi olarak yönetin. 
+          Eklediğiniz kategoriler ve değerler tüm sitede otomatik olarak kullanılır.
+        </p>
+      </div>
+
+      <!-- Templates Section -->
+      <section class="content-section">
+        <!-- BOQ Categories -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="margin: 0;">📐 BOQ / Metraj Kategorileri</h3>
+            <button class="btn btn-primary btn-sm" onclick="openAddTemplateModal('boq_categories')">
+              ➕ Yeni Kategori
+            </button>
+          </div>
+          <div id="boqCategoriesList" class="template-list">
+            <p style="text-align: center; color: var(--text-secondary); padding: 1rem;">Yükleniyor...</p>
+          </div>
+        </div>
+
+        <!-- BOQ Units -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="margin: 0;">📏 BOQ / Metraj Birimleri</h3>
+            <button class="btn btn-primary btn-sm" onclick="openAddTemplateModal('boq_units')">
+              ➕ Yeni Birim
+            </button>
+          </div>
+          <div id="boqUnitsList" class="template-list">
+            <p style="text-align: center; color: var(--text-secondary); padding: 1rem;">Yükleniyor...</p>
+          </div>
+        </div>
+
+        <!-- Payment Methods -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="margin: 0;">💳 Ödeme Yöntemleri</h3>
+            <button class="btn btn-primary btn-sm" onclick="openAddTemplateModal('payment_methods')">
+              ➕ Yeni Yöntem
+            </button>
+          </div>
+          <div id="paymentMethodsList" class="template-list">
+            <p style="text-align: center; color: var(--text-secondary); padding: 1rem;">Yükleniyor...</p>
+          </div>
+        </div>
+
+        <!-- Project Statuses -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="margin: 0;">📊 Proje Durumları</h3>
+            <button class="btn btn-primary btn-sm" onclick="openAddTemplateModal('project_statuses')">
+              ➕ Yeni Durum
+            </button>
+          </div>
+          <div id="projectStatusesList" class="template-list">
+            <p style="text-align: center; color: var(--text-secondary); padding: 1rem;">Yükleniyor...</p>
+          </div>
+        </div>
+
+        <!-- Stock Categories -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="margin: 0;">📦 Stok Kategorileri</h3>
+            <button class="btn btn-primary btn-sm" onclick="openAddTemplateModal('stock_categories')">
+              ➕ Yeni Kategori
+            </button>
+          </div>
+          <div id="stockCategoriesList" class="template-list">
+            <p style="text-align: center; color: var(--text-secondary); padding: 1rem;">Yükleniyor...</p>
+          </div>
+        </div>
+
+        <!-- Stock Units -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="margin: 0;">📏 Stok Birimleri</h3>
+            <button class="btn btn-primary btn-sm" onclick="openAddTemplateModal('stock_units')">
+              ➕ Yeni Birim
+            </button>
+          </div>
+          <div id="stockUnitsList" class="template-list">
+            <p style="text-align: center; color: var(--text-secondary); padding: 1rem;">Yükleniyor...</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Add/Edit Template Modal -->
+  <div id="templateModal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2 id="templateModalTitle">Yeni Şablon Ekle</h2>
+        <button class="modal-close" onclick="closeTemplateModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="templateForm" onsubmit="handleSaveTemplate(event)">
+          <input type="hidden" id="templateType">
+          <input type="hidden" id="templateId">
+          
+          <div class="form-group">
+            <label for="templateValue">Değer *</label>
+            <input type="text" id="templateValue" required 
+              placeholder="Örn: Hafriyat ve Temel" 
+              style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary);">
+          </div>
+
+          <div class="form-group">
+            <label for="templateDescription">Açıklama (Opsiyonel)</label>
+            <textarea id="templateDescription" rows="2" 
+              placeholder="İsteğe bağlı açıklama..."
+              style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background-color: var(--input-bg); color: var(--text-primary); resize: vertical;"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="templateIsDefault" style="margin-right: 0.5rem;">
+              Varsayılan değer olarak işaretle
+            </label>
+          </div>
+
+          <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">
+              💾 Kaydet
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="closeTemplateModal()" style="flex: 1;">
+              ❌ İptal
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load JS modules -->
+  <script type="module" src="js/firebase-config.js"></script>
+  <script type="module" src="js/auth.js?v=9"></script>
+  <script type="module" src="js/templates.js?v=1"></script>
+  <script type="module" src="js/app.js?v=9"></script>
+
+  <script>
+    // Mobile menu toggle
+    document.getElementById('menuToggle')?.addEventListener('click', function() {
+      document.querySelector('.sidebar').classList.toggle('sidebar-open');
+    });
+
+    // Close sidebar on mobile when clicking outside
+    document.addEventListener('click', function(event) {
+      const sidebar = document.querySelector('.sidebar');
+      const menuToggle = document.getElementById('menuToggle');
+      
+      if (window.innerWidth <= 768 && 
+          sidebar.classList.contains('sidebar-open') && 
+          !sidebar.contains(event.target) && 
+          event.target !== menuToggle) {
+        sidebar.classList.remove('sidebar-open');
+      }
+    });
+
+    // Close modals when clicking outside
+    window.addEventListener('click', function(event) {
+      if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
