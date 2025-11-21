@@ -113,6 +113,10 @@ async function loadClients() {
     });
 
     filteredClients = [...clients];
+    
+    // Count project permissions for each client
+    await loadClientProjectCounts();
+    
     renderClientsTable();
 
     console.log(`✅ ${clients.length} müşteri yüklendi`);
@@ -124,105 +128,361 @@ async function loadClients() {
 }
 
 /**
- * Render Clients Table
+ * Load project counts for clients
+ */
+async function loadClientProjectCounts() {
+  try {
+    const projectsRef = collection(db, 'projects');
+    const projectsSnapshot = await getDocs(projectsRef);
+    
+    // Count projects for each client
+    for (let client of clients) {
+      let projectCount = 0;
+      
+      for (const projectDoc of projectsSnapshot.docs) {
+        const permissionsRef = collection(db, `projects/${projectDoc.id}/project_permissions`);
+        const permQuery = query(permissionsRef, where('userId', '==', client.id));
+        const permSnapshot = await getDocs(permQuery);
+        
+        if (!permSnapshot.empty) {
+          projectCount++;
+        }
+      }
+      
+      client.projectCount = projectCount;
+    }
+    
+    console.log('✅ Proje sayıları hesaplandı');
+  } catch (error) {
+    console.error('❌ Proje sayıları yüklenirken hata:', error);
+  }
+}
+
+/**
+ * Render Clients Table (Modern Design)
  */
 function renderClientsTable() {
-  const tbody = document.getElementById('clientsTableBody');
+  const container = document.getElementById('clientsListContainer');
+  
+  if (!container) {
+    console.warn('⚠️ clientsListContainer element not found');
+    return;
+  }
   
   // Update statistics
   updateStatistics();
   
   if (!filteredClients || filteredClients.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="8" style="text-align: center; padding: 3rem;">
-          <div style="font-size: 3rem; margin-bottom: 1rem;">👤</div>
-          <p style="color: var(--text-secondary);">Henüz müşteri eklenmemiş</p>
-          <button class="btn btn-primary" onclick="openAddClientModal()" style="margin-top: 1rem;">
-            ➕ İlk Müşteriyi Ekle
-          </button>
-        </td>
-      </tr>
+    container.innerHTML = `
+      <div class="empty-state" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">👥</div>
+        <p style="font-size: 1.1rem; margin-bottom: 1rem;">Henüz müşteri eklenmemiş</p>
+        <button class="btn btn-primary" onclick="openAddClientModal()">➕ İlk Müşteriyi Ekle</button>
+      </div>
     `;
     return;
   }
 
-  let html = '';
+  // Modern table header with filters and search
+  let html = `
+    <div class="users-header-actions" style="
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    ">
+      <div class="users-info">
+        <h3 style="margin: 0; font-size: 1.25rem; color: var(--text-primary);">👥 Müşteri Listesi</h3>
+        <p style="margin: 0.25rem 0 0 0; color: var(--text-secondary); font-size: 0.9rem;">${filteredClients.length} Müşteri</p>
+      </div>
+      <button class="btn btn-primary" onclick="openAddClientModal()">
+        ➕ Yeni Müşteri Ekle
+      </button>
+    </div>
+
+    <!-- Filters -->
+    <div class="users-filters" style="
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: var(--card-bg);
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    ">
+      <input 
+        type="text" 
+        id="searchInput" 
+        placeholder="🔍 İsim, email, firma veya telefon ile ara..." 
+        onkeyup="filterClients()"
+        style="
+          padding: 0.75rem;
+          border: 1px solid var(--border-color);
+          border-radius: 6px;
+          background: var(--input-bg);
+          color: var(--text-primary);
+          font-size: 0.9rem;
+        "
+      >
+      <select id="statusFilter" onchange="filterClients()" style="
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--input-bg);
+        color: var(--text-primary);
+        font-size: 0.9rem;
+      ">
+        <option value="">Tüm Durumlar</option>
+        <option value="active">Aktif</option>
+        <option value="inactive">Pasif</option>
+      </select>
+      <select id="sortBy" onchange="filterClients()" style="
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--input-bg);
+        color: var(--text-primary);
+        font-size: 0.9rem;
+      ">
+        <option value="name">İsim (A-Z)</option>
+        <option value="name-desc">İsim (Z-A)</option>
+        <option value="projects-desc">Proje Sayısı (Çok-Az)</option>
+        <option value="projects-asc">Proje Sayısı (Az-Çok)</option>
+        <option value="createdAt">Yeni Ekleneler</option>
+        <option value="createdAt-asc">Eski Ekleneler</option>
+      </select>
+      <button class="btn btn-secondary" onclick="clearFilters()" style="padding: 0.75rem 1rem;">🔄 Temizle</button>
+    </div>
+
+    <div class="table-responsive" style="
+      background: var(--card-bg);
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+    ">
+      <table class="users-table" style="
+        width: 100%;
+        border-collapse: collapse;
+      ">
+        <thead>
+          <tr style="
+            background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-red-dark) 100%);
+            color: white;
+            border-bottom: 2px solid var(--border-color);
+          ">
+            <th style="padding: 1rem; text-align: left; font-weight: 600;">👤 Müşteri Bilgileri</th>
+            <th style="padding: 1rem; text-align: left; font-weight: 600;">🏢 Firma</th>
+            <th style="padding: 1rem; text-align: center; font-weight: 600;">📞 İletişim</th>
+            <th style="padding: 1rem; text-align: center; font-weight: 600;">📁 Proje Sayısı</th>
+            <th style="padding: 1rem; text-align: center; font-weight: 600;">✅ Durum</th>
+            <th style="padding: 1rem; text-align: center; font-weight: 600;">⚙️ İşlemler</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
   filteredClients.forEach(client => {
     const fullName = `${client.firstName || ''} ${client.lastName || ''}`.trim() || 'İsimsiz';
-    const createdDate = client.createdAt?.toDate?.() ? 
-      new Date(client.createdAt.toDate()).toLocaleDateString('tr-TR') : '-';
-    const statusBadge = client.isActive ? 
-      '<span class="badge badge-success">✅ Aktif</span>' : 
-      '<span class="badge badge-danger">❌ Pasif</span>';
-    
-    // Project count (will be loaded separately)
     const projectCount = client.projectCount || 0;
-
+    const status = client.isActive !== false ? 'active' : 'inactive';
+    const statusColor = status === 'active' ? '#4CAF50' : '#999';
+    const statusText = status === 'active' ? 'Aktif' : 'Pasif';
+    
     html += `
-      <tr>
-        <td><strong>${fullName}</strong></td>
-        <td>${client.email || '-'}</td>
-        <td>${client.phone || '-'}</td>
-        <td>${client.company || '-'}</td>
-        <td>
-          <span class="badge badge-info" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-            🏗️ ${projectCount}
+      <tr id="client-row-${client.id}" data-client-id="${client.id}" style="
+        border-bottom: 1px solid var(--border-color);
+        transition: background-color 0.2s;
+      " onmouseover="this.style.backgroundColor='var(--hover-bg)'" onmouseout="this.style.backgroundColor=''">
+        <td data-label="👤 Müşteri Bilgileri" style="padding: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="
+              width: 40px;
+              height: 40px;
+              border-radius: 50%;
+              background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-red-dark) 100%);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 1.25rem;
+              flex-shrink: 0;
+            ">👤</div>
+            <div>
+              <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">
+                ${fullName}
+              </div>
+              <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                📧 ${client.email || '-'}
+              </div>
+            </div>
+          </div>
+        </td>
+        <td data-label="🏢 Firma" style="padding: 1rem;">
+          ${client.company ? `
+            <div>
+              <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">
+                ${client.company}
+              </div>
+              ${client.taxId ? `
+                <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                  🔖 ${client.taxId}
+                </div>
+              ` : ''}
+            </div>
+          ` : '<span style="color: var(--text-secondary);">-</span>'}
+        </td>
+        <td data-label="📞 İletişim" style="padding: 1rem; text-align: center;">
+          ${client.phone ? `
+            <div style="font-size: 0.9rem; color: var(--text-primary);">
+              📞 ${client.phone}
+            </div>
+          ` : '<span style="color: var(--text-secondary);">-</span>'}
+        </td>
+        <td data-label="📁 Proje Sayısı" style="padding: 1rem; text-align: center;">
+          <div style="
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: ${projectCount > 0 ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'var(--bg-tertiary)'};
+            color: ${projectCount > 0 ? 'white' : 'var(--text-secondary)'};
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.95rem;
+          ">
+            <span style="font-size: 1.2rem;">📁</span>
+            <span>${projectCount}</span>
+          </div>
+        </td>
+        <td data-label="✅ Durum" style="padding: 1rem; text-align: center;">
+          <span style="
+            display: inline-block;
+            padding: 0.4rem 0.9rem;
+            background: ${statusColor};
+            color: white;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+          ">
+            ${statusText}
           </span>
         </td>
-        <td>${createdDate}</td>
-        <td>${statusBadge}</td>
-        <td>
-          <div class="action-buttons" style="display: flex; gap: 0.5rem; justify-content: center;">
-            <button class="btn btn-sm btn-secondary" onclick="viewClientDetails('${client.id}')" title="Detaylar">
-              👁️
-            </button>
-            <button class="btn btn-sm btn-secondary" onclick="editClient('${client.id}')" title="Düzenle">
-              ✏️
-            </button>
-            <button class="btn btn-sm btn-danger" onclick="deleteClient('${client.id}', '${fullName}')" title="Sil">
-              🗑️
-            </button>
+        <td data-label="⚙️ İşlemler" style="padding: 1rem;">
+          <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+            <button onclick="editClient('${client.id}')"
+              style="
+                background: #2196F3;
+                color: white;
+                border: none;
+                padding: 0.5rem 0.75rem;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 0.85rem;
+                transition: transform 0.2s;
+              "
+              onmouseover="this.style.transform='translateY(-2px)'"
+              onmouseout="this.style.transform='translateY(0)'"
+              title="Düzenle"
+            >✏️</button>
+            <button onclick="deleteClient('${client.id}', '${fullName.replace(/'/g, "\\'")}')"
+              style="
+                background: #f44336;
+                color: white;
+                border: none;
+                padding: 0.5rem 0.75rem;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 0.85rem;
+                transition: transform 0.2s;
+              "
+              onmouseover="this.style.transform='translateY(-2px)'"
+              onmouseout="this.style.transform='translateY(0)'"
+              title="Sil"
+            >🗑️</button>
           </div>
         </td>
       </tr>
     `;
   });
 
-  tbody.innerHTML = html;
+  html += `
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  container.innerHTML = html;
 }
 
 /**
  * Filter Clients
  */
 function filterClients() {
-  const searchText = document.getElementById('searchInput').value.toLowerCase();
-  const statusFilter = document.getElementById('statusFilter').value;
-  const sortBySelect = document.getElementById('sortBy');
-  
-  if (sortBySelect) {
-    sortField = sortBySelect.value;
-  }
+  const searchText = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  const statusFilter = document.getElementById('statusFilter')?.value || '';
+  const sortBy = document.getElementById('sortBy')?.value || 'createdAt';
 
   filteredClients = clients.filter(client => {
     const fullName = `${client.firstName || ''} ${client.lastName || ''}`.toLowerCase();
     const email = (client.email || '').toLowerCase();
     const company = (client.company || '').toLowerCase();
+    const phone = (client.phone || '').toLowerCase();
+    const taxId = (client.taxId || '').toLowerCase();
     
     const matchesSearch = fullName.includes(searchText) || 
                          email.includes(searchText) || 
-                         company.includes(searchText);
+                         company.includes(searchText) ||
+                         phone.includes(searchText) ||
+                         taxId.includes(searchText);
     
     const matchesStatus = !statusFilter || 
-                         (statusFilter === 'active' && client.isActive) ||
-                         (statusFilter === 'inactive' && !client.isActive);
+                         (statusFilter === 'active' && client.isActive !== false) ||
+                         (statusFilter === 'inactive' && client.isActive === false);
     
     return matchesSearch && matchesStatus;
   });
   
   // Apply sorting
-  sortClients();
+  filteredClients.sort((a, b) => {
+    const aName = `${a.firstName || ''} ${a.lastName || ''}`.trim();
+    const bName = `${b.firstName || ''} ${b.lastName || ''}`.trim();
+    
+    switch (sortBy) {
+      case 'name':
+        return aName.localeCompare(bName, 'tr');
+      case 'name-desc':
+        return bName.localeCompare(aName, 'tr');
+      case 'projects-desc':
+        return (b.projectCount || 0) - (a.projectCount || 0);
+      case 'projects-asc':
+        return (a.projectCount || 0) - (b.projectCount || 0);
+      case 'createdAt':
+        return (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0);
+      case 'createdAt-asc':
+        return (a.createdAt?.toMillis() || 0) - (b.createdAt?.toMillis() || 0);
+      default:
+        return 0;
+    }
+  });
+  
   renderClientsTable();
+}
+
+/**
+ * Clear Filters
+ */
+function clearFilters() {
+  const searchInput = document.getElementById('searchInput');
+  const statusFilter = document.getElementById('statusFilter');
+  const sortBy = document.getElementById('sortBy');
+  
+  if (searchInput) searchInput.value = '';
+  if (statusFilter) statusFilter.value = '';
+  if (sortBy) sortBy.value = 'createdAt';
+  
+  filterClients();
 }
 
 /**

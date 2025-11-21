@@ -119,53 +119,8 @@
 
       <!-- Clients Table -->
       <div class="content-container">
-        <div class="table-controls" style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
-          <div class="search-box" style="flex: 1; min-width: 250px;">
-            <input type="text" id="searchInput" placeholder="🔍 Ad, e-posta veya şirket ara..." onkeyup="filterClients()">
-          </div>
-          <select id="statusFilter" onchange="filterClients()" style="padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background: var(--input-bg); color: var(--text-primary);">
-            <option value="">Tüm Durumlar</option>
-            <option value="active">✅ Aktif</option>
-            <option value="inactive">❌ Pasif</option>
-          </select>
-          <select id="sortBy" onchange="filterClients()" style="padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background: var(--input-bg); color: var(--text-primary);">
-            <option value="createdAt">📅 Kayıt Tarihi</option>
-            <option value="name">🔤 İsim</option>
-            <option value="company">🏢 Şirket</option>
-          </select>
-          <button class="btn btn-secondary" onclick="clearFilters()" style="white-space: nowrap;">🔄 Filtreleri Temizle</button>
-        </div>
-
-        <div class="table-wrapper">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th style="cursor: pointer;" onclick="sortTable('name')" title="Sıralamak için tıklayın">
-                  👤 Ad Soyad <span id="sortIconName"></span>
-                </th>
-                <th>📧 E-posta</th>
-                <th>📞 Telefon</th>
-                <th style="cursor: pointer;" onclick="sortTable('company')" title="Sıralamak için tıklayın">
-                  🏢 Şirket <span id="sortIconCompany"></span>
-                </th>
-                <th>🏗️ Proje Sayısı</th>
-                <th style="cursor: pointer;" onclick="sortTable('createdAt')" title="Sıralamak için tıklayın">
-                  📅 Kayıt Tarihi <span id="sortIconCreatedAt">▼</span>
-                </th>
-                <th>✓ Durum</th>
-                <th>⚙️ İşlemler</th>
-              </tr>
-            </thead>
-            <tbody id="clientsTableBody">
-              <tr>
-                <td colspan="7" style="text-align: center; padding: 3rem;">
-                  <div class="loading-spinner"></div>
-                  <p>Müşteriler yükleniyor...</p>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <!-- Modern table will be rendered by clients.js -->
+        <div id="clientsListContainer"></div>
       </div>
     </main>
   </div>
@@ -266,7 +221,7 @@
   <!-- Load JS modules -->
   <script type="module" src="js/firebase-config.js"></script>
   <script type="module" src="js/auth.js?v=11"></script>
-  <script type="module" src="js/clients.js?v=1"></script>
+  <script type="module" src="js/clients.js?v=10"></script>
   <script type="module" src="js/app.js?v=9"></script>
 
   <script>
