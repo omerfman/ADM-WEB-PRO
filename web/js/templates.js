@@ -94,97 +94,42 @@ async function loadTemplatesByType(type) {
   } catch (error) {
     console.error(`❌ ${type} yüklenirken hata:`, error);
     
-    // If no index yet, initialize with defaults
-    if (error.code === 'failed-precondition') {
-      console.log(`⚠️ ${type} için index bulunamadı, varsayılan değerler yükleniyor...`);
-      await initializeDefaultTemplates(type);
-      await loadTemplatesByType(type);
+    // If no index yet, use defaults without Firestore
+    if (error.code === 'failed-precondition' || error.code === 'failed-precondition') {
+      console.log(`⚠️ ${type} için Firestore index bulunamadı, varsayılan değerler kullanılıyor`);
+      console.log('📋 Index oluşturmak için Firebase Console\'a gidin veya firestore.indexes.json dosyasını deploy edin');
+      
+      // Load defaults into memory without creating Firestore docs
+      const defaults = getDefaultTemplates(type);
+      templates[type] = defaults.map((value, index) => ({
+        id: `default-${index}`,
+        type,
+        value,
+        description: '',
+        isDefault: true,
+        order: index,
+        companyId: currentCompanyId
+      }));
+      
+      renderTemplateList(type);
     } else {
       showAlert(`${type} yüklenemedi: ${error.message}`, 'danger');
+      
+      // Load defaults as fallback
+      const defaults = getDefaultTemplates(type);
+      templates[type] = defaults.map((value, index) => ({
+        id: `default-${index}`,
+        type,
+        value,
+        description: '',
+        isDefault: true,
+        order: index,
+        companyId: currentCompanyId
+      }));
+      
+      renderTemplateList(type);
     }
   }
-}
-
-/**
- * Initialize Default Templates
- */
-async function initializeDefaultTemplates(type) {
-  const defaults = {
-    boq_categories: [
-      'Hafriyat ve Temel',
-      'Kaba İnşaat',
-      'İnce İşler',
-      'Tesisat',
-      'Elektrik',
-      'Dış Cephe',
-      'Çevre Düzenlemesi',
-      'Diğer'
-    ],
-    boq_units: [
-      'm² (Metrekare)',
-      'm³ (Metreküp)',
-      'm (Metre)',
-      'mtül (Metretül)',
-      'Adet',
-      'Kg (Kilogram)',
-      'Ton',
-      'Lt (Litre)',
-      'Takım',
-      'Komple'
-    ],
-    payment_methods: [
-      'Nakit',
-      'Banka Transferi',
-      'Çek',
-      'Senet',
-      'Kredi Kartı'
-    ],
-    project_statuses: [
-      'Devam Ediyor',
-      'Tamamlandı',
-      'Beklemede',
-      'İptal'
-    ],
-    stock_categories: [
-      'İnşaat Malzemeleri',
-      'Elektrik Malzemeleri',
-      'Tesisat Malzemeleri',
-      'Boya ve Kimyasallar',
-      'Ahşap Malzemeler',
-      'Metal ve Demir',
-      'Diğer'
-    ],
-    stock_units: [
-      'Adet',
-      'Kg',
-      'Ton',
-      'Lt',
-      'm',
-      'm²',
-      'm³',
-      'Paket',
-      'Koli',
-      'Takım'
-    ]
-  };
-
-  const values = defaults[type] || [];
-  
-  for (let i = 0; i < values.length; i++) {
-    await addDoc(collection(db, 'templates'), {
-      type,
-      value: values[i],
-      description: '',
-      isDefault: true,
-      isDeleted: false,
-      order: i,
-      companyId: currentCompanyId,
-      createdAt: serverTimestamp(),
-      createdBy: auth.currentUser?.email || 'system'
-    });
-  }
-
-  console.log(`✅ ${type} için varsayılan değerler oluşturuldu`);
 }
 
 /**
