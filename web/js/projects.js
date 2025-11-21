@@ -39,7 +39,9 @@ async function loadProjects() {
     const userDocSnap = await getDoc(userDocRef);
     const userData = userDocSnap.data() || {};
     const companyId = userData.companyId || 'default-company';
-    const userRole = window.userRole || userData.role;
+    const userRole = userData.role || window.userRole; // Firestore'dan gelen role öncelikli
+    
+    console.log(`👤 Kullanıcı rolü: ${userRole}, UID: ${user.uid}`);
 
     // Query projects
     const projectsRef = collection(db, 'projects');
