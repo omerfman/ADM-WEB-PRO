@@ -170,6 +170,20 @@ service cloud.firestore {
         allow read: if isSignedIn() && !isClient();
         allow create, update, delete: if isSignedIn() && !isClient();
       }
+
+      // ========== PROJECT PERMISSIONS (CLIENT ACCESS CONTROL) ==========
+      match /project_permissions/{permissionId} {
+        // Read: All authenticated users (to check if client has access)
+        allow read: if isSignedIn();
+        
+        // Create/Delete: Only admins can grant/revoke project access
+        allow create, delete: if isSignedIn() && isAdminRole() &&
+                                 request.resource.data.userId != null &&
+                                 request.resource.data.projectId == projectId;
+        
+        // No updates - to change permission, delete and recreate
+        allow update: if false;
+      }
     }
 
     // ========== AUDIT LOGS ==========

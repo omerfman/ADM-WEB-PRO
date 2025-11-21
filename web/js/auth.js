@@ -281,6 +281,7 @@ onAuthStateChanged(auth, async (user) => {
   const isSirketlerPage = window.location.pathname.includes('sirketler.html');
   const isKullanicilarPage = window.location.pathname.includes('kullanicilar.html');
   const isTemplatesPage = window.location.pathname.includes('templateler.html');
+  const isClientPermissionsPage = window.location.pathname.includes('musteri-yetkileri.html');
   
   if (user) {
     console.log('👤 Kullanıcı oturum açık:', user.email);
@@ -293,7 +294,7 @@ onAuthStateChanged(auth, async (user) => {
     
     // Load user data for all authenticated pages
     if (isDashboardPage || isProjectDetailPage || isAnasayfaPage || isProjelerPage || 
-        isCalisanlarPage || isSirketlerPage || isKullanicilarPage || isTemplatesPage) {
+        isCalisanlarPage || isSirketlerPage || isKullanicilarPage || isTemplatesPage || isClientPermissionsPage) {
       await loadUserData();
       
       // Remove auth-loading class to show dashboard content
@@ -342,6 +343,13 @@ onAuthStateChanged(auth, async (user) => {
         window.initTemplates();
       });
     }
+    
+    if (isClientPermissionsPage) {
+      waitForFunction('initClientPermissions', () => {
+        console.log('👥 Loading client permissions for musteri-yetkileri.html');
+        window.initClientPermissions();
+      });
+    }
 
     // Restore saved section or load overview as default (legacy dashboard.html support)
     if (isDashboardPage) {
@@ -372,7 +380,7 @@ onAuthStateChanged(auth, async (user) => {
     
     // If on any authenticated page and not logged in, redirect to login
     if (isDashboardPage || isProjectDetailPage || isAnasayfaPage || isProjelerPage || 
-        isCalisanlarPage || isSirketlerPage || isKullanicilarPage || isTemplatesPage) {
+        isCalisanlarPage || isSirketlerPage || isKullanicilarPage || isTemplatesPage || isClientPermissionsPage) {
       window.location.href = 'login.html';
     }
   }

@@ -249,8 +249,8 @@
     }
   </style>
 </head>
-<body>
-  <div class="app-container">
+<body class="auth-loading">
+  <div class="dashboard-layout">
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
@@ -368,9 +368,9 @@
           <span>Müşteri Yetkileri</span>
         </div>
         <div class="top-bar-actions">
-          <button class="btn btn-primary" onclick="openInviteClientModal()">
-            ✉️ Müşteri Davet Et
-          </button>
+          <a href="../kullanicilar.html" class="btn btn-primary">
+            ➕ Yeni Müşteri Kullanıcısı Oluştur
+          </a>
         </div>
       </div>
 
@@ -383,8 +383,12 @@
         </div>
 
         <!-- Permission Categories -->
-        <div class="permissions-grid">
-          <div class="permission-card">
+        <div class="permissions-grid" style="display: none;">
+          <!-- Permission toggles disabled for v1.0 - focus on project access only -->
+          <!-- Will be enabled in future versions for granular permissions -->
+        </div>
+
+        <!-- Client Users List -->
             <div class="permission-header">
               <div class="permission-icon">📊</div>
               <div class="permission-info">
@@ -527,8 +531,8 @@
           </div>
         </div>
 
-        <!-- Access Log -->
-        <div class="access-log">
+        <!-- Access Log - Coming in v2.0 -->
+        <div class="access-log" style="display: none;">
           <h2 style="margin: 0 0 1.5rem 0;">📋 Erişim Günlüğü</h2>
           <div id="accessLog">
             <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
@@ -541,46 +545,14 @@
     </main>
   </div>
 
-  <!-- Invite Client Modal -->
-  <div id="inviteClientModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>✉️ Müşteri Davet Et</h2>
-        <button class="close-modal" onclick="closeInviteClientModal()">&times;</button>
-      </div>
-      <form id="inviteClientForm" onsubmit="handleInviteClient(event)">
-        <div class="form-group">
-          <label>Ad Soyad *</label>
-          <input type="text" id="clientName" required placeholder="Müşteri adı">
-        </div>
-        <div class="form-group">
-          <label>E-posta *</label>
-          <input type="email" id="clientEmail" required placeholder="ornek@email.com">
-        </div>
-        <div class="form-group">
-          <label>Telefon</label>
-          <input type="tel" id="clientPhone" placeholder="05XX XXX XX XX">
-        </div>
-        <div class="form-group">
-          <label>Şirket</label>
-          <input type="text" id="clientCompany" placeholder="Şirket adı">
-        </div>
-        <div class="form-group">
-          <label>Mesaj (İsteğe Bağlı)</label>
-          <textarea id="inviteMessage" rows="3" placeholder="Davet mesajı..."></textarea>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" onclick="closeInviteClientModal()">İptal</button>
-          <button type="submit" class="btn btn-primary">📧 Davet Gönder</button>
-        </div>
-      </form>
-    </div>
-  </div>
+  <!-- Alert Container -->
+  <div id="alertContainer" style="position: fixed; top: 20px; right: 20px; z-index: 10000;"></div>
 
   <!-- Load JS modules -->
-  <script type="module" src="../js/auth.js?v=6"></script>
-  <script type="module" src="../js/projects.js?v=6"></script>
-  <script type="module" src="../js/app.js?v=6"></script>
+  <script type="module" src="../js/firebase-config.js"></script>
+  <script type="module" src="../js/auth.js?v=10"></script>
+  <script type="module" src="../js/client-permissions.js?v=1"></script>
+  <script type="module" src="../js/app.js?v=9"></script>
 
   <script>
     // Mobile menu toggle
@@ -634,21 +606,6 @@
       }
     }
 
-    // Modal functions
-    function openInviteClientModal() {
-      document.getElementById('inviteClientModal').style.display = 'block';
-    }
-
-    function closeInviteClientModal() {
-      document.getElementById('inviteClientModal').style.display = 'none';
-      document.getElementById('inviteClientForm').reset();
-    }
-
-    function updatePermissions() {
-      console.log('Permissions updated');
-      // Save permissions logic will be added here
-    }
-
     // Close modal when clicking outside
     window.addEventListener('click', function(event) {
       if (event.target.classList.contains('modal')) {
@@ -657,173 +614,6 @@
     });
 
     updateNavLinks();
-  </script>
-
-  <script type="module">
-    import { db, auth } from '../js/firebase-config.js';
-    import { doc, getDoc, collection, query, where, getDocs, addDoc, Timestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-
-    let currentProjectId = null;
-    let currentPermissions = {};
-
-    // Load client permissions
-    async function loadClientPermissions() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const projectId = urlParams.get('id');
-      
-      if (!projectId) {
-        console.error('❌ Project ID not found');
-        window.location.href = '../projeler.html';
-        return;
-      }
-
-      currentProjectId = projectId;
-
-      try {
-        // Get project details
-        const projectDoc = await getDoc(doc(db, 'projects', projectId));
-        if (!projectDoc.exists()) {
-          alert('❌ Proje bulunamadı');
-          window.location.href = '../projeler.html';
-          return;
-        }
-
-        const project = { id: projectDoc.id, ...projectDoc.data() };
-        
-        document.getElementById('projectName').textContent = project.name || 'Proje';
-        document.getElementById('projectNameBreadcrumb').textContent = project.name || 'Proje';
-
-        // Load default permissions
-        currentPermissions = project.clientPermissions || {
-          view_summary: true,
-          view_daily: true,
-          view_boq: true,
-          view_payments: true,
-          approve_payments: false,
-          view_budget: false,
-          view_expenses: false,
-          view_stock: true,
-          view_stock_details: false
-        };
-
-        // Set checkboxes
-        Object.keys(currentPermissions).forEach(key => {
-          const checkbox = document.getElementById(`perm_${key}`);
-          if (checkbox) {
-            checkbox.checked = currentPermissions[key];
-          }
-        });
-
-        // Load client users (from users collection with role=client and this project)
-        const usersQuery = query(
-          collection(db, 'users'),
-          where('role', '==', 'client'),
-          where('projectIds', 'array-contains', projectId)
-        );
-        const usersSnap = await getDocs(usersQuery);
-        
-        renderClientsList(usersSnap);
-
-        console.log('✅ Client permissions loaded');
-
-      } catch (error) {
-        console.error('❌ Error loading client permissions:', error);
-        alert('Müşteri yetkileri yüklenirken hata: ' + error.message);
-      }
-    }
-
-    function renderClientsList(usersSnap) {
-      const container = document.getElementById('clientsList');
-      
-      if (usersSnap.empty) {
-        container.innerHTML = `
-          <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">👤</div>
-            <p style="margin: 0; font-size: 1.1rem;">Henüz müşteri kullanıcısı eklenmemiş</p>
-            <p style="margin: 0.5rem 0 0 0;">Müşteri davet ederek başlayın</p>
-          </div>
-        `;
-        return;
-      }
-
-      let html = '';
-      usersSnap.forEach(docSnap => {
-        const user = { id: docSnap.id, ...docSnap.data() };
-        const initials = (user.name || 'U').substring(0, 2).toUpperCase();
-        
-        const statusClass = user.status === 'active' ? 'status-active' : 
-                           user.status === 'pending' ? 'status-pending' : 'status-inactive';
-        const statusText = user.status === 'active' ? '✅ Aktif' : 
-                          user.status === 'pending' ? '⏳ Bekliyor' : '❌ Pasif';
-
-        html += `
-          <div class="client-item">
-            <div class="client-avatar">${initials}</div>
-            <div class="client-info">
-              <div class="client-name">${user.name || 'İsimsiz Kullanıcı'}</div>
-              <div class="client-email">${user.email || '-'}</div>
-              ${user.company ? `<div class="client-email">${user.company}</div>` : ''}
-            </div>
-            <div class="client-status ${statusClass}">${statusText}</div>
-            <div>
-              <button class="btn btn-secondary" style="padding: 0.5rem 1rem;" onclick="editClientPermissions('${user.id}')">
-                ⚙️ Yetkilendir
-              </button>
-            </div>
-          </div>
-        `;
-      });
-
-      container.innerHTML = html;
-    }
-
-    async function handleInviteClient(event) {
-      event.preventDefault();
-
-      const name = document.getElementById('clientName').value;
-      const email = document.getElementById('clientEmail').value;
-      const phone = document.getElementById('clientPhone').value;
-      const company = document.getElementById('clientCompany').value;
-      const message = document.getElementById('inviteMessage').value;
-
-      try {
-        const user = auth.currentUser;
-
-        // Create invitation record
-        await addDoc(collection(db, 'client_invitations'), {
-          projectId: currentProjectId,
-          name: name,
-          email: email,
-          phone: phone,
-          company: company,
-          message: message,
-          status: 'pending',
-          createdAt: Timestamp.now(),
-          createdBy: user.uid
-        });
-
-        alert('✅ Davet başarıyla gönderildi!\n\nMüşteriye e-posta gönderildi.');
-        closeInviteClientModal();
-        loadClientPermissions();
-
-      } catch (error) {
-        console.error('❌ Error inviting client:', error);
-        alert('Davet gönderilirken hata: ' + error.message);
-      }
-    }
-
-    window.editClientPermissions = function(userId) {
-      alert('Müşteri bazlı yetkilendirme özelliği yakında eklenecek');
-    };
-
-    // Export functions
-    window.loadClientPermissions = loadClientPermissions;
-    window.handleInviteClient = handleInviteClient;
-
-    // Load on page ready
-    setTimeout(() => {
-      loadClientPermissions();
-    }, 200);
   </script>
 </body>
 </html>

@@ -50,29 +50,27 @@ async function loadProjects() {
       q = query(projectsRef);
       console.log('🔑 Super admin: Tüm projeler yükleniyor');
     } 
-    // Clients can only see authorized projects
+    // Clients can only see authorized projects (via project_permissions subcollection)
     else if (userRole === 'client') {
-      const authorizedProjects = userData.authorizedProjects || [];
-      console.log('🏢 Client: Yetkili projeler yükleniyor:', authorizedProjects.length);
+      console.log('👤 Client: Yetkili projeler yükleniyor...');
       
-      if (authorizedProjects.length === 0) {
-        projects = [];
-        renderProjectsList();
-        console.log('⚠️ Müşteriye henüz proje yetkisi verilmemiş');
-        return;
-      }
+      // Get all projects first
+      const allProjectsSnapshot = await getDocs(collection(db, 'projects'));
       
-      // Load authorized projects one by one
-      // Note: Firestore doesn't support 'in' with empty arrays, so we handle manually
       projects = [];
-      for (const projectId of authorizedProjects) {
-        try {
-          const projectDoc = await getDoc(doc(db, 'projects', projectId));
-          if (projectDoc.exists()) {
-            projects.push({ id: projectDoc.id, ...projectDoc.data() });
-          }
-        } catch (err) {
-          console.warn(`⚠️ Could not load project ${projectId}:`, err.message);
+      
+      // Check each project for permissions
+      for (const projectDoc of allProjectsSnapshot.docs) {
+        const projectId = projectDoc.id;
+        
+        // Check if user has permission to this project
+        const permissionsRef = collection(db, `projects/${projectId}/project_permissions`);
+        const permQuery = query(permissionsRef, where('userId', '==', user.uid));
+        const permSnapshot = await getDocs(permQuery);
+        
+        if (!permSnapshot.empty) {
+          // User has access to this project
+          projects.push({ id: projectDoc.id, ...projectDoc.data() });
         }
       }
       
@@ -83,9 +81,14 @@ async function loadProjects() {
         return dateB - dateA;
       });
       
-      filteredProjects = [...projects]; // Set filtered to avoid duplication
+      filteredProjects = [...projects];
       renderProjectsList();
       console.log(`✅ ${projects.length} yetkili proje yüklendi`);
+      
+      if (projects.length === 0) {
+        console.log('⚠️ Müşteriye henüz proje yetkisi verilmemiş');
+      }
+      
       initializeProjectFilters();
       isLoadingProjects = false;
       return;
