@@ -332,6 +332,17 @@ onAuthStateChanged(auth, async (user) => {
         console.log('📊 Loading dashboard overview for anasayfa.html');
         window.loadDashboardOverview();
       });
+      
+      // Update Projects menu text and hide unauthorized menus for clients
+      if (window.userRole === 'client') {
+        setTimeout(() => {
+          if (typeof window.updateProjectsMenuForClient === 'function') {
+            window.updateProjectsMenuForClient();
+          }
+          // Hide admin-only menu items
+          hideAdminMenusForClient();
+        }, 500);
+      }
     }
     
     if (isProjelerPage) {
@@ -451,8 +462,31 @@ function showAlert(message, type = 'info') {
   }, 5000);
 }
 
+/**
+ * Hide admin-only menu items for client users
+ */
+function hideAdminMenusForClient() {
+  if (window.userRole !== 'client') return;
+  
+  console.log('🔒 Client için admin menüleri gizleniyor...');
+  
+  // Find and hide Şirketler and Kullanıcılar menu items
+  const menuItems = document.querySelectorAll('.sidebar-nav .nav-item');
+  
+  menuItems.forEach(item => {
+    const text = item.textContent.trim();
+    if (text.includes('Şirketler') || text.includes('Kullanıcılar') || text.includes('Çalışanlar')) {
+      item.style.display = 'none';
+      console.log(`🚫 Gizlendi: ${text}`);
+    }
+  });
+  
+  console.log('✅ Admin menüleri gizlendi');
+}
+
 // Global window exports
 window.handleLogin = handleLogin;
 window.handleLogout = handleLogout;
 window.showAlert = showAlert;
 window.loadUserData = loadUserData;
+window.hideAdminMenusForClient = hideAdminMenusForClient;

@@ -186,8 +186,8 @@
               <h2 id="projectName" style="margin: 0; font-size: 1.5rem;">Yükleniyor...</h2>
               <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">Hakediş tahsilat ve ödeme yönetimi</p>
             </div>
-            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-              <button class="btn btn-primary" onclick="openRecordPaymentModal()" style="background: white; color: var(--brand-red);">
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;" id="odemeActionButtons">
+              <button class="btn btn-primary" onclick="openRecordPaymentModal()" style="background: white; color: var(--brand-red);" id="btnRecordPayment">
                 ➕ Ödeme Kaydet
               </button>
               <button class="btn" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white; padding: 0.5rem 1rem;" onclick="window.location.href='../projeler.html'">
@@ -427,6 +427,7 @@
   <script type="module" src="../js/auth.js?v=6"></script>
   <script type="module" src="../js/projects.js?v=6"></script>
   <script type="module" src="../js/app.js?v=6"></script>
+  <script src="../js/read-only-mode.js?v=1"></script>
 
   <script>
     document.getElementById('menuToggle')?.addEventListener('click', function() {

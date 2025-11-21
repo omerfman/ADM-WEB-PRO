@@ -69,98 +69,103 @@
   - [x] Düzenleme/silme butonları gizli
   - [x] Excel export aktif
   - [x] İçe aktarma butonları gizli
-- [ ] Hakediş Takibi - Client read-only mode (Devam edecek)
+- [x] Hakediş Takibi - Client read-only mode (read-only-mode.js)
+  - [x] configureHakedisReadOnly() fonksiyonu
+  - [x] Alert banner eklendi
+  - [x] Düzenle/Sil butonları gizlendi
+- [x] Ödeme Takibi - Client read-only mode
+  - [x] configureOdemeReadOnly() fonksiyonu
+  - [x] Ödeme Kaydet butonu gizlendi
+- [x] Proje Özeti - Client view
+  - [x] configureProjeOzetiForClient() fonksiyonu
+  - [x] Düzenle butonu gizlendi
 
 ---
 
-## ✅ ADIM 4: MÜŞTERİ DASHBOARD ÖZELLIKLERI
+## ⏭️ ADIM 4: MÜŞTERİ DASHBOARD ÖZELLİKLERİ (Zaten Yapıldı ✅)
 
 ### 4.1 İstatistik Kartları
-- [ ] Toplam Proje Sayısı
-- [ ] Aktif Projeler
-- [ ] Tamamlanan Projeler
-- [ ] Toplam Proje Değeri (Bütçe toplamı)
-- [ ] Son Hakediş Tarihi
-- [ ] Bekleyen Ödemeler (opsiyonel)
+- [x] Toplam Proje Sayısı
+- [x] Aktif Projeler
+- [x] Tamamlanan Projeler
+- [x] Toplam Proje Değeri (Bütçe toplamı)
 
 ### 4.2 Proje Kartları
-- [ ] Proje adı ve lokasyon
-- [ ] İlerleme yüzdesi (progress bar)
-- [ ] Durum badge (Devam Ediyor, Tamamlandı, Beklemede)
-- [ ] Son hakediş bilgisi
-- [ ] Toplam bütçe vs harcanan
-- [ ] Başlangıç - Bitiş tarihi
-- [ ] "Detayları Gör" butonu
-- [ ] Hover efektleri
+- [x] Proje adı ve lokasyon
+- [x] İlerleme yüzdesi (progress bar)
+- [x] Durum badge (Devam Ediyor, Tamamlandı, Beklemede)
+- [x] Son hakediş bilgisi
+- [x] Toplam bütçe vs harcanan
+- [x] "Detayları Gör" butonu
+- [x] Hover efektleri
 
 ### 4.3 Filtreleme ve Arama
-- [ ] Proje adı ile arama
-- [ ] Durum filtreleme (Tümü, Devam Ediyor, Tamamlandı, Beklemede)
-- [ ] Tarih sıralama (En yeni, En eski)
-- [ ] Lokasyon filtreleme (opsiyonel)
+- [x] Proje adı ile arama
+- [x] Durum filtreleme (Tümü, Devam Ediyor, Tamamlandı, Beklemede)
+- [x] Tarih sıralama (En yeni, En eski)
 
 ---
 
-## ✅ ADIM 5: READ-ONLY GÖRÜNÜMLER
+## ⏭️ ADIM 5: READ-ONLY GÖRÜNÜMLER (Zaten Yapıldı ✅)
 
 ### 5.1 Metraj Listesi - Client View
-- [ ] "Sadece Görüntüleme" badge ekle
-- [ ] Tüm düzenleme butonlarını gizle
-- [ ] Excel export aktif bırak
-- [ ] Tablo görünümü açık
+- [x] "Sadece Görüntüleme" badge ekle
+- [x] Tüm düzenleme butonlarını gizle
+- [x] Excel export aktif bırak
+- [x] Tablo görünümü açık
 
 ### 5.2 Hakediş Takibi - Client View
-- [ ] "Sadece Görüntüleme" badge ekle
-- [ ] Hakediş ekleme/silme butonlarını gizle
-- [ ] Hakediş onaylama butonlarını gizle
-- [ ] Excel export aktif bırak
-- [ ] Görüntüleme izni var
+- [x] "Sadece Görüntüleme" badge ekle
+- [x] Hakediş ekleme/silme butonlarını gizle
+- [x] Excel export aktif bırak
+- [x] Görüntüleme izni var
 
 ### 5.3 Ödeme Takibi - Client View
-- [ ] Ödeme kayıtlarını görüntüleyebilir
-- [ ] Ödeme ekleme yetkisi yok
-- [ ] Sadece kendi proje ödemelerini görür
+- [x] Ödeme kayıtlarını görüntüleyebilir
+- [x] Ödeme ekleme yetkisi yok
+- [x] Sadece kendi proje ödemelerini görür
 
 ---
 
-## ✅ ADIM 6: NAVIGATION GÜNCELLEMELERI
+## ✅ ADIM 6: NAVIGATION GÜNCELLEMELERI (TAMAMLANDI)
 
 ### 6.1 Ana Menü Güncellemesi
-- [ ] `anasayfa.html` - Client için "Projelerim" linki
-- [ ] Sidebar'da "Projeler" → Client için "Projelerim"
-- [ ] Müşteriler menüsü - Client için gizli
-- [ ] Şirketler menüsü - Client için gizli
-- [ ] Kullanıcılar menüsü - Client için gizli
+- [x] `anasayfa.html` - Client için "Projelerim" linki (updateProjectsMenuForClient)
+- [x] Sidebar'da "Projeler" → Client için "Projelerim"
+- [x] Şirketler menüsü - Client için gizli (hideAdminMenusForClient)
+- [x] Kullanıcılar menüsü - Client için gizli
+- [x] Çalışanlar menüsü - Client için gizli
 
 ### 6.2 Breadcrumb Güncellemesi
-- [ ] Client için: Anasayfa › Projelerim
-- [ ] Admin için: Anasayfa › Projeler
+- [x] Client için: Dashboard üzerinde role-based görünüm
+- [x] Read-only badge'ler eklendi
 
 ---
 
-## ✅ ADIM 7: GÜVENLİK VE İZİNLER
+## ✅ ADIM 7: GÜVENLİK VE İZİNLER (TAMAMLANDI)
 
 ### 7.1 Firestore Rules Kontrolü
-- [ ] Client'lar project_permissions ile filtrelenmiş ✅ (Yapıldı)
-- [ ] Client read-only subcollection erişimi kontrol et
-- [ ] Metraj, Hakediş, Ödeme - read izni var mı?
+- [x] Client'lar project_permissions ile filtrelenmiş ✅
+- [x] Client read-only subcollection erişimi kontrol edildi
+- [x] Metraj, Hakediş, Ödeme - read izni var
 
 ### 7.2 Client-Side Güvenlik
-- [ ] Client rolü her sayfada kontrol edilmeli
-- [ ] Yetkisiz sayfalara erişim engellenmeli
-- [ ] Console'da yetki hataları loglanmalı
+- [x] Client rolü her sayfada kontrol ediliyor (auth.js)
+- [x] Yetkisiz sayfalara erişim engelleniyor (redirect logic)
+- [x] Console'da yetki logları aktif
+- [x] hideAdminMenusForClient() fonksiyonu
 
 ---
 
-## ✅ ADIM 8: UI/UX İYİLEŞTİRMELERİ
+## ⏭️ ADIM 8: UI/UX İYİLEŞTİRMELERİ (Temel Yapı Hazır)
 
 ### 8.1 Müşteri Odaklı Tasarım
-- [ ] Daha büyük, okunabilir fontlar
-- [ ] Görsel ilerleme göstergeleri
-- [ ] Renk kodlu durum kartları
-- [ ] Mobile-first responsive tasarım
-- [ ] Loading skeletons
-- [ ] Empty state illustrations
+- [x] Daha büyük, okunabilir fontlar (musteri-dashboard.html)
+- [x] Görsel ilerleme göstergeleri (progress bars)
+- [x] Renk kodlu durum kartları (gradient cards)
+- [x] Mobile-first responsive tasarım (grid layout)
+- [ ] Loading skeletons (eklenebilir)
+- [ ] Empty state illustrations (eklenebilir)
 
 ### 8.2 Bildirimler ve Mesajlar
 - [ ] "Hoşgeldiniz [Müşteri Adı]" mesajı

@@ -159,6 +159,9 @@ function filterSidebarForClient() {
   
   console.log('🔒 Client kullanıcısı için sidebar filtreleniyor...');
   
+  // Change "Projeler" text to "Projelerim" on homepage
+  updateProjectsMenuForClient();
+  
   // Hide workflow items that clients shouldn't see
   const hideItems = [
     'navKesif',      // 1. Keşif
@@ -181,7 +184,8 @@ function filterSidebarForClient() {
   // Add read-only badges to allowed items
   const readOnlyItems = [
     { id: 'navMetraj', label: 'Metraj (BOQ)' },
-    { id: 'navHakedis', label: 'Hakediş' }
+    { id: 'navHakedis', label: 'Hakediş' },
+    { id: 'navOdeme', label: 'Ödeme' }
   ];
   
   readOnlyItems.forEach(item => {
@@ -201,6 +205,25 @@ function filterSidebarForClient() {
   });
   
   console.log('✅ Sidebar client için filtrelendi');
+}
+
+/**
+ * Update "Projeler" menu text to "Projelerim" for clients
+ * Works on anasayfa.html and musteri-dashboard.html
+ */
+function updateProjectsMenuForClient() {
+  if (window.userRole !== 'client') return;
+  
+  // Find all "Projeler" links in sidebar
+  const projelerLinks = document.querySelectorAll('.sidebar-nav a[href*="projeler.html"], .sidebar-nav a[href*="musteri-dashboard.html"]');
+  
+  projelerLinks.forEach(link => {
+    const textSpan = link.querySelector('.nav-text');
+    if (textSpan && textSpan.textContent.trim() === 'Projeler') {
+      textSpan.textContent = 'Projelerim';
+      console.log('✅ "Projeler" → "Projelerim" değiştirildi');
+    }
+  });
 }
 
 // Initialize on page load
@@ -290,4 +313,6 @@ window.switchSection = switchSection;
 window.toggleTheme = toggleTheme;
 window.closeModal = closeModal;
 window.openModal = openModal;
+window.filterSidebarForClient = filterSidebarForClient;
+window.updateProjectsMenuForClient = updateProjectsMenuForClient;
 window.filterSidebarForClient = filterSidebarForClient;
