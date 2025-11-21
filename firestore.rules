@@ -75,9 +75,12 @@ service cloud.firestore {
         userId == request.auth.uid
       );
       
-      // Create: Only admins can create users (including clients)
-      allow create: if isAdminRole() && 
-                       request.resource.data.email != null;
+      // Create: Admins can create users
+      // Also allow user to create their own profile document (for initial setup after Firebase Auth creation)
+      allow create: if isSignedIn() && (
+        isAdminRole() ||
+        (userId == request.auth.uid && request.resource.data.email != null)
+      );
       
       // Update: Admins can update all users, clients can update only their own profile (limited fields)
       allow update: if isSignedIn() && (

@@ -71,6 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Global window exports for non-module scripts
+window.app = app;
 window.auth = auth;
 window.db = db;
 window.verifyFirebaseConnection = verifyFirebaseConnection;
@@ -91,6 +92,7 @@ window.firestore = {
 
 // ES Module exports (for import statements)
 export { 
+  app,
   firebaseConfig,
   auth, 
   db, 

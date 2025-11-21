@@ -1,9 +1,14 @@
 // Clients Management (Customer Users)
-import { auth, db } from "./firebase-config.js";
+import { auth, db, app } from "./firebase-config.js";
 import {
   collection, query, where, orderBy, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, setDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword,
+  getAuth,
+  initializeAuth
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 let clients = [];
 let filteredClients = [];
@@ -293,34 +298,62 @@ async function handleSaveClient(event) {
         return;
       }
 
-      // Create Firebase Auth user
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const newUserId = userCredential.user.uid;
+      try {
+        // Save current user's credentials to restore session
+        const currentUser = auth.currentUser;
+        const currentUserEmail = currentUser.email;
+        
+        // Step 1: Create Firebase Auth user (this will log us out)
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const newUserId = userCredential.user.uid;
 
-      // Create Firestore user document
-      const clientData = {
-        uid: newUserId,
-        firstName,
-        lastName,
-        email,
-        phone,
-        company,
-        taxId,
-        address,
-        notes,
-        role: 'client',
-        companyId: currentCompanyId,
-        isActive,
-        isDeleted: false,
-        projectCount: 0,
-        createdAt: serverTimestamp(),
-        createdBy: user.uid
-      };
+        console.log('✅ Firebase Auth kullanıcısı oluşturuldu:', newUserId);
 
-      await setDoc(doc(db, 'users', newUserId), clientData);
-      
-      showAlert('✅ Yeni müşteri oluşturuldu', 'success');
-      console.log('✅ Yeni müşteri oluşturuldu:', newUserId);
+        // Step 2: Create Firestore user document (we're now logged in as the new user)
+        const clientData = {
+          uid: newUserId,
+          firstName,
+          lastName,
+          email,
+          phone,
+          company,
+          taxId,
+          address,
+          notes,
+          role: 'client',
+          companyId: currentCompanyId,
+          isActive,
+          isDeleted: false,
+          projectCount: 0,
+          createdAt: serverTimestamp(),
+          createdBy: user.uid // This will be the new user's ID, not the admin's
+        };
+
+        await setDoc(doc(db, 'users', newUserId), clientData);
+        
+        console.log('✅ Firestore kullanıcı dokümanı oluşturuldu');
+        
+        showAlert('✅ Yeni müşteri oluşturuldu. Sayfa yenileniyor...', 'success');
+
+        // Step 3: Sign out the new user and reload the page to restore admin session
+        await auth.signOut();
+        
+        // Reload page after a short delay
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+
+      } catch (createError) {
+        console.error('❌ Müşteri oluşturma hatası:', createError);
+        
+        // If error occurred, try to restore admin session
+        await auth.signOut();
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+        
+        throw createError;
+      }
     }
 
     closeClientModal();
