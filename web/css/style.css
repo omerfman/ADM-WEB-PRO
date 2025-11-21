@@ -75,6 +75,26 @@ body {
   animation: pageLoadFadeIn 0.3s ease-in;
 }
 
+/* Auth Loading State - Hide content until auth is verified */
+body.auth-loading .dashboard-layout {
+  opacity: 0;
+  visibility: hidden;
+}
+
+body.auth-loading::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-primary);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 @keyframes pageLoadFadeIn {
   from {
     opacity: 0;
