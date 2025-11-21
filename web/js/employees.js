@@ -262,6 +262,11 @@ function renderEmployeesList(employees) {
   const statusFilter = document.getElementById('employeeStatusFilter')?.value || '';
 
   let filteredEmployees = employees.filter(emp => {
+    // Filter out clients - they should only appear in "Müşteriler" section
+    if (emp.role === 'client') {
+      return false;
+    }
+    
     const matchesSearch = !searchTerm || 
       (emp.fullName && emp.fullName.toLowerCase().includes(searchTerm)) ||
       (emp.email && emp.email.toLowerCase().includes(searchTerm));

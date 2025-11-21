@@ -181,8 +181,11 @@ async function loadUsers() {
   }
 }
 
-// Render users list in table
-function renderUsersList(users) {
+// Store original users for filtering
+let allUsers = [];
+
+// Render users list in modern table format
+async function renderUsersList(users) {
   const usersSection = document.getElementById('usersSection');
   if (!usersSection) return;
 
@@ -198,12 +201,149 @@ function renderUsersList(users) {
     console.warn('⚠️ users list container not found');
     return;
   }
+  
+  // Calculate project count for each client user
+  const usersWithProjectCount = await Promise.all(users.map(async (user) => {
+    if (user.role === 'client') {
+      try {
+        // Count projects where user has permissions
+        const projectsRef = collection(db, 'projects');
+        const projectsSnapshot = await getDocs(projectsRef);
+        
+        let projectCount = 0;
+        
+        for (const projectDoc of projectsSnapshot.docs) {
+          const permissionsRef = collection(db, `projects/${projectDoc.id}/project_permissions`);
+          const permQuery = query(permissionsRef, where('userId', '==', user.id));
+          const permSnapshot = await getDocs(permQuery);
+          
+          if (!permSnapshot.empty) {
+            projectCount++;
+          }
+        }
+        
+        return { ...user, projectCount };
+      } catch (error) {
+        console.error('Error counting projects for user:', user.id, error);
+        return { ...user, projectCount: 0 };
+      }
+    }
+    return user;
+  }));
 
-  if (users.length === 0) {
-    usersList.innerHTML = '<p style="text-align: center; color: #999;">Henüz kullanıcı yok</p>';
+  // Store users for filtering
+  allUsers = usersWithProjectCount;
+
+  if (usersWithProjectCount.length === 0) {
+    usersList.innerHTML = `
+      <div class="empty-state" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">👥</div>
+        <p style="font-size: 1.1rem; margin-bottom: 1rem;">Henüz müşteri kullanıcısı yok</p>
+        <button class="btn btn-primary" onclick="openCreateUserModal()">➕ İlk Müşteriyi Ekle</button>
+      </div>
+    `;
     return;
   }
   
+  // Modern table header with filters and search
+  let html = `
+    <div class="users-header-actions" style="
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    ">
+      <div class="users-info">
+        <h3 style="margin: 0; font-size: 1.25rem; color: var(--text-primary);">👥 Müşteri Listesi</h3>
+        <p style="margin: 0.25rem 0 0 0; color: var(--text-secondary); font-size: 0.9rem;">${usersWithProjectCount.length} Müşteri</p>
+      </div>
+      <button class="btn btn-primary" onclick="openCreateUserModal()">
+        ➕ Yeni Müşteri Ekle
+      </button>
+    </div>
+
+    <!-- Filters -->
+    <div class="users-filters" style="
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: var(--card-bg);
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    ">
+      <input 
+        type="text" 
+        id="userSearchInput" 
+        placeholder="🔍 İsim, email, firma veya telefon ile ara..." 
+        style="
+          padding: 0.75rem;
+          border: 1px solid var(--border-color);
+          border-radius: 6px;
+          background: var(--input-bg);
+          color: var(--text-primary);
+          font-size: 0.9rem;
+        "
+      >
+      <select id="userStatusFilter" style="
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--input-bg);
+        color: var(--text-primary);
+        font-size: 0.9rem;
+      ">
+        <option value="">Tüm Durumlar</option>
+        <option value="active">Aktif</option>
+        <option value="inactive">Pasif</option>
+      </select>
+      <select id="userSortFilter" style="
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--input-bg);
+        color: var(--text-primary);
+        font-size: 0.9rem;
+      ">
+        <option value="name-asc">İsim (A-Z)</option>
+        <option value="name-desc">İsim (Z-A)</option>
+        <option value="projects-desc">Proje Sayısı (Çok-Az)</option>
+        <option value="projects-asc">Proje Sayısı (Az-Çok)</option>
+        <option value="date-desc">Yeni Ekleneler</option>
+        <option value="date-asc">Eski Ekleneler</option>
+      </select>
+      <button class="btn btn-secondary" onclick="clearUserFilters()" style="padding: 0.75rem 1rem;">🔄 Temizle</button>
+    </div>
+
+    <div class="table-responsive" style="
+      background: var(--card-bg);
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+    ">
+      <table class="users-table" style="
+        width: 100%;
+        border-collapse: collapse;
+      ">
+        <thead>
+          <tr style="
+            background: var(--bg-tertiary);
+            border-bottom: 2px solid var(--border-color);
+          ">
+            <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-primary);">👤 Müşteri Bilgileri</th>
+            <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-primary);">🏢 Firma</th>
+            <th style="padding: 1rem; text-align: center; font-weight: 600; color: var(--text-primary);">📞 İletişim</th>
+            <th style="padding: 1rem; text-align: center; font-weight: 600; color: var(--text-primary);">📁 Proje Sayısı</th>
+            <th style="padding: 1rem; text-align: center; font-weight: 600; color: var(--text-primary);">✅ Durum</th>
+            <th style="padding: 1rem; text-align: center; font-weight: 600; color: var(--text-primary);">⚙️ İşlemler</th>
+          </tr>
+        </thead>
+        <tbody id="usersTableBody">
+  `;
+
   // Role display mapping
   const roleIcons = {
     'super_admin': '👑',
@@ -219,85 +359,414 @@ function renderUsersList(users) {
     'client': 'Müşteri'
   };
 
-  usersList.innerHTML = users.map(user => {
+  usersWithProjectCount.forEach(user => {
     const roleIcon = roleIcons[user.role] || '👤';
     const roleLabel = roleLabels[user.role] || user.role;
     const isClient = user.role === 'client';
     const clientInfo = user.clientInfo || {};
+    const projectCount = user.projectCount || 0;
+    const status = user.status || 'active';
+    const statusColor = status === 'active' ? '#4CAF50' : '#999';
+    const statusText = status === 'active' ? 'Aktif' : 'Pasif';
     
-    return `
-    <div class="user-card" style="
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 10px;
-    ">
-      <div style="display: flex; justify-content: space-between; align-items: start;">
-        <div style="flex: 1;">
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-            <span style="font-size: 1.2rem;">${roleIcon}</span>
-            <strong style="font-size: 1rem;">${user.fullName || user.email}</strong>
-          </div>
-          <div style="font-size: 0.85rem; color: var(--text-secondary); margin-left: 30px;">
-            ${user.email}
-          </div>
-          <div style="font-size: 0.8rem; color: var(--text-secondary); margin-left: 30px; margin-top: 4px;">
-            <span style="background: ${isClient ? '#FF9800' : '#2196F3'}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem;">
-              ${roleLabel}
-            </span>
-            ${user.phone ? `• <span>📞 ${user.phone}</span>` : ''}
-          </div>
-          ${isClient && clientInfo.companyName ? `
-            <div style="margin-top: 8px; padding: 8px; background: var(--input-bg); border-radius: 4px; font-size: 0.85rem;">
-              <div><strong>🏢 Firma:</strong> ${clientInfo.companyName}</div>
-              ${clientInfo.contactPerson ? `<div><strong>👤 Yetkili:</strong> ${clientInfo.contactPerson}</div>` : ''}
-              ${clientInfo.taxId ? `<div><strong>🔖 Vergi No:</strong> ${clientInfo.taxId}</div>` : ''}
-              ${(user.authorizedProjects && user.authorizedProjects.length > 0) ? 
-                `<div style="margin-top: 4px;"><strong>📁 Yetkili Proje:</strong> ${user.authorizedProjects.length} proje</div>` : 
-                '<div style="margin-top: 4px; color: #999;">⚠️ Henüz proje yetkisi yok</div>'
-              }
+    html += `
+      <tr id="user-row-${user.id}" data-user-id="${user.id}" data-status="${status}" data-projects="${projectCount}" data-created="${user.createdAt?.toMillis() || Date.now()}" style="
+        border-bottom: 1px solid var(--border-color);
+        transition: background-color 0.2s;
+      " onmouseover="this.style.backgroundColor='var(--hover-bg)'" onmouseout="this.style.backgroundColor=''">
+        <td data-label="👤 Müşteri Bilgileri" style="padding: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="
+              width: 40px;
+              height: 40px;
+              border-radius: 50%;
+              background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-red-dark) 100%);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 1.25rem;
+              flex-shrink: 0;
+            ">${roleIcon}</div>
+            <div>
+              <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">
+                ${user.fullName || user.email}
+              </div>
+              <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                📧 ${user.email}
+              </div>
             </div>
-          ` : ''}
-        </div>
-        <div style="display: flex; gap: 5px;">
-          ${isClient ? `
-            <button onclick="manageClientProjects('${user.id}', '${user.fullName || user.email}')" style="
-              background: #FF9800;
-              color: white;
-              border: none;
-              padding: 5px 10px;
-              border-radius: 4px;
-              cursor: pointer;
-              font-size: 0.85rem;
-            ">📁 Projeler</button>
-          ` : ''}
-          <button onclick="editUser('${user.id}')" style="
-            background: #2196F3;
+          </div>
+        </td>
+        <td data-label="🏢 Firma" style="padding: 1rem;">
+          ${clientInfo.companyName ? `
+            <div>
+              <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">
+                ${clientInfo.companyName}
+              </div>
+              ${clientInfo.taxId ? `
+                <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                  🔖 ${clientInfo.taxId}
+                </div>
+              ` : ''}
+              ${clientInfo.contactPerson ? `
+                <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                  👤 ${clientInfo.contactPerson}
+                </div>
+              ` : ''}
+            </div>
+          ` : '<span style="color: var(--text-secondary);">-</span>'}
+        </td>
+        <td data-label="📞 İletişim" style="padding: 1rem; text-align: center;">
+          ${user.phone ? `
+            <div style="font-size: 0.9rem; color: var(--text-primary);">
+              📞 ${user.phone}
+            </div>
+          ` : '<span style="color: var(--text-secondary);">-</span>'}
+        </td>
+        <td data-label="📁 Proje Sayısı" style="padding: 1rem; text-align: center;">
+          <div style="
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: ${projectCount > 0 ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'var(--bg-tertiary)'};
+            color: ${projectCount > 0 ? 'white' : 'var(--text-secondary)'};
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.95rem;
+          ">
+            <span style="font-size: 1.2rem;">📁</span>
+            <span>${projectCount}</span>
+          </div>
+        </td>
+        <td data-label="✅ Durum" style="padding: 1rem; text-align: center;">
+          <span style="
+            display: inline-block;
+            padding: 0.4rem 0.9rem;
+            background: ${statusColor};
             color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
+            border-radius: 15px;
             font-size: 0.85rem;
-          ">Düzenle</button>
-          <button onclick="deleteUser('${user.id}')" style="
-            background: #f44336;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.85rem;
-          ">Sil</button>
-        </div>
-      </div>
+            font-weight: 600;
+          ">
+            ${statusText}
+          </span>
+        </td>
+        <td data-label="⚙️ İşlemler" style="padding: 1rem;">
+          <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+            <button onclick="manageClientProjects('${user.id}', '${(user.fullName || user.email).replace(/'/g, "\\'")}')"
+              class="btn-icon"
+              style="
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border: none;
+                padding: 0.5rem 0.75rem;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 0.85rem;
+                display: flex;
+                align-items: center;
+                gap: 0.25rem;
+                transition: transform 0.2s;
+              "
+              onmouseover="this.style.transform='translateY(-2px)'"
+              onmouseout="this.style.transform='translateY(0)'"
+              title="Proje Yetkileri"
+            >📁 Projeler</button>
+            <button onclick="editUser('${user.id}')"
+              class="btn-icon"
+              style="
+                background: #2196F3;
+                color: white;
+                border: none;
+                padding: 0.5rem 0.75rem;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 0.85rem;
+                transition: transform 0.2s;
+              "
+              onmouseover="this.style.transform='translateY(-2px)'"
+              onmouseout="this.style.transform='translateY(0)'"
+              title="Düzenle"
+            >✏️</button>
+            <button onclick="deleteUser('${user.id}')"
+              class="btn-icon"
+              style="
+                background: #f44336;
+                color: white;
+                border: none;
+                padding: 0.5rem 0.75rem;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 0.85rem;
+                transition: transform 0.2s;
+              "
+              onmouseover="this.style.transform='translateY(-2px)'"
+              onmouseout="this.style.transform='translateY(0)'"
+              title="Sil"
+            >🗑️</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+
+  html += `
+        </tbody>
+      </table>
     </div>
   `;
-  }).join('');
+
+  usersList.innerHTML = html;
+  
+  // Attach filter event listeners
+  setTimeout(() => {
+    const searchInput = document.getElementById('userSearchInput');
+    const statusFilter = document.getElementById('userStatusFilter');
+    const sortFilter = document.getElementById('userSortFilter');
+    
+    if (searchInput) searchInput.addEventListener('input', applyUserFilters);
+    if (statusFilter) statusFilter.addEventListener('change', applyUserFilters);
+    if (sortFilter) sortFilter.addEventListener('change', applyUserFilters);
+  }, 100);
 }
 
-// Delete user
+// Apply filters to user list
+function applyUserFilters() {
+  const searchTerm = document.getElementById('userSearchInput')?.value.toLowerCase().trim() || '';
+  const statusFilter = document.getElementById('userStatusFilter')?.value || '';
+  const sortFilter = document.getElementById('userSortFilter')?.value || 'name-asc';
+  
+  let filtered = [...allUsers];
+  
+  // Apply search filter
+  if (searchTerm) {
+    filtered = filtered.filter(user => {
+      const searchFields = [
+        user.fullName || '',
+        user.email || '',
+        user.phone || '',
+        user.clientInfo?.companyName || '',
+        user.clientInfo?.contactPerson || '',
+        user.clientInfo?.taxId || ''
+      ].map(f => f.toLowerCase());
+      
+      return searchFields.some(field => field.includes(searchTerm));
+    });
+  }
+  
+  // Apply status filter
+  if (statusFilter) {
+    filtered = filtered.filter(user => (user.status || 'active') === statusFilter);
+  }
+  
+  // Apply sorting
+  filtered.sort((a, b) => {
+    switch (sortFilter) {
+      case 'name-asc':
+        return (a.fullName || a.email).localeCompare(b.fullName || b.email, 'tr');
+      case 'name-desc':
+        return (b.fullName || b.email).localeCompare(a.fullName || a.email, 'tr');
+      case 'projects-desc':
+        return (b.projectCount || 0) - (a.projectCount || 0);
+      case 'projects-asc':
+        return (a.projectCount || 0) - (b.projectCount || 0);
+      case 'date-desc':
+        return (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0);
+      case 'date-asc':
+        return (a.createdAt?.toMillis() || 0) - (b.createdAt?.toMillis() || 0);
+      default:
+        return 0;
+    }
+  });
+  
+  // Update table body only
+  updateUsersTableBody(filtered);
+}
+
+// Update only table body (keep headers and filters)
+function updateUsersTableBody(users) {
+  const tbody = document.getElementById('usersTableBody');
+  if (!tbody) return;
+  
+  if (users.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="padding: 3rem; text-align: center; color: var(--text-secondary);">
+          <div style="font-size: 2.5rem; margin-bottom: 1rem;">🔍</div>
+          <p style="font-size: 1.1rem;">Filtrelere uygun müşteri bulunamadı</p>
+          <button class="btn btn-secondary" onclick="clearUserFilters()" style="margin-top: 1rem;">🔄 Filtreleri Temizle</button>
+        </td>
+      </tr>
+    `;
+    return;
+  }
+  
+  let html = '';
+  
+  users.forEach(user => {
+    const roleIcon = '🏢';
+    const clientInfo = user.clientInfo || {};
+    const projectCount = user.projectCount || 0;
+    const status = user.status || 'active';
+    const statusColor = status === 'active' ? '#4CAF50' : '#999';
+    const statusText = status === 'active' ? 'Aktif' : 'Pasif';
+    
+    html += `
+      <tr id="user-row-${user.id}" data-user-id="${user.id}" style="
+        border-bottom: 1px solid var(--border-color);
+        transition: background-color 0.2s;
+      " onmouseover="this.style.backgroundColor='var(--hover-bg)'" onmouseout="this.style.backgroundColor=''">
+        <td data-label="👤 Müşteri Bilgileri" style="padding: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="
+              width: 40px;
+              height: 40px;
+              border-radius: 50%;
+              background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-red-dark) 100%);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 1.25rem;
+              flex-shrink: 0;
+            ">${roleIcon}</div>
+            <div>
+              <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">
+                ${user.fullName || user.email}
+              </div>
+              <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                📧 ${user.email}
+              </div>
+            </div>
+          </div>
+        </td>
+        <td data-label="🏢 Firma" style="padding: 1rem;">
+          ${clientInfo.companyName ? `
+            <div>
+              <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">
+                ${clientInfo.companyName}
+              </div>
+              ${clientInfo.taxId ? `
+                <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                  🔖 ${clientInfo.taxId}
+                </div>
+              ` : ''}
+              ${clientInfo.contactPerson ? `
+                <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                  👤 ${clientInfo.contactPerson}
+                </div>
+              ` : ''}
+            </div>
+          ` : '<span style="color: var(--text-secondary);">-</span>'}
+        </td>
+        <td data-label="📞 İletişim" style="padding: 1rem; text-align: center;">
+          ${user.phone ? `
+            <div style="font-size: 0.9rem; color: var(--text-primary);">
+              📞 ${user.phone}
+            </div>
+          ` : '<span style="color: var(--text-secondary);">-</span>'}
+        </td>
+        <td data-label="📁 Proje Sayısı" style="padding: 1rem; text-align: center;">
+          <div style="
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: ${projectCount > 0 ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'var(--bg-tertiary)'};
+            color: ${projectCount > 0 ? 'white' : 'var(--text-secondary)'};
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.95rem;
+          ">
+            <span style="font-size: 1.2rem;">📁</span>
+            <span>${projectCount}</span>
+          </div>
+        </td>
+        <td data-label="✅ Durum" style="padding: 1rem; text-align: center;">
+          <span style="
+            display: inline-block;
+            padding: 0.4rem 0.9rem;
+            background: ${statusColor};
+            color: white;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+          ">
+            ${statusText}
+          </span>
+        </td>
+        <td data-label="⚙️ İşlemler" style="padding: 1rem;">
+          <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+            <button onclick="manageClientProjects('${user.id}', '${(user.fullName || user.email).replace(/'/g, "\\'")}')"
+              style="
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border: none;
+                padding: 0.5rem 0.75rem;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 0.85rem;
+                transition: transform 0.2s;
+              "
+              onmouseover="this.style.transform='translateY(-2px)'"
+              onmouseout="this.style.transform='translateY(0)'"
+              title="Proje Yetkileri"
+            >📁 Projeler</button>
+            <button onclick="editUser('${user.id}')"
+              style="
+                background: #2196F3;
+                color: white;
+                border: none;
+                padding: 0.5rem 0.75rem;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 0.85rem;
+                transition: transform 0.2s;
+              "
+              onmouseover="this.style.transform='translateY(-2px)'"
+              onmouseout="this.style.transform='translateY(0)'"
+              title="Düzenle"
+            >✏️</button>
+            <button onclick="deleteUser('${user.id}')"
+              style="
+                background: #f44336;
+                color: white;
+                border: none;
+                padding: 0.5rem 0.75rem;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 0.85rem;
+                transition: transform 0.2s;
+              "
+              onmouseover="this.style.transform='translateY(-2px)'"
+              onmouseout="this.style.transform='translateY(0)'"
+              title="Sil"
+            >🗑️</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+  
+  tbody.innerHTML = html;
+}
+
+// Clear all filters
+function clearUserFilters() {
+  const searchInput = document.getElementById('userSearchInput');
+  const statusFilter = document.getElementById('userStatusFilter');
+  const sortFilter = document.getElementById('userSortFilter');
+  
+  if (searchInput) searchInput.value = '';
+  if (statusFilter) statusFilter.value = '';
+  if (sortFilter) sortFilter.value = 'name-asc';
+  
+  applyUserFilters();
+}
+
+// Export functions to window
+window.applyUserFilters = applyUserFilters;
+window.clearUserFilters = clearUserFilters;// Delete user
 async function deleteUser(userId) {
   if (!confirm('Bu kullanıcıyı silmek istediğinize emin misiniz?')) {
     return;
