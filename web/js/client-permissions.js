@@ -229,12 +229,15 @@ async function toggleClientAccess(clientId, clientEmail, hasAccess) {
       const q = query(permissionsRef, where('userId', '==', clientId));
       const snapshot = await getDocs(q);
       
+      console.log(`🔍 ${snapshot.size} izin kaydı bulundu, siliniyor...`);
+      
       for (const docSnap of snapshot.docs) {
+        console.log(`🗑️ Siliniyor: ${docSnap.id}`);
         await deleteDoc(docSnap.ref);
       }
       
       showAlert(`❌ ${clientEmail} kullanıcısının proje erişimi kaldırıldı`, 'success');
-      console.log('❌ Erişim kaldırıldı');
+      console.log(`✅ Erişim kaldırıldı. ${snapshot.size} kayıt silindi.`);
     }
 
     // Reload the list to reflect changes

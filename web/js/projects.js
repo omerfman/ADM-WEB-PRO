@@ -60,6 +60,8 @@ async function loadProjects() {
       projects = [];
       
       // Check each project for permissions
+      console.log(`🔍 ${allProjectsSnapshot.docs.length} proje kontrol ediliyor...`);
+      
       for (const projectDoc of allProjectsSnapshot.docs) {
         const projectId = projectDoc.id;
         
@@ -70,7 +72,10 @@ async function loadProjects() {
         
         if (!permSnapshot.empty) {
           // User has access to this project
+          console.log(`✅ Yetkili proje: ${projectDoc.data().name || projectId}`);
           projects.push({ id: projectDoc.id, ...projectDoc.data() });
+        } else {
+          console.log(`❌ Yetkisiz proje: ${projectDoc.data().name || projectId}`);
         }
       }
       
