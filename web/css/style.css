@@ -81,6 +81,11 @@ body.auth-loading .dashboard-layout {
   visibility: hidden;
 }
 
+body.auth-loading .login-page {
+  opacity: 0;
+  visibility: hidden;
+}
+
 body.auth-loading::before {
   content: '';
   position: fixed;

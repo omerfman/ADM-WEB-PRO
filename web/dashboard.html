@@ -3,8 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - ADM İnşaat Proje Yönetim Sistemi</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>Yönlendiriliyor - ADM İnşaat</title>
+  <meta http-equiv="refresh" content="0;url=anasayfa.html">
+  <script>
+    // Immediate redirect
+    window.location.replace('anasayfa.html');
+  </script>
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      font-family: 'Montserrat', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    .redirect-message {
+      text-align: center;
+    }
+    .spinner {
+      border: 4px solid rgba(255,255,255,0.3);
+      border-top: 4px solid white;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="redirect-message">
+    <div class="spinner"></div>
+    <h2>Anasayfaya yönlendiriliyorsunuz...</h2>
+    <p>Eğer otomatik yönlendirilmediyseniz, <a href="anasayfa.html" style="color: white; text-decoration: underline;">buraya tıklayın</a></p>
+  </div>
+</body>
+</html>
   <!-- SheetJS for Excel Import/Export -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 </head>

@@ -29,7 +29,7 @@
     }
   </style>
 </head>
-<body>
+<body class="auth-loading">
   <div class="login-page">
     <div class="login-header">
       <img src="assets/adm_logo.png" alt="ADM Studio" class="login-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
@@ -80,6 +80,9 @@
     import { auth } from './js/firebase-config.js';
     import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
+    // Remove auth-loading class when page is ready
+    document.body.classList.remove('auth-loading');
+    
     // Check if user is already logged in
     onAuthStateChanged(auth, (user) => {
       if (user) {
