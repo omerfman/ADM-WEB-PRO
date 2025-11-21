@@ -4,11 +4,33 @@ import {
   collection, query, where, orderBy, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, setDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword,
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
   getAuth,
-  initializeAuth
+  createUserWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+// Create a second Firebase app instance for user creation
+// This prevents logging out the current admin user
+let secondaryApp;
+let secondaryAuth;
+
+try {
+  secondaryApp = initializeApp({
+    apiKey: "AIzaSyAvGQjx51AJZQnQQvLJcB6Onel-M84FhLw",
+    authDomain: "adm-web-pro.firebaseapp.com",
+    projectId: "adm-web-pro",
+    storageBucket: "adm-web-pro.firebasestorage.app",
+    messagingSenderId: "877194069372",
+    appId: "1:877194069372:web:6e9a5320fafdc20cbb90f9"
+  }, "Secondary");
+  
+  secondaryAuth = getAuth(secondaryApp);
+  console.log('✅ Secondary auth instance created');
+} catch (error) {
+  console.error('❌ Secondary auth creation error:', error);
+}
 
 let clients = [];
 let filteredClients = [];
@@ -298,62 +320,44 @@ async function handleSaveClient(event) {
         return;
       }
 
-      try {
-        // Save current user's credentials to restore session
-        const currentUser = auth.currentUser;
-        const currentUserEmail = currentUser.email;
-        
-        // Step 1: Create Firebase Auth user (this will log us out)
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const newUserId = userCredential.user.uid;
-
-        console.log('✅ Firebase Auth kullanıcısı oluşturuldu:', newUserId);
-
-        // Step 2: Create Firestore user document (we're now logged in as the new user)
-        const clientData = {
-          uid: newUserId,
-          firstName,
-          lastName,
-          email,
-          phone,
-          company,
-          taxId,
-          address,
-          notes,
-          role: 'client',
-          companyId: currentCompanyId,
-          isActive,
-          isDeleted: false,
-          projectCount: 0,
-          createdAt: serverTimestamp(),
-          createdBy: user.uid // This will be the new user's ID, not the admin's
-        };
-
-        await setDoc(doc(db, 'users', newUserId), clientData);
-        
-        console.log('✅ Firestore kullanıcı dokümanı oluşturuldu');
-        
-        showAlert('✅ Yeni müşteri oluşturuldu. Sayfa yenileniyor...', 'success');
-
-        // Step 3: Sign out the new user and reload the page to restore admin session
-        await auth.signOut();
-        
-        // Reload page after a short delay
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
-
-      } catch (createError) {
-        console.error('❌ Müşteri oluşturma hatası:', createError);
-        
-        // If error occurred, try to restore admin session
-        await auth.signOut();
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
-        
-        throw createError;
+      if (!secondaryAuth) {
+        showAlert('❌ İkincil auth instance oluşturulamadı', 'danger');
+        return;
       }
+
+      // Use secondary auth instance to create user (doesn't affect main session)
+      const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+      const newUserId = userCredential.user.uid;
+
+      console.log('✅ Firebase Auth kullanıcısı oluşturuldu:', newUserId);
+
+      // Create Firestore user document using main auth (admin is still logged in)
+      const clientData = {
+        uid: newUserId,
+        firstName,
+        lastName,
+        email,
+        phone,
+        company,
+        taxId,
+        address,
+        notes,
+        role: 'client',
+        companyId: currentCompanyId,
+        isActive,
+        isDeleted: false,
+        projectCount: 0,
+        createdAt: serverTimestamp(),
+        createdBy: user.uid
+      };
+
+      await setDoc(doc(db, 'users', newUserId), clientData);
+      
+      // Sign out from secondary auth immediately
+      await secondaryAuth.signOut();
+      
+      showAlert('✅ Yeni müşteri oluşturuldu', 'success');
+      console.log('✅ Yeni müşteri oluşturuldu:', newUserId);
     }
 
     closeClientModal();
