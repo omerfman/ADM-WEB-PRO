@@ -95,11 +95,9 @@ service cloud.firestore {
 
     // ========== PROJECTS COLLECTION ==========
     match /projects/{projectId} {
-      // Read: Company users + authorized clients can read
-      allow read: if isSignedIn() && (
-        !isClient() || 
-        request.auth.uid in resource.data.get('allowedClients', [])
-      );
+      // Read: All authenticated users can read projects
+      // Clients will be filtered via project_permissions subcollection in client code
+      allow read: if isSignedIn();
       
       // Create: Only admins and company users (not clients)
       allow create: if isSignedIn() && !isClient() &&
