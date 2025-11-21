@@ -81,11 +81,19 @@
 
       <!-- Info Banner -->
       <div style="background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-red-dark) 100%); color: white; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
-        <h3 style="margin: 0 0 0.5rem 0; font-size: 1.25rem;">📋 Şablon Yönetimi</h3>
-        <p style="margin: 0; opacity: 0.9; font-size: 0.9rem;">
-          Tüm dropdown menülerde kullanılan değerleri buradan merkezi olarak yönetin. 
-          Eklediğiniz kategoriler ve değerler tüm sitede otomatik olarak kullanılır.
-        </p>
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+          <div style="flex: 1;">
+            <h3 style="margin: 0 0 0.5rem 0; font-size: 1.25rem;">📋 Şablon Yönetimi</h3>
+            <p style="margin: 0; opacity: 0.9; font-size: 0.9rem;">
+              Tüm dropdown menülerde kullanılan değerleri buradan merkezi olarak yönetin. 
+              Eklediğiniz kategoriler ve değerler tüm sitede otomatik olarak kullanılır.
+            </p>
+          </div>
+          <button class="btn" onclick="cleanAllDuplicates()" 
+            style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white; padding: 0.75rem 1.5rem; white-space: nowrap;">
+            🧹 Tekrarları Temizle
+          </button>
+        </div>
       </div>
 
       <!-- Templates Section -->

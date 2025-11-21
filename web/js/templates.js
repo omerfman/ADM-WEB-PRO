@@ -136,7 +136,13 @@ async function loadTemplatesByType(type) {
  * Render Template List
  */
 function renderTemplateList(type) {
-  const listId = type.replace('_', '') + 'List';
+  // Convert snake_case to camelCase for element ID
+  // boq_categories -> boqCategoriesList
+  const listId = type
+    .split('_')
+    .map((word, index) => index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1))
+    .join('') + 'List';
+  
   const listEl = document.getElementById(listId);
   
   if (!listEl) {
@@ -504,6 +510,86 @@ function showAlert(message, type = 'info') {
   }, 5000);
 }
 
+/**
+ * Clean Duplicate Templates
+ * Removes duplicate template entries keeping only unique values
+ */
+async function cleanDuplicateTemplates(type) {
+  if (!confirm(`⚠️ "${type}" için tekrar eden şablonları temizlemek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!`)) {
+    return;
+  }
+
+  try {
+    showAlert('🧹 Tekrar eden şablonlar temizleniyor...', 'info');
+
+    const templatesRef = collection(db, 'templates');
+    const q = query(
+      templatesRef,
+      where('type', '==', type),
+      where('companyId', '==', currentCompanyId)
+    );
+
+    const snapshot = await getDocs(q);
+    
+    // Group by value
+    const valueMap = new Map();
+    const duplicates = [];
+    
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const value = data.value;
+      
+      if (valueMap.has(value)) {
+        // This is a duplicate - mark for deletion
+        duplicates.push(doc.id);
+      } else {
+        // First occurrence - keep it
+        valueMap.set(value, doc.id);
+      }
+    });
+
+    console.log(`🔍 ${snapshot.size} şablon bulundu, ${duplicates.length} tekrar`);
+
+    // Delete duplicates
+    for (const docId of duplicates) {
+      await deleteDoc(doc(db, 'templates', docId));
+    }
+
+    showAlert(`✅ ${duplicates.length} tekrar eden şablon silindi! ${valueMap.size} benzersiz şablon kaldı.`, 'success');
+    
+    // Reload templates
+    await loadTemplatesByType(type);
+
+  } catch (error) {
+    console.error('❌ Temizleme hatası:', error);
+    showAlert('Temizleme başarısız: ' + error.message, 'danger');
+  }
+}
+
+/**
+ * Clean All Duplicate Templates
+ */
+async function cleanAllDuplicates() {
+  if (!confirm('⚠️ TÜM kategorilerdeki tekrar eden şablonları temizlemek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!')) {
+    return;
+  }
+
+  const types = [
+    'boq_categories',
+    'boq_units',
+    'payment_methods',
+    'project_statuses',
+    'stock_categories',
+    'stock_units'
+  ];
+
+  for (const type of types) {
+    await cleanDuplicateTemplates(type);
+  }
+
+  showAlert('✅ Tüm kategoriler temizlendi!', 'success');
+}
+
 // Export functions
 window.initTemplates = initTemplates;
 window.openAddTemplateModal = openAddTemplateModal;
@@ -515,6 +601,8 @@ window.moveTemplateUp = moveTemplateUp;
 window.moveTemplateDown = moveTemplateDown;
 window.getTemplatesByType = getTemplatesByType;
 window.getDefaultTemplates = getDefaultTemplates;
+window.cleanDuplicateTemplates = cleanDuplicateTemplates;
+window.cleanAllDuplicates = cleanAllDuplicates;
 
 // Auto-initialize when auth state changes
 onAuthStateChanged(auth, async (user) => {
