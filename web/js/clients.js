@@ -9,6 +9,8 @@ let clients = [];
 let filteredClients = [];
 let currentCompanyId = null;
 let deleteClientId = null;
+let sortField = 'createdAt';
+let sortDirection = 'desc';
 
 /**
  * Initialize Clients Page
@@ -100,10 +102,13 @@ async function loadClients() {
 function renderClientsTable() {
   const tbody = document.getElementById('clientsTableBody');
   
+  // Update statistics
+  updateStatistics();
+  
   if (!filteredClients || filteredClients.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" style="text-align: center; padding: 3rem;">
+        <td colspan="8" style="text-align: center; padding: 3rem;">
           <div style="font-size: 3rem; margin-bottom: 1rem;">👤</div>
           <p style="color: var(--text-secondary);">Henüz müşteri eklenmemiş</p>
           <button class="btn btn-primary" onclick="openAddClientModal()" style="margin-top: 1rem;">
@@ -121,8 +126,11 @@ function renderClientsTable() {
     const createdDate = client.createdAt?.toDate?.() ? 
       new Date(client.createdAt.toDate()).toLocaleDateString('tr-TR') : '-';
     const statusBadge = client.isActive ? 
-      '<span class="badge badge-success">Aktif</span>' : 
-      '<span class="badge badge-danger">Pasif</span>';
+      '<span class="badge badge-success">✅ Aktif</span>' : 
+      '<span class="badge badge-danger">❌ Pasif</span>';
+    
+    // Project count (will be loaded separately)
+    const projectCount = client.projectCount || 0;
 
     html += `
       <tr>
@@ -130,10 +138,18 @@ function renderClientsTable() {
         <td>${client.email || '-'}</td>
         <td>${client.phone || '-'}</td>
         <td>${client.company || '-'}</td>
+        <td>
+          <span class="badge badge-info" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            🏗️ ${projectCount}
+          </span>
+        </td>
         <td>${createdDate}</td>
         <td>${statusBadge}</td>
         <td>
-          <div class="action-buttons">
+          <div class="action-buttons" style="display: flex; gap: 0.5rem; justify-content: center;">
+            <button class="btn btn-sm btn-secondary" onclick="viewClientDetails('${client.id}')" title="Detaylar">
+              👁️
+            </button>
             <button class="btn btn-sm btn-secondary" onclick="editClient('${client.id}')" title="Düzenle">
               ✏️
             </button>
@@ -155,6 +171,11 @@ function renderClientsTable() {
 function filterClients() {
   const searchText = document.getElementById('searchInput').value.toLowerCase();
   const statusFilter = document.getElementById('statusFilter').value;
+  const sortBySelect = document.getElementById('sortBy');
+  
+  if (sortBySelect) {
+    sortField = sortBySelect.value;
+  }
 
   filteredClients = clients.filter(client => {
     const fullName = `${client.firstName || ''} ${client.lastName || ''}`.toLowerCase();
@@ -171,7 +192,9 @@ function filterClients() {
     
     return matchesSearch && matchesStatus;
   });
-
+  
+  // Apply sorting
+  sortClients();
   renderClientsTable();
 }
 
@@ -205,6 +228,9 @@ async function editClient(clientId) {
     document.getElementById('email').value = client.email || '';
     document.getElementById('phone').value = client.phone || '';
     document.getElementById('company').value = client.company || '';
+    document.getElementById('taxId').value = client.taxId || '';
+    document.getElementById('address').value = client.address || '';
+    document.getElementById('notes').value = client.notes || '';
     document.getElementById('isActive').checked = client.isActive !== false;
     document.getElementById('password').required = false;
     document.getElementById('password').value = '';
@@ -230,6 +256,9 @@ async function handleSaveClient(event) {
   const email = document.getElementById('email').value.trim();
   const phone = document.getElementById('phone').value.trim();
   const company = document.getElementById('company').value.trim();
+  const taxId = document.getElementById('taxId').value.trim();
+  const address = document.getElementById('address').value.trim();
+  const notes = document.getElementById('notes').value.trim();
   const password = document.getElementById('password').value;
   const isActive = document.getElementById('isActive').checked;
 
@@ -244,6 +273,9 @@ async function handleSaveClient(event) {
         email,
         phone,
         company,
+        taxId,
+        address,
+        notes,
         isActive,
         updatedAt: serverTimestamp(),
         updatedBy: user.uid
@@ -273,10 +305,14 @@ async function handleSaveClient(event) {
         email,
         phone,
         company,
+        taxId,
+        address,
+        notes,
         role: 'client',
         companyId: currentCompanyId,
         isActive,
         isDeleted: false,
+        projectCount: 0,
         createdAt: serverTimestamp(),
         createdBy: user.uid
       };
@@ -393,6 +429,186 @@ function showAlert(message, type = 'info') {
   }, 5000);
 }
 
+/**
+ * Update Statistics
+ */
+function updateStatistics() {
+  const total = clients.length;
+  const active = clients.filter(c => c.isActive).length;
+  const inactive = clients.filter(c => !c.isActive).length;
+  
+  // Calculate monthly additions
+  const now = new Date();
+  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthly = clients.filter(c => {
+    if (!c.createdAt?.toDate) return false;
+    const createdDate = c.createdAt.toDate();
+    return createdDate >= firstDayOfMonth;
+  }).length;
+  
+  document.getElementById('totalClients').textContent = total;
+  document.getElementById('activeClients').textContent = active;
+  document.getElementById('inactiveClients').textContent = inactive;
+  document.getElementById('monthlyClients').textContent = monthly;
+}
+
+/**
+ * Sort Clients
+ */
+function sortClients() {
+  filteredClients.sort((a, b) => {
+    let aVal, bVal;
+    
+    if (sortField === 'name') {
+      aVal = `${a.firstName || ''} ${a.lastName || ''}`.toLowerCase();
+      bVal = `${b.firstName || ''} ${b.lastName || ''}`.toLowerCase();
+    } else if (sortField === 'company') {
+      aVal = (a.company || '').toLowerCase();
+      bVal = (b.company || '').toLowerCase();
+    } else if (sortField === 'createdAt') {
+      aVal = a.createdAt?.toDate?.() || new Date(0);
+      bVal = b.createdAt?.toDate?.() || new Date(0);
+    }
+    
+    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+}
+
+/**
+ * Sort Table
+ */
+function sortTable(field) {
+  if (sortField === field) {
+    // Toggle direction
+    sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortField = field;
+    sortDirection = 'asc';
+  }
+  
+  // Update sort icons
+  document.getElementById('sortIconName').textContent = sortField === 'name' ? (sortDirection === 'asc' ? '▲' : '▼') : '';
+  document.getElementById('sortIconCompany').textContent = sortField === 'company' ? (sortDirection === 'asc' ? '▲' : '▼') : '';
+  document.getElementById('sortIconCreatedAt').textContent = sortField === 'createdAt' ? (sortDirection === 'asc' ? '▲' : '▼') : '';
+  
+  sortClients();
+  renderClientsTable();
+}
+
+/**
+ * Clear Filters
+ */
+function clearFilters() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('statusFilter').value = '';
+  if (document.getElementById('sortBy')) {
+    document.getElementById('sortBy').value = 'createdAt';
+  }
+  sortField = 'createdAt';
+  sortDirection = 'desc';
+  filterClients();
+}
+
+/**
+ * Export Clients to Excel
+ */
+function exportClientsToExcel() {
+  try {
+    if (typeof XLSX === 'undefined') {
+      showAlert('❌ Excel kütüphanesi yüklenemedi', 'danger');
+      return;
+    }
+    
+    // Prepare data for export
+    const exportData = filteredClients.map((client, index) => ({
+      'Sıra': index + 1,
+      'Ad': client.firstName || '',
+      'Soyad': client.lastName || '',
+      'E-posta': client.email || '',
+      'Telefon': client.phone || '',
+      'Şirket': client.company || '',
+      'Vergi No': client.taxId || '',
+      'Adres': client.address || '',
+      'Durum': client.isActive ? 'Aktif' : 'Pasif',
+      'Proje Sayısı': client.projectCount || 0,
+      'Kayıt Tarihi': client.createdAt?.toDate?.() ? 
+        new Date(client.createdAt.toDate()).toLocaleDateString('tr-TR') : '',
+      'Notlar': client.notes || ''
+    }));
+    
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    
+    // Set column widths
+    ws['!cols'] = [
+      { wch: 5 },  // Sıra
+      { wch: 15 }, // Ad
+      { wch: 15 }, // Soyad
+      { wch: 25 }, // E-posta
+      { wch: 15 }, // Telefon
+      { wch: 20 }, // Şirket
+      { wch: 15 }, // Vergi No
+      { wch: 30 }, // Adres
+      { wch: 10 }, // Durum
+      { wch: 12 }, // Proje Sayısı
+      { wch: 15 }, // Kayıt Tarihi
+      { wch: 30 }  // Notlar
+    ];
+    
+    XLSX.utils.book_append_sheet(wb, ws, 'Müşteriler');
+    
+    // Generate filename with date
+    const filename = `Musteriler_${new Date().toLocaleDateString('tr-TR').replace(/\./g, '-')}.xlsx`;
+    
+    // Download file
+    XLSX.writeFile(wb, filename);
+    
+    showAlert(`✅ ${filteredClients.length} müşteri Excel'e aktarıldı`, 'success');
+    
+  } catch (error) {
+    console.error('❌ Excel export hatası:', error);
+    showAlert('Excel export hatası: ' + error.message, 'danger');
+  }
+}
+
+/**
+ * View Client Details
+ */
+async function viewClientDetails(clientId) {
+  try {
+    const client = clients.find(c => c.id === clientId);
+    if (!client) {
+      throw new Error('Müşteri bulunamadı');
+    }
+    
+    // Show client details in a modal or redirect to detail page
+    const fullName = `${client.firstName || ''} ${client.lastName || ''}`.trim();
+    const details = `
+📋 MÜŞTERİ DETAYLARI
+
+👤 Ad Soyad: ${fullName}
+📧 E-posta: ${client.email || '-'}
+📞 Telefon: ${client.phone || '-'}
+🏢 Şirket: ${client.company || '-'}
+🆔 Vergi No: ${client.taxId || '-'}
+📍 Adres: ${client.address || '-'}
+📝 Notlar: ${client.notes || '-'}
+✅ Durum: ${client.isActive ? 'Aktif' : 'Pasif'}
+🏗️ Proje Sayısı: ${client.projectCount || 0}
+📅 Kayıt Tarihi: ${client.createdAt?.toDate?.() ? new Date(client.createdAt.toDate()).toLocaleString('tr-TR') : '-'}
+    `;
+    
+    alert(details);
+    
+  } catch (error) {
+    console.error('❌ Müşteri detay hatası:', error);
+    showAlert('Müşteri detayları yüklenemedi: ' + error.message, 'danger');
+  }
+}
+
 // Export functions to window
 window.initClients = initClients;
 window.filterClients = filterClients;
@@ -403,5 +619,9 @@ window.deleteClient = deleteClient;
 window.confirmDelete = confirmDelete;
 window.closeClientModal = closeClientModal;
 window.closeDeleteModal = closeDeleteModal;
+window.sortTable = sortTable;
+window.clearFilters = clearFilters;
+window.exportClientsToExcel = exportClientsToExcel;
+window.viewClientDetails = viewClientDetails;
 
 export { initClients };

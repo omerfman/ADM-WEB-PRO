@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Müşteriler - ADM İnşaat Proje Yönetim Sistemi</title>
   <link rel="stylesheet" href="css/style.css?v=5">
+  <!-- SheetJS for Excel Export -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 </head>
 <body class="auth-loading">
   <div class="dashboard-layout">
@@ -73,6 +75,9 @@
         <button class="menu-toggle" id="menuToggle">☰</button>
         <h2 id="pageTitle">Müşteriler</h2>
         <div class="topbar-actions">
+          <button class="btn btn-success" id="exportExcelBtn" onclick="exportClientsToExcel()" title="Excel'e Aktar">
+            📊 Excel'e Aktar
+          </button>
           <button class="btn btn-primary" id="addClientBtn">➕ Yeni Müşteri</button>
           <span id="userNameDisplay" class="topbar-user"></span>
         </div>
@@ -80,32 +85,75 @@
 
       <div id="alertContainer"></div>
 
+      <!-- Statistics Cards -->
+      <div class="stats-grid" style="margin-bottom: 2rem;">
+        <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+          <div class="stat-icon">👥</div>
+          <div class="stat-info">
+            <div class="stat-label">Toplam Müşteri</div>
+            <div class="stat-value" id="totalClients">0</div>
+          </div>
+        </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+          <div class="stat-icon">✅</div>
+          <div class="stat-info">
+            <div class="stat-label">Aktif Müşteri</div>
+            <div class="stat-value" id="activeClients">0</div>
+          </div>
+        </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+          <div class="stat-icon">❌</div>
+          <div class="stat-info">
+            <div class="stat-label">Pasif Müşteri</div>
+            <div class="stat-value" id="inactiveClients">0</div>
+          </div>
+        </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+          <div class="stat-icon">📅</div>
+          <div class="stat-info">
+            <div class="stat-label">Bu Ay Eklenen</div>
+            <div class="stat-value" id="monthlyClients">0</div>
+          </div>
+        </div>
+      </div>
+
       <!-- Clients Table -->
       <div class="content-container">
-        <div class="table-controls">
-          <div class="search-box">
-            <input type="text" id="searchInput" placeholder="🔍 Müşteri ara..." onkeyup="filterClients()">
+        <div class="table-controls" style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+          <div class="search-box" style="flex: 1; min-width: 250px;">
+            <input type="text" id="searchInput" placeholder="🔍 Ad, e-posta veya şirket ara..." onkeyup="filterClients()">
           </div>
-          <div class="filter-controls">
-            <select id="statusFilter" onchange="filterClients()">
-              <option value="">Tüm Durumlar</option>
-              <option value="active">Aktif</option>
-              <option value="inactive">Pasif</option>
-            </select>
-          </div>
+          <select id="statusFilter" onchange="filterClients()" style="padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background: var(--input-bg); color: var(--text-primary);">
+            <option value="">Tüm Durumlar</option>
+            <option value="active">✅ Aktif</option>
+            <option value="inactive">❌ Pasif</option>
+          </select>
+          <select id="sortBy" onchange="filterClients()" style="padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background: var(--input-bg); color: var(--text-primary);">
+            <option value="createdAt">📅 Kayıt Tarihi</option>
+            <option value="name">🔤 İsim</option>
+            <option value="company">🏢 Şirket</option>
+          </select>
+          <button class="btn btn-secondary" onclick="clearFilters()" style="white-space: nowrap;">🔄 Filtreleri Temizle</button>
         </div>
 
         <div class="table-wrapper">
           <table class="data-table">
             <thead>
               <tr>
-                <th>Ad Soyad</th>
-                <th>E-posta</th>
-                <th>Telefon</th>
-                <th>Şirket</th>
-                <th>Kayıt Tarihi</th>
-                <th>Durum</th>
-                <th>İşlemler</th>
+                <th style="cursor: pointer;" onclick="sortTable('name')" title="Sıralamak için tıklayın">
+                  👤 Ad Soyad <span id="sortIconName"></span>
+                </th>
+                <th>📧 E-posta</th>
+                <th>📞 Telefon</th>
+                <th style="cursor: pointer;" onclick="sortTable('company')" title="Sıralamak için tıklayın">
+                  🏢 Şirket <span id="sortIconCompany"></span>
+                </th>
+                <th>🏗️ Proje Sayısı</th>
+                <th style="cursor: pointer;" onclick="sortTable('createdAt')" title="Sıralamak için tıklayın">
+                  📅 Kayıt Tarihi <span id="sortIconCreatedAt">▼</span>
+                </th>
+                <th>✓ Durum</th>
+                <th>⚙️ İşlemler</th>
               </tr>
             </thead>
             <tbody id="clientsTableBody">
@@ -160,8 +208,24 @@
             <input type="text" id="company" placeholder="Müşteri şirketi">
           </div>
           <div class="form-group">
+            <label for="taxId">Vergi No / TC</label>
+            <input type="text" id="taxId" placeholder="Vergi numarası veya TC kimlik">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="address">Adres</label>
+          <textarea id="address" rows="3" placeholder="Müşteri adresi" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; resize: vertical; font-family: inherit;"></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
             <label for="password">Şifre <span id="passwordHint">(yeni kullanıcı için gerekli)</span></label>
             <input type="password" id="password" minlength="6" placeholder="En az 6 karakter">
+          </div>
+          <div class="form-group">
+            <label for="notes">Notlar</label>
+            <textarea id="notes" rows="2" placeholder="Müşteri hakkında notlar" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; resize: vertical; font-family: inherit;"></textarea>
           </div>
         </div>
 
