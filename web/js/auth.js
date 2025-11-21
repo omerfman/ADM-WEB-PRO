@@ -369,13 +369,6 @@ onAuthStateChanged(auth, async (user) => {
     if (isMusterilerPage) {
       waitForFunction('initClients', () => {
         console.log('👥 Loading clients for musteriler.html');
-        window.loadEmployees();
-      });
-    }
-    
-    if (isMusterilerPage) {
-      waitForFunction('initClients', () => {
-        console.log('👥 Loading clients for musteriler.html');
         window.initClients();
       });
     }

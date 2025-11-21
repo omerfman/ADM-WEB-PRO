@@ -910,9 +910,4 @@ window.viewClientDetails = viewClientDetails;
 
 export { initClients };
 
-// Auto-initialize when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initClients);
-} else {
-  initClients();
-}
+// Note: initClients is called by auth.js after user authentication
