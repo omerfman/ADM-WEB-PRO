@@ -6,79 +6,6 @@
   <title>Müşteri Yetkileri - ADM Proje Takip</title>
   <link rel="stylesheet" href="../css/style.css?v=6">
   <style>
-    .permissions-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-    }
-
-    .permission-card {
-      background: white;
-      padding: 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      border-left: 4px solid var(--brand-red);
-    }
-
-    .permission-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .permission-icon {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-    }
-
-    .permission-info h3 {
-      margin: 0 0 0.25rem 0;
-      font-size: 1.1rem;
-    }
-
-    .permission-info p {
-      margin: 0;
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-    }
-
-    .permission-toggle {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.75rem 0;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .permission-toggle:last-child {
-      border-bottom: none;
-    }
-
-    .permission-label {
-      flex: 1;
-    }
-
-    .permission-name {
-      font-weight: 500;
-      margin-bottom: 0.25rem;
-    }
-
-    .permission-desc {
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-    }
-
     .switch {
       position: relative;
       display: inline-block;
@@ -124,25 +51,25 @@
       transform: translateX(24px);
     }
 
-    .client-list {
-      background: white;
-      padding: 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      margin-bottom: 1.5rem;
+    input:disabled + .slider {
+      background-color: #e0e0e0;
+      cursor: not-allowed;
     }
 
     .client-item {
-      display: flex;
+      display: grid;
+      grid-template-columns: auto 1fr auto auto;
       align-items: center;
       gap: 1rem;
       padding: 1rem;
       border-bottom: 1px solid var(--border-color);
-      transition: background 0.2s;
+      transition: all 0.2s;
+      border-radius: 8px;
     }
 
     .client-item:hover {
       background: var(--bg-secondary);
+      transform: translateX(4px);
     }
 
     .client-item:last-child {
@@ -153,98 +80,98 @@
       width: 50px;
       height: 50px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+      background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-red-dark) 100%);
       color: white;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.5rem;
+      font-size: 1.2rem;
       font-weight: bold;
       flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(218, 31, 38, 0.2);
     }
 
     .client-info {
       flex: 1;
+      min-width: 0;
     }
 
     .client-name {
       font-weight: 600;
       margin-bottom: 0.25rem;
+      font-size: 1rem;
+      color: var(--text-primary);
     }
 
     .client-email {
       font-size: 0.85rem;
       color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .client-status {
-      padding: 0.25rem 0.75rem;
-      border-radius: 12px;
+      padding: 0.35rem 0.85rem;
+      border-radius: 20px;
       font-size: 0.75rem;
       font-weight: 600;
+      white-space: nowrap;
     }
 
     .status-active {
-      background: #d4edda;
+      background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
       color: #155724;
     }
 
-    .status-pending {
-      background: #fff3cd;
-      color: #856404;
-    }
-
     .status-inactive {
-      background: #f8d7da;
+      background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
       color: #721c24;
     }
 
-    .access-log {
-      background: white;
-      padding: 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .log-item {
-      display: flex;
-      gap: 1rem;
-      padding: 1rem;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .log-item:last-child {
-      border-bottom: none;
-    }
-
-    .log-time {
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-      min-width: 150px;
-    }
-
-    .log-content {
-      flex: 1;
-    }
-
-    .log-action {
-      font-weight: 600;
-      margin-bottom: 0.25rem;
-    }
-
-    .log-details {
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-    }
-
     @media (max-width: 768px) {
-      .permissions-grid {
-        grid-template-columns: 1fr;
+      .client-item {
+        grid-template-columns: auto 1fr;
+        gap: 0.75rem;
       }
 
+      .client-status {
+        grid-column: 2;
+        justify-self: start;
+      }
+
+      .switch {
+        grid-column: 2;
+        justify-self: end;
+      }
+
+      .client-name {
+        font-size: 0.95rem;
+      }
+
+      .client-email {
+        font-size: 0.8rem;
+      }
+    }
+
+    @media (max-width: 480px) {
       .client-item {
-        flex-direction: column;
-        align-items: flex-start;
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+
+      .client-avatar {
+        margin: 0 auto;
+      }
+
+      .client-status,
+      .switch {
+        grid-column: 1;
+        justify-self: center;
+        margin-top: 0.5rem;
       }
     }
   </style>
@@ -254,286 +181,171 @@
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <div class="logo">
-          <span class="logo-icon">🏗️</span>
-          <span class="logo-text">ADM Proje</span>
-        </div>
+        <img src="../assets/adm_logo.png" alt="ADM Studio" class="sidebar-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+        <h1 style="display: none;">🏗️ ADM İnşaat</h1>
       </div>
-
+      
       <nav class="sidebar-nav">
-        <div class="nav-section">
-          <div class="nav-section-title">MENÜ</div>
-          <a href="../anasayfa.html" class="nav-item">
-            <span class="nav-icon">🏠</span>
-            <span class="nav-text">Ana Sayfa</span>
-          </a>
-          <a href="../projeler.html" class="nav-item">
-            <span class="nav-icon">📊</span>
-            <span class="nav-text">Projeler</span>
-          </a>
-          <a href="../sirketler.html" class="nav-item">
-            <span class="nav-icon">🏢</span>
-            <span class="nav-text">Şirketler</span>
-          </a>
-          <a href="../kullanicilar.html" class="nav-item">
-            <span class="nav-icon">👥</span>
-            <span class="nav-text">Kullanıcılar</span>
-          </a>
+        <a href="../anasayfa.html" class="nav-item">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Anasayfa</span>
+        </a>
+        <a href="../projeler.html" class="nav-item">
+          <span class="nav-icon">🏗️</span>
+          <span class="nav-text">Projeler</span>
+        </a>
+        
+        <!-- Project Navigation -->
+        <div style="margin-top: 1.5rem; padding: 0 1rem; color: var(--text-secondary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+          Proje Dashboard
         </div>
-
-        <div class="nav-section">
-          <div class="nav-section-title">PROJE</div>
-          <a href="proje-ozeti.html" class="nav-item" id="navOzet">
-            <span class="nav-icon">📋</span>
-            <span class="nav-text">Proje Özeti</span>
-          </a>
+        <a href="proje-ozeti.html" class="nav-item" id="navOzet">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Proje Özeti</span>
+        </a>
+        
+        <div style="margin-top: 1.5rem; padding: 0 1rem; color: var(--text-secondary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+          İş Akış Süreci
         </div>
-
-        <div class="nav-section">
-          <div class="nav-section-title">İŞ AKIŞI</div>
-          <a href="kesif.html" class="nav-item" id="navKesif">
-            <span class="nav-icon">🔍</span>
-            <span class="nav-text">1. Keşif</span>
-          </a>
-          <a href="teklif.html" class="nav-item" id="navTeklif">
-            <span class="nav-icon">💼</span>
-            <span class="nav-text">2. Teklif</span>
-          </a>
-          <a href="sozlesme.html" class="nav-item" id="navSozlesme">
-            <span class="nav-icon">📝</span>
-            <span class="nav-text">3. Sözleşme</span>
-          </a>
-          <a href="metraj-listesi.html" class="nav-item" id="navMetraj">
-            <span class="nav-icon">📐</span>
-            <span class="nav-text">4. Metraj</span>
-          </a>
-          <a href="hakedis-takibi.html" class="nav-item" id="navHakedis">
-            <span class="nav-icon">💰</span>
-            <span class="nav-text">5. Hakediş</span>
-          </a>
-          <a href="odeme-takibi.html" class="nav-item" id="navOdeme">
-            <span class="nav-icon">💳</span>
-            <span class="nav-text">6. Ödeme</span>
-          </a>
+        <a href="kesif.html" class="nav-item" id="navKesif">
+          <span class="nav-icon">🔍</span>
+          <span class="nav-text">1. Keşif</span>
+        </a>
+        <a href="teklif.html" class="nav-item" id="navTeklif">
+          <span class="nav-icon">💼</span>
+          <span class="nav-text">2. Teklif</span>
+        </a>
+        <a href="sozlesme.html" class="nav-item" id="navSozlesme">
+          <span class="nav-icon">📝</span>
+          <span class="nav-text">3. Sözleşme</span>
+        </a>
+        <a href="metraj-listesi.html" class="nav-item" id="navMetraj">
+          <span class="nav-icon">📐</span>
+          <span class="nav-text">4. Metraj (BOQ)</span>
+        </a>
+        <a href="hakedis-takibi.html" class="nav-item" id="navHakedis">
+          <span class="nav-icon">💰</span>
+          <span class="nav-text">5. Hakediş</span>
+        </a>
+        <a href="odeme-takibi.html" class="nav-item" id="navOdeme">
+          <span class="nav-icon">💳</span>
+          <span class="nav-text">6. Ödeme</span>
+        </a>
+        
+        <div style="margin-top: 1.5rem; padding: 0 1rem; color: var(--text-secondary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+          Destek Modüller
         </div>
-
-        <div class="nav-section">
-          <div class="nav-section-title">DESTEK</div>
-          <a href="butce-yonetimi.html" class="nav-item" id="navButce">
-            <span class="nav-icon">💵</span>
-            <span class="nav-text">Bütçe Yönetimi</span>
-          </a>
-          <a href="stok-yonetimi.html" class="nav-item" id="navStok">
-            <span class="nav-icon">📦</span>
-            <span class="nav-text">Stok Yönetimi</span>
-          </a>
-          <a href="santiye-gunlugu.html" class="nav-item" id="navGunluk">
-            <span class="nav-icon">📔</span>
-            <span class="nav-text">Şantiye Günlüğü</span>
-          </a>
-          <a href="musteri-yetkileri.html" class="nav-item active" id="navMusteri">
-            <span class="nav-icon">👥</span>
-            <span class="nav-text">Müşteri Yetkileri</span>
-          </a>
-        </div>
+        <a href="santiye-gunlugu.html" class="nav-item" id="navGunluk">
+          <span class="nav-icon">📔</span>
+          <span class="nav-text">Şantiye Günlüğü</span>
+        </a>
+        <a href="stok-yonetimi.html" class="nav-item" id="navStok">
+          <span class="nav-icon">📦</span>
+          <span class="nav-text">Stok Yönetimi</span>
+        </a>
+        <a href="butce-yonetimi.html" class="nav-item" id="navButce">
+          <span class="nav-icon">💵</span>
+          <span class="nav-text">Bütçe Yönetimi</span>
+        </a>
+        <a href="musteri-yetkileri.html" class="nav-item active hidden" id="navMusteri">
+          <span class="nav-icon">👥</span>
+          <span class="nav-text">Müşteri Yetkileri</span>
+        </a>
       </nav>
-
+      
       <div class="sidebar-footer">
-        <div class="user-profile">
-          <div class="user-avatar">A</div>
-          <div class="user-info">
-            <div class="user-name" id="sidebarUserName">Admin</div>
-            <div class="user-role" id="sidebarUserRole">Yönetici</div>
+        <div class="user-info">
+          <div class="user-avatar">👤</div>
+          <div class="user-details">
+            <div class="user-name" id="sidebarUserName">Yükleniyor...</div>
+            <div class="user-role" id="sidebarUserRole">...</div>
           </div>
         </div>
-        <button class="btn btn-secondary" style="width: 100%; margin-top: 1rem;" onclick="handleLogout()">
-          🚪 Çıkış Yap
-        </button>
+        <div class="sidebar-actions">
+          <button id="sidebarThemeToggle" class="theme-toggle-btn" onclick="toggleTheme()">
+            <span class="theme-option light-option">
+              <span class="theme-circle">⚪</span>
+              <span class="theme-label">Light</span>
+            </span>
+            <span class="theme-option dark-option active">
+              <span class="theme-circle">⚫</span>
+              <span class="theme-label">Dark</span>
+            </span>
+          </button>
+          <button id="logoutBtn" class="logout-btn" onclick="handleLogout()">Çıkış Yap</button>
+        </div>
       </div>
     </aside>
 
     <!-- Main Content -->
     <main class="main-content">
-      <div class="top-bar">
-        <button class="menu-toggle" id="menuToggle">
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
-        <div class="breadcrumb">
-          <a href="../projeler.html">Projeler</a>
-          <span class="separator">/</span>
-          <span id="projectNameBreadcrumb">Proje</span>
-          <span class="separator">/</span>
-          <span>Müşteri Yetkileri</span>
+      <!-- Top Bar -->
+      <div class="topbar">
+        <div style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+          <button class="menu-toggle" id="menuToggle">☰</button>
+          <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">
+            <a href="../anasayfa.html" style="color: var(--text-secondary); text-decoration: none;">Anasayfa</a>
+            <span>›</span>
+            <a href="../projeler.html" style="color: var(--text-secondary); text-decoration: none;">Projeler</a>
+            <span>›</span>
+            <span id="projectNameBreadcrumb" style="color: var(--brand-red); font-weight: 600;">Yükleniyor...</span>
+          </div>
         </div>
-        <div class="top-bar-actions">
-          <a href="../kullanicilar.html" class="btn btn-primary">
-            ➕ Yeni Müşteri Kullanıcısı Oluştur
-          </a>
+        <div class="topbar-actions">
+          <span id="userNameDisplay" class="topbar-user"></span>
         </div>
       </div>
 
-      <div class="content-wrapper">
-        <div class="page-header">
-          <div>
-            <h1 id="projectName">Müşteri Yetkileri</h1>
-            <p class="page-subtitle">Müşteri erişim yetkilerini yönetin</p>
-          </div>
-        </div>
+      <div id="alertContainer"></div>
 
-        <!-- Permission Categories -->
-        <div class="permissions-grid" style="display: none;">
-          <!-- Permission toggles disabled for v1.0 - focus on project access only -->
-          <!-- Will be enabled in future versions for granular permissions -->
-        </div>
-
-        <!-- Client Users List -->
-            <div class="permission-header">
-              <div class="permission-icon">📊</div>
-              <div class="permission-info">
-                <h3>Genel Görüntüleme</h3>
-                <p>Temel proje bilgileri</p>
-              </div>
+      <!-- Project Header -->
+      <section class="content-section">
+        <div style="background: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-red-dark) 100%); color: white; padding: 1rem 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+            <div style="flex: 1;">
+              <h2 id="projectName" style="margin: 0; font-size: 1.5rem;">Müşteri Yetkileri</h2>
+              <p style="margin: 0.5rem 0 0 0; opacity: 0.9; font-size: 0.9rem;">Müşteri kullanıcılarına proje erişim yetkisi verin</p>
             </div>
-            <div class="permission-toggle">
-              <div class="permission-label">
-                <div class="permission-name">Proje Özeti</div>
-                <div class="permission-desc">Genel proje durumu ve ilerleme</div>
-              </div>
-              <label class="switch">
-                <input type="checkbox" id="perm_view_summary" onchange="updatePermissions()">
-                <span class="slider"></span>
-              </label>
-            </div>
-            <div class="permission-toggle">
-              <div class="permission-label">
-                <div class="permission-name">Şantiye Günlüğü</div>
-                <div class="permission-desc">Günlük raporları görüntüleme</div>
-              </div>
-              <label class="switch">
-                <input type="checkbox" id="perm_view_daily" onchange="updatePermissions()">
-                <span class="slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <div class="permission-card" style="border-left-color: #27ae60;">
-            <div class="permission-header">
-              <div class="permission-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">📐</div>
-              <div class="permission-info">
-                <h3>Metraj ve Hakediş</h3>
-                <p>İş kalemleri ve ödemeler</p>
-              </div>
-            </div>
-            <div class="permission-toggle">
-              <div class="permission-label">
-                <div class="permission-name">Metraj Listesi (BOQ)</div>
-                <div class="permission-desc">İş kalemleri ve miktarlar</div>
-              </div>
-              <label class="switch">
-                <input type="checkbox" id="perm_view_boq" onchange="updatePermissions()">
-                <span class="slider"></span>
-              </label>
-            </div>
-            <div class="permission-toggle">
-              <div class="permission-label">
-                <div class="permission-name">Hakediş Bilgileri</div>
-                <div class="permission-desc">Ödeme dönemleri ve tutarlar</div>
-              </div>
-              <label class="switch">
-                <input type="checkbox" id="perm_view_payments" onchange="updatePermissions()">
-                <span class="slider"></span>
-              </label>
-            </div>
-            <div class="permission-toggle">
-              <div class="permission-label">
-                <div class="permission-name">Hakediş Onaylama</div>
-                <div class="permission-desc">Hakediş onay yetkisi</div>
-              </div>
-              <label class="switch">
-                <input type="checkbox" id="perm_approve_payments" onchange="updatePermissions()">
-                <span class="slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <div class="permission-card" style="border-left-color: #3498db;">
-            <div class="permission-header">
-              <div class="permission-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">💰</div>
-              <div class="permission-info">
-                <h3>Mali Bilgiler</h3>
-                <p>Bütçe ve giderler</p>
-              </div>
-            </div>
-            <div class="permission-toggle">
-              <div class="permission-label">
-                <div class="permission-name">Bütçe Görüntüleme</div>
-                <div class="permission-desc">Proje bütçesi ve harcamalar</div>
-              </div>
-              <label class="switch">
-                <input type="checkbox" id="perm_view_budget" onchange="updatePermissions()">
-                <span class="slider"></span>
-              </label>
-            </div>
-            <div class="permission-toggle">
-              <div class="permission-label">
-                <div class="permission-name">Detaylı Giderler</div>
-                <div class="permission-desc">Gider detaylarını görme</div>
-              </div>
-              <label class="switch">
-                <input type="checkbox" id="perm_view_expenses" onchange="updatePermissions()">
-                <span class="slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <div class="permission-card" style="border-left-color: #f39c12;">
-            <div class="permission-header">
-              <div class="permission-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">📦</div>
-              <div class="permission-info">
-                <h3>Stok ve Malzeme</h3>
-                <p>Envanter bilgileri</p>
-              </div>
-            </div>
-            <div class="permission-toggle">
-              <div class="permission-label">
-                <div class="permission-name">Stok Durumu</div>
-                <div class="permission-desc">Malzeme ve stok listesi</div>
-              </div>
-              <label class="switch">
-                <input type="checkbox" id="perm_view_stock" onchange="updatePermissions()">
-                <span class="slider"></span>
-              </label>
-            </div>
-            <div class="permission-toggle">
-              <div class="permission-label">
-                <div class="permission-name">Stok Detayları</div>
-                <div class="permission-desc">Fiyat ve kullanım bilgileri</div>
-              </div>
-              <label class="switch">
-                <input type="checkbox" id="perm_view_stock_details" onchange="updatePermissions()">
-                <span class="slider"></span>
-              </label>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white; padding: 0.5rem 1rem; font-size: 0.9rem;" onclick="window.location.href='../musteriler.html'">
+                👥 Müşteriler Sayfası
+              </button>
+              <button class="btn" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white; padding: 0.5rem 1rem; font-size: 0.9rem;" onclick="window.location.href='../projeler.html'">
+                ← Projelere Dön
+              </button>
             </div>
           </div>
         </div>
 
         <!-- Client Users List -->
-        <div class="client-list">
-          <h2 style="margin: 0 0 1.5rem 0;">👥 Müşteri Kullanıcıları</h2>
+        <div class="card" style="margin-bottom: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid var(--border-color);">
+            <div>
+              <h2 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                <span style="font-size: 1.5rem;">👥</span>
+                <span>Müşteri Kullanıcıları</span>
+              </h2>
+              <p style="margin: 0.5rem 0 0 0; color: var(--text-secondary); font-size: 0.9rem;">Bu projeye erişim verebileceğiniz müşteri kullanıcıları</p>
+            </div>
+            <button class="btn btn-primary" onclick="window.location.href='../musteriler.html'" style="white-space: nowrap;">
+              ➕ Yeni Müşteri Ekle
+            </button>
+          </div>
           <div id="clientsList">
             <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
               <div style="font-size: 3rem; margin-bottom: 1rem;">👤</div>
               <p style="margin: 0; font-size: 1.1rem;">Henüz müşteri kullanıcısı eklenmemiş</p>
-              <p style="margin: 0.5rem 0 0 0;">Müşteri davet ederek başlayın</p>
+              <p style="margin: 0.5rem 0 0 0;">Önce "Müşteriler" sayfasından müşteri kullanıcısı oluşturun</p>
             </div>
           </div>
         </div>
 
         <!-- Access Log - Coming in v2.0 -->
-        <div class="access-log" style="display: none;">
-          <h2 style="margin: 0 0 1.5rem 0;">📋 Erişim Günlüğü</h2>
+        <div class="card" style="display: none;">
+          <h2 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-size: 1.5rem;">📋</span>
+            <span>Erişim Günlüğü</span>
+          </h2>
           <div id="accessLog">
             <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
               <div style="font-size: 2rem; margin-bottom: 0.5rem;">📝</div>
@@ -541,14 +353,14 @@
             </div>
           </div>
         </div>
-      </div>
+      </section>
     </main>
   </div>
 
-  <!-- Alert Container -->
-  <div id="alertContainer" style="position: fixed; top: 20px; right: 20px; z-index: 10000;"></div>
-
   <!-- Load JS modules -->
+  <!-- Alert Container -->
+  <div id="alertContainer"></div>
+
   <script type="module" src="../js/firebase-config.js"></script>
   <script type="module" src="../js/auth.js?v=10"></script>
   <script type="module" src="../js/client-permissions.js?v=1"></script>
@@ -560,7 +372,7 @@
       document.querySelector('.sidebar').classList.toggle('sidebar-open');
     });
 
-    // Close sidebar on mobile when clicking outside
+    // Close sidebar when clicking outside on mobile
     document.addEventListener('click', function(event) {
       const sidebar = document.querySelector('.sidebar');
       const menuToggle = document.getElementById('menuToggle');
@@ -600,18 +412,11 @@
         if (navOdeme) navOdeme.href = `odeme-takibi.html?id=${projectId}`;
         if (navOzet) navOzet.href = `proje-ozeti.html?id=${projectId}`;
         if (navStok) navStok.href = `stok-yonetimi.html?id=${projectId}`;
-        if (navButce) navButce.href = `butce-yonetimi.html?id=${projectId}`;
+        if (navButce) navButce.html = `butce-yonetimi.html?id=${projectId}`;
         if (navGunluk) navGunluk.href = `santiye-gunlugu.html?id=${projectId}`;
         if (navMusteri) navMusteri.href = `musteri-yetkileri.html?id=${projectId}`;
       }
     }
-
-    // Close modal when clicking outside
-    window.addEventListener('click', function(event) {
-      if (event.target.classList.contains('modal')) {
-        event.target.style.display = 'none';
-      }
-    });
 
     updateNavLinks();
   </script>
