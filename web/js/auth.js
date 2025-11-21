@@ -118,7 +118,7 @@ async function loadUserData() {
     // Show/hide navigation items based on role
     const employeesNavBtn = document.getElementById('employeesNavBtn');
     const activityNavBtn = document.getElementById('activityNavBtn');
-    const usersNavBtn = document.getElementById('usersNavBtn');
+    const clientsNavBtn = document.getElementById('clientsNavBtn');
     const companiesNavBtn = document.getElementById('companiesNavBtn');
     const templatesNavBtn = document.getElementById('templatesNavBtn');
     
@@ -127,7 +127,7 @@ async function loadUserData() {
       // Hide all admin/internal sections from clients
       if (employeesNavBtn) employeesNavBtn.classList.add('hidden');
       if (activityNavBtn) activityNavBtn.classList.add('hidden');
-      if (usersNavBtn) usersNavBtn.classList.add('hidden');
+      if (clientsNavBtn) clientsNavBtn.classList.add('hidden');
       if (companiesNavBtn) companiesNavBtn.classList.add('hidden');
       if (templatesNavBtn) templatesNavBtn.classList.add('hidden');
       
@@ -152,9 +152,10 @@ async function loadUserData() {
         }
       }
       
-      // Company admin can see employees
+      // Company admin can see employees, clients, templates
       if (role === 'company_admin') {
         if (employeesNavBtn) employeesNavBtn.classList.remove('hidden');
+        if (clientsNavBtn) clientsNavBtn.classList.remove('hidden');
         if (activityNavBtn) activityNavBtn.classList.remove('hidden');
         if (templatesNavBtn) templatesNavBtn.classList.remove('hidden');
       }
@@ -162,8 +163,8 @@ async function loadUserData() {
       // Super admin can see everything
       if (role === 'super_admin') {
         if (employeesNavBtn) employeesNavBtn.classList.remove('hidden');
+        if (clientsNavBtn) clientsNavBtn.classList.remove('hidden');
         if (activityNavBtn) activityNavBtn.classList.remove('hidden');
-        if (usersNavBtn) usersNavBtn.classList.remove('hidden');
         if (companiesNavBtn) companiesNavBtn.classList.remove('hidden');
         if (templatesNavBtn) templatesNavBtn.classList.remove('hidden');
       }
@@ -216,16 +217,17 @@ function loadCachedUserData() {
       
       // Show nav items based on cached role (instant visibility)
       const employeesNavBtn = document.getElementById('employeesNavBtn');
-      const usersNavBtn = document.getElementById('usersNavBtn');
+      const clientsNavBtn = document.getElementById('clientsNavBtn');
       const companiesNavBtn = document.getElementById('companiesNavBtn');
       
       if (data.role === 'company_admin') {
         if (employeesNavBtn) employeesNavBtn.classList.remove('hidden');
+        if (clientsNavBtn) clientsNavBtn.classList.remove('hidden');
       }
       
       if (data.role === 'super_admin') {
         if (employeesNavBtn) employeesNavBtn.classList.remove('hidden');
-        if (usersNavBtn) usersNavBtn.classList.remove('hidden');
+        if (clientsNavBtn) clientsNavBtn.classList.remove('hidden');
         if (companiesNavBtn) companiesNavBtn.classList.remove('hidden');
       }
       
@@ -278,8 +280,8 @@ onAuthStateChanged(auth, async (user) => {
   const isAnasayfaPage = window.location.pathname.includes('anasayfa.html');
   const isProjelerPage = window.location.pathname.includes('projeler.html');
   const isCalisanlarPage = window.location.pathname.includes('calisanlar.html');
+  const isMusterilerPage = window.location.pathname.includes('musteriler.html');
   const isSirketlerPage = window.location.pathname.includes('sirketler.html');
-  const isKullanicilarPage = window.location.pathname.includes('kullanicilar.html');
   const isTemplatesPage = window.location.pathname.includes('templateler.html');
   const isClientPermissionsPage = window.location.pathname.includes('musteri-yetkileri.html');
   
@@ -294,7 +296,7 @@ onAuthStateChanged(auth, async (user) => {
     
     // Load user data for all authenticated pages
     if (isDashboardPage || isProjectDetailPage || isAnasayfaPage || isProjelerPage || 
-        isCalisanlarPage || isSirketlerPage || isKullanicilarPage || isTemplatesPage || isClientPermissionsPage) {
+        isCalisanlarPage || isMusterilerPage || isSirketlerPage || isTemplatesPage || isClientPermissionsPage) {
       await loadUserData();
       
       // Remove auth-loading class to show dashboard content
@@ -323,17 +325,17 @@ onAuthStateChanged(auth, async (user) => {
       });
     }
     
+    if (isMusterilerPage) {
+      waitForFunction('initClients', () => {
+        console.log('👥 Loading clients for musteriler.html');
+        window.initClients();
+      });
+    }
+    
     if (isSirketlerPage) {
       waitForFunction('loadCompanies', () => {
         console.log('🏢 Loading companies for sirketler.html');
         window.loadCompanies();
-      });
-    }
-    
-    if (isKullanicilarPage) {
-      waitForFunction('loadUsers', () => {
-        console.log('👥 Loading users for kullanicilar.html');
-        window.loadUsers();
       });
     }
     
@@ -380,7 +382,7 @@ onAuthStateChanged(auth, async (user) => {
     
     // If on any authenticated page and not logged in, redirect to login
     if (isDashboardPage || isProjectDetailPage || isAnasayfaPage || isProjelerPage || 
-        isCalisanlarPage || isSirketlerPage || isKullanicilarPage || isTemplatesPage || isClientPermissionsPage) {
+        isCalisanlarPage || isMusterilerPage || isSirketlerPage || isTemplatesPage || isClientPermissionsPage) {
       window.location.href = 'login.html';
     }
   }

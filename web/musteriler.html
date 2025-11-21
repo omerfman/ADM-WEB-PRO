@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Müşteriler - ADM İnşaat Proje Yönetim Sistemi</title>
+  <link rel="stylesheet" href="css/style.css?v=5">
+</head>
+<body class="auth-loading">
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="assets/adm_logo.png" alt="ADM Studio" class="sidebar-logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+        <h1 style="display: none;">🏗️ ADM İnşaat</h1>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="anasayfa.html" class="nav-item">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Anasayfa</span>
+        </a>
+        <a href="projeler.html" class="nav-item">
+          <span class="nav-icon">🏗️</span>
+          <span class="nav-text">Projeler</span>
+        </a>
+        <a href="calisanlar.html" class="nav-item hidden" id="employeesNavBtn">
+          <span class="nav-icon">👷</span>
+          <span class="nav-text">Çalışanlar</span>
+        </a>
+        <a href="musteriler.html" class="nav-item active hidden" id="clientsNavBtn">
+          <span class="nav-icon">👥</span>
+          <span class="nav-text">Müşteriler</span>
+        </a>
+        <a href="sirketler.html" class="nav-item hidden" id="companiesNavBtn">
+          <span class="nav-icon">🏢</span>
+          <span class="nav-text">Şirketler</span>
+        </a>
+        <a href="templateler.html" class="nav-item hidden" id="templatesNavBtn">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-text">Şablonlar & Ayarlar</span>
+        </a>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">👤</div>
+          <div class="user-details">
+            <div class="user-name" id="sidebarUserName">Kullanıcı</div>
+            <div class="user-role" id="sidebarUserRole">Rol</div>
+          </div>
+        </div>
+        <div class="sidebar-actions">
+          <button id="sidebarThemeToggle" class="theme-toggle-btn" onclick="toggleTheme()">
+            <span class="theme-option light-option">
+              <span class="theme-circle">⚪</span>
+              <span class="theme-label">Light</span>
+            </span>
+            <span class="theme-option dark-option active">
+              <span class="theme-circle">⚫</span>
+              <span class="theme-label">Dark</span>
+            </span>
+          </button>
+          <button id="logoutBtn" class="logout-btn" onclick="handleLogout()">Çıkış Yap</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <div class="topbar">
+        <button class="menu-toggle" id="menuToggle">☰</button>
+        <h2 id="pageTitle">Müşteriler</h2>
+        <div class="topbar-actions">
+          <button class="btn btn-primary" id="addClientBtn">➕ Yeni Müşteri</button>
+          <span id="userNameDisplay" class="topbar-user"></span>
+        </div>
+      </div>
+
+      <div id="alertContainer"></div>
+
+      <!-- Clients Table -->
+      <div class="content-container">
+        <div class="table-controls">
+          <div class="search-box">
+            <input type="text" id="searchInput" placeholder="🔍 Müşteri ara..." onkeyup="filterClients()">
+          </div>
+          <div class="filter-controls">
+            <select id="statusFilter" onchange="filterClients()">
+              <option value="">Tüm Durumlar</option>
+              <option value="active">Aktif</option>
+              <option value="inactive">Pasif</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Ad Soyad</th>
+                <th>E-posta</th>
+                <th>Telefon</th>
+                <th>Şirket</th>
+                <th>Kayıt Tarihi</th>
+                <th>Durum</th>
+                <th>İşlemler</th>
+              </tr>
+            </thead>
+            <tbody id="clientsTableBody">
+              <tr>
+                <td colspan="7" style="text-align: center; padding: 3rem;">
+                  <div class="loading-spinner"></div>
+                  <p>Müşteriler yükleniyor...</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add/Edit Client Modal -->
+  <div id="clientModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">Yeni Müşteri Ekle</h3>
+        <span class="close-modal" onclick="closeClientModal()">&times;</span>
+      </div>
+      <form id="clientForm" onsubmit="handleSaveClient(event)">
+        <input type="hidden" id="clientId">
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="firstName">Ad *</label>
+            <input type="text" id="firstName" required>
+          </div>
+          <div class="form-group">
+            <label for="lastName">Soyad *</label>
+            <input type="text" id="lastName" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="email">E-posta *</label>
+            <input type="email" id="email" required>
+          </div>
+          <div class="form-group">
+            <label for="phone">Telefon</label>
+            <input type="tel" id="phone" placeholder="05XX XXX XX XX">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="company">Şirket</label>
+            <input type="text" id="company" placeholder="Müşteri şirketi">
+          </div>
+          <div class="form-group">
+            <label for="password">Şifre <span id="passwordHint">(yeni kullanıcı için gerekli)</span></label>
+            <input type="password" id="password" minlength="6" placeholder="En az 6 karakter">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="isActive" checked>
+            Aktif Kullanıcı
+          </label>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeClientModal()">İptal</button>
+          <button type="submit" class="btn btn-primary">💾 Kaydet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Müşteriyi Sil</h3>
+        <span class="close-modal" onclick="closeDeleteModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <p>Bu müşteriyi silmek istediğinizden emin misiniz?</p>
+        <p><strong id="deleteClientName"></strong></p>
+        <p class="warning-text">⚠️ Bu işlem geri alınamaz!</p>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">İptal</button>
+        <button type="button" class="btn btn-danger" onclick="confirmDelete()">🗑️ Sil</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load JS modules -->
+  <script type="module" src="js/firebase-config.js"></script>
+  <script type="module" src="js/auth.js?v=11"></script>
+  <script type="module" src="js/clients.js?v=1"></script>
+  <script type="module" src="js/app.js?v=9"></script>
+
+  <script>
+    // Mobile menu toggle
+    document.getElementById('menuToggle')?.addEventListener('click', function() {
+      document.querySelector('.sidebar').classList.toggle('sidebar-open');
+    });
+
+    // Close sidebar on mobile when clicking outside
+    document.addEventListener('click', function(event) {
+      const sidebar = document.querySelector('.sidebar');
+      const menuToggle = document.getElementById('menuToggle');
+      
+      if (window.innerWidth <= 768 && 
+          sidebar.classList.contains('sidebar-open') && 
+          !sidebar.contains(event.target) && 
+          event.target !== menuToggle) {
+        sidebar.classList.remove('sidebar-open');
+      }
+    });
+
+    // Modal functions
+    function closeClientModal() {
+      document.getElementById('clientModal').style.display = 'none';
+      document.getElementById('clientForm').reset();
+      document.getElementById('clientId').value = '';
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('deleteModal').style.display = 'none';
+    }
+
+    // Close modals when clicking outside
+    window.addEventListener('click', function(event) {
+      if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
