@@ -1441,6 +1441,19 @@ async function deleteProject(projectId, projectName) {
 }
 
 /**
+ * Hide a specific alert message
+ */
+function hideAlert(alertElement) {
+  if (alertElement && alertElement.remove) {
+    alertElement.remove();
+  } else if (alertElement && typeof alertElement === 'string') {
+    // If alertElement is an ID string
+    const element = document.getElementById(alertElement);
+    if (element) element.remove();
+  }
+}
+
+/**
  * Create Demo Project - "Deniz Manzaralı Villa"
  * Creates a complete demo project with all workflow stages filled
  */
@@ -1756,3 +1769,4 @@ window.closeEditProjectModal = closeEditProjectModal;
 window.deleteProject = deleteProject;
 window.handleUpdateProject = handleUpdateProject;
 window.createDemoProject = createDemoProject;
+window.hideAlert = hideAlert;
