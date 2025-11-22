@@ -932,8 +932,6 @@ window.handleCompanyLogoUpload = handleCompanyLogoUpload;
  * Render Client Dashboard
  */
 function renderClientDashboard(data) {
-  console.log('🎨 renderClientDashboard çağrıldı:', data);
-  
   const container = document.getElementById('overviewSection');
   if (!container) {
     console.error('❌ overviewSection bulunamadı!');
@@ -941,8 +939,6 @@ function renderClientDashboard(data) {
   }
 
   const { clientInfo, projects, userName, message } = data;
-  
-  console.log(`📊 Render ediliyor: ${projects.length} proje, userName: ${userName}`);
 
   container.innerHTML = `
     <div class="section-header">
