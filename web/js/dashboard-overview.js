@@ -957,8 +957,47 @@ function renderClientDashboard(data) {
     </div>
     ` : ''}
 
+    <!-- Statistics Cards -->
+    <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); margin-bottom: 2rem;">
+      <!-- Total Projects -->
+      <div class="stats-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <div class="stats-icon">🏗️</div>
+        <div class="stats-content">
+          <div class="stats-label">Dahil Olduğum Projeler</div>
+          <div class="stats-value">${projects.length}</div>
+        </div>
+      </div>
+
+      <!-- Active Projects -->
+      <div class="stats-card" style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white;">
+        <div class="stats-icon">✅</div>
+        <div class="stats-content">
+          <div class="stats-label">Devam Eden Projeler</div>
+          <div class="stats-value">${projects.filter(p => p.status === 'Devam Ediyor').length}</div>
+        </div>
+      </div>
+
+      <!-- Completed Projects -->
+      <div class="stats-card" style="background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); color: white;">
+        <div class="stats-icon">🎯</div>
+        <div class="stats-content">
+          <div class="stats-label">Tamamlanan Projeler</div>
+          <div class="stats-value">${projects.filter(p => p.status === 'Tamamlandı').length}</div>
+        </div>
+      </div>
+
+      <!-- Pending Projects -->
+      <div class="stats-card" style="background: linear-gradient(135deg, #FFA500 0%, #FF8C00 100%); color: white;">
+        <div class="stats-icon">⏳</div>
+        <div class="stats-content">
+          <div class="stats-label">Bekleyen Projeler</div>
+          <div class="stats-value">${projects.filter(p => p.status === 'Beklemede').length}</div>
+        </div>
+      </div>
+    </div>
+
     ${message ? `
-    <div class="card" style="background: #FFF3CD; border-left: 4px solid #FFA500; padding: 1.5rem;">
+    <div class="card" style="background: #FFF3CD; border-left: 4px solid #FFA500; padding: 1.5rem; margin-bottom: 2rem;">
       <h4 style="margin: 0 0 0.5rem 0; color: #856404;">ℹ️ Bilgilendirme</h4>
       <p style="margin: 0; color: #856404;">${message}</p>
     </div>
