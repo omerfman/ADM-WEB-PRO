@@ -2133,5 +2133,19 @@ input[type="range"]::-moz-range-thumb:hover {
   .stat-value {
     font-size: 1.75rem;
   }
+  
+  /* Hide button text on mobile, keep icons only */
+  .btn-text {
+    display: none;
+  }
+  
+  .topbar-actions {
+    gap: 0.5rem;
+  }
+  
+  .topbar-actions button {
+    padding: 0.6rem !important;
+    min-width: 42px;
+  }
 }
 

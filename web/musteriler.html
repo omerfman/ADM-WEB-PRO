@@ -72,13 +72,22 @@
     <main class="main-content">
       <!-- Top Bar -->
       <div class="topbar">
-        <button class="menu-toggle" id="menuToggle">☰</button>
-        <h2 id="pageTitle">Müşteriler</h2>
+        <div style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+          <button class="menu-toggle" id="menuToggle">☰</button>
+          <h2 id="pageTitle" style="margin: 0; font-size: 1.5rem;">Müşteriler</h2>
+        </div>
         <div class="topbar-actions">
-          <button class="btn btn-success" id="exportExcelBtn" onclick="exportClientsToExcel()" title="Excel'e Aktar">
-            📊 Excel'e Aktar
+          <button class="btn btn-success" id="exportExcelBtn" onclick="exportClientsToExcel()" 
+            style="display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1rem; font-size: 0.9rem;"
+            title="Excel'e Aktar">
+            <span style="font-size: 1.1rem;">📊</span>
+            <span class="btn-text">Excel</span>
           </button>
-          <button class="btn btn-primary" id="addClientBtn">➕ Yeni Müşteri</button>
+          <button class="btn btn-primary" id="addClientBtn" onclick="openAddClientModal()"
+            style="display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1rem; font-size: 0.9rem;">
+            <span style="font-size: 1.1rem;">➕</span>
+            <span class="btn-text">Yeni Müşteri</span>
+          </button>
           <span id="userNameDisplay" class="topbar-user"></span>
         </div>
       </div>
@@ -86,33 +95,82 @@
       <div id="alertContainer"></div>
 
       <!-- Statistics Cards -->
-      <div class="stats-grid" style="margin-bottom: 2rem;">
-        <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-          <div class="stat-icon">👥</div>
-          <div class="stat-info">
-            <div class="stat-label">Toplam Müşteri</div>
-            <div class="stat-value" id="totalClients">0</div>
+      <div class="stats-grid" style="
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 1.5rem;
+      ">
+        <div class="stat-card" style="
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          padding: 1.25rem;
+          border-radius: 12px;
+          color: white;
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+          transition: transform 0.2s, box-shadow 0.2s;
+        " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 20px rgba(102, 126, 234, 0.4)';" 
+           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.3)';">
+          <div class="stat-icon" style="font-size: 2.5rem;">👥</div>
+          <div class="stat-info" style="flex: 1;">
+            <div class="stat-label" style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.25rem;">Toplam Müşteri</div>
+            <div class="stat-value" id="totalClients" style="font-size: 2rem; font-weight: 700;">0</div>
           </div>
         </div>
-        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-          <div class="stat-icon">✅</div>
-          <div class="stat-info">
-            <div class="stat-label">Aktif Müşteri</div>
-            <div class="stat-value" id="activeClients">0</div>
+        <div class="stat-card" style="
+          background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+          padding: 1.25rem;
+          border-radius: 12px;
+          color: white;
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          box-shadow: 0 4px 12px rgba(240, 147, 251, 0.3);
+          transition: transform 0.2s, box-shadow 0.2s;
+        " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 20px rgba(240, 147, 251, 0.4)';" 
+           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(240, 147, 251, 0.3)';">
+          <div class="stat-icon" style="font-size: 2.5rem;">✅</div>
+          <div class="stat-info" style="flex: 1;">
+            <div class="stat-label" style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.25rem;">Aktif Müşteri</div>
+            <div class="stat-value" id="activeClients" style="font-size: 2rem; font-weight: 700;">0</div>
           </div>
         </div>
-        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-          <div class="stat-icon">❌</div>
-          <div class="stat-info">
-            <div class="stat-label">Pasif Müşteri</div>
-            <div class="stat-value" id="inactiveClients">0</div>
+        <div class="stat-card" style="
+          background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+          padding: 1.25rem;
+          border-radius: 12px;
+          color: white;
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);
+          transition: transform 0.2s, box-shadow 0.2s;
+        " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 20px rgba(79, 172, 254, 0.4)';" 
+           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(79, 172, 254, 0.3)';">
+          <div class="stat-icon" style="font-size: 2.5rem;">❌</div>
+          <div class="stat-info" style="flex: 1;">
+            <div class="stat-label" style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.25rem;">Pasif Müşteri</div>
+            <div class="stat-value" id="inactiveClients" style="font-size: 2rem; font-weight: 700;">0</div>
           </div>
         </div>
-        <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-          <div class="stat-icon">📅</div>
-          <div class="stat-info">
-            <div class="stat-label">Bu Ay Eklenen</div>
-            <div class="stat-value" id="monthlyClients">0</div>
+        <div class="stat-card" style="
+          background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+          padding: 1.25rem;
+          border-radius: 12px;
+          color: white;
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          box-shadow: 0 4px 12px rgba(67, 233, 123, 0.3);
+          transition: transform 0.2s, box-shadow 0.2s;
+        " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 20px rgba(67, 233, 123, 0.4)';" 
+           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(67, 233, 123, 0.3)';">
+          <div class="stat-icon" style="font-size: 2.5rem;">📅</div>
+          <div class="stat-info" style="flex: 1;">
+            <div class="stat-label" style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 0.25rem;">Bu Ay Eklenen</div>
+            <div class="stat-value" id="monthlyClients" style="font-size: 2rem; font-weight: 700;">0</div>
           </div>
         </div>
       </div>
@@ -221,7 +279,7 @@
   <!-- Load JS modules -->
   <script type="module" src="js/firebase-config.js"></script>
   <script type="module" src="js/auth.js?v=12"></script>
-  <script type="module" src="js/clients.js?v=13"></script>
+  <script type="module" src="js/clients.js?v=14"></script>
   <script type="module" src="js/app.js?v=9"></script>
 
   <script>
