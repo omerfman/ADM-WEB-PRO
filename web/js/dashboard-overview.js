@@ -273,37 +273,62 @@ async function loadUserDashboard(userId, companyId) {
  * Client Dashboard - Read-only view for authorized projects
  */
 async function loadClientDashboard(userId, userData) {
-  console.log('🏢 Client Dashboard yükleniyor...');
+  console.log('🏢 Client Dashboard yükleniyor...', { userId, userData });
 
   try {
-    const authorizedProjects = userData?.authorizedProjects || [];
+    // Get all projects
+    const projectsSnapshot = await getDocs(collection(db, 'projects'));
+    console.log(`📊 Toplam proje sayısı: ${projectsSnapshot.size}`);
+    
+    // Find projects where user has permissions
+    const authorizedProjects = [];
+    
+    for (const projectDoc of projectsSnapshot.docs) {
+      try {
+        // Check project_permissions subcollection
+        const permissionsRef = collection(db, `projects/${projectDoc.id}/project_permissions`);
+        const permQuery = query(permissionsRef, where('userId', '==', userId));
+        const permSnapshot = await getDocs(permQuery);
+        
+        if (!permSnapshot.empty) {
+          const projectData = projectDoc.data();
+          const permissionData = permSnapshot.docs[0].data();
+          
+          console.log(`✅ Yetkili proje bulundu: ${projectData.name}`, permissionData);
+          
+          authorizedProjects.push({
+            id: projectDoc.id,
+            ...projectData,
+            permission: permissionData.permission || 'view'
+          });
+        }
+      } catch (err) {
+        console.warn(`⚠️ Proje izinleri kontrol edilemedi: ${projectDoc.id}`, err);
+      }
+    }
+    
+    console.log(`📋 Toplam yetkili proje: ${authorizedProjects.length}`, authorizedProjects);
     
     if (authorizedProjects.length === 0) {
       renderClientDashboard({
-        clientInfo: userData?.clientInfo || {},
+        clientInfo: {
+          companyName: userData?.company || userData?.companyName || null,
+          contactPerson: userData?.fullName || userData?.displayName || null
+        },
         projects: [],
+        userName: userData?.fullName || userData?.displayName || userData?.email,
         message: 'Henüz size proje yetkisi verilmemiş. Lütfen firma yetkiliniz ile iletişime geçin.'
       });
       return;
     }
 
-    // Load authorized projects
-    const projects = [];
-    for (const projectId of authorizedProjects) {
-      try {
-        const projectDoc = await getDoc(doc(db, 'projects', projectId));
-        if (projectDoc.exists()) {
-          projects.push({ id: projectDoc.id, ...projectDoc.data() });
-        }
-      } catch (err) {
-        console.warn(`⚠️ Proje yüklenemedi: ${projectId}`, err.message);
-      }
-    }
-
     renderClientDashboard({
-      clientInfo: userData?.clientInfo || {},
-      projects,
-      userName: userData?.fullName || userData?.email
+      clientInfo: {
+        companyName: userData?.company || userData?.companyName || null,
+        contactPerson: userData?.fullName || userData?.displayName || null
+      },
+      projects: authorizedProjects,
+      userName: userData?.fullName || userData?.displayName || userData?.email
     });
 
   } catch (error) {
@@ -311,6 +336,7 @@ async function loadClientDashboard(userId, userData) {
     renderClientDashboard({
       clientInfo: {},
       projects: [],
+      userName: userData?.fullName || userData?.displayName || userData?.email,
       message: 'Dashboard yüklenirken hata oluştu: ' + error.message
     });
   }
