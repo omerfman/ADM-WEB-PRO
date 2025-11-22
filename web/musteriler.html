@@ -77,17 +77,6 @@
           <h2 id="pageTitle" style="margin: 0; font-size: 1.5rem;">Müşteriler</h2>
         </div>
         <div class="topbar-actions">
-          <button class="btn btn-success" id="exportExcelBtn" onclick="exportClientsToExcel()" 
-            style="display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1rem; font-size: 0.9rem;"
-            title="Excel'e Aktar">
-            <span style="font-size: 1.1rem;">📊</span>
-            <span class="btn-text">Excel</span>
-          </button>
-          <button class="btn btn-primary" id="addClientBtn" onclick="openAddClientModal()"
-            style="display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1rem; font-size: 0.9rem;">
-            <span style="font-size: 1.1rem;">➕</span>
-            <span class="btn-text">Yeni Müşteri</span>
-          </button>
           <span id="userNameDisplay" class="topbar-user"></span>
         </div>
       </div>
@@ -177,6 +166,21 @@
 
       <!-- Clients Table -->
       <div class="content-container">
+        <!-- Action Buttons -->
+        <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-bottom: 1.5rem;">
+          <button class="btn btn-success" id="exportExcelBtn" onclick="exportClientsToExcel()" 
+            style="display: flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1.2rem;"
+            title="Excel'e Aktar">
+            <span style="font-size: 1.1rem;">📊</span>
+            <span>Excel'e Aktar</span>
+          </button>
+          <button class="btn btn-primary" id="addClientBtn" onclick="openAddClientModal()"
+            style="display: flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1.2rem;">
+            <span style="font-size: 1.1rem;">➕</span>
+            <span>Yeni Müşteri</span>
+          </button>
+        </div>
+        
         <!-- Modern table will be rendered by clients.js -->
         <div id="clientsListContainer"></div>
       </div>
@@ -279,7 +283,7 @@
   <!-- Load JS modules -->
   <script type="module" src="js/firebase-config.js"></script>
   <script type="module" src="js/auth.js?v=12"></script>
-  <script type="module" src="js/clients.js?v=14"></script>
+  <script type="module" src="js/clients.js?v=15"></script>
   <script type="module" src="js/app.js?v=9"></script>
 
   <script>
