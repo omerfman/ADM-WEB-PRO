@@ -98,6 +98,10 @@ async function loadProjectOverview() {
   try {
     console.log('📊 Proje özeti verileri yükleniyor...');
     
+    // Check if user is client
+    const isClient = window.userRole === 'client';
+    console.log('👤 İstemci modu:', isClient);
+    
     // Update project info
     const overviewProjectName = document.getElementById('overviewProjectName');
     if (overviewProjectName) {
@@ -147,6 +151,13 @@ async function loadProjectOverview() {
     const overviewLocation = document.getElementById('overviewLocation');
     if (overviewLocation) {
       overviewLocation.textContent = currentProject.location || '-';
+    }
+    
+    // Render based on user role
+    if (isClient) {
+      await renderClientView();
+    } else {
+      await renderAdminView();
     }
     
     const overviewDescription = document.getElementById('overviewDescription');
@@ -218,6 +229,236 @@ async function loadProjectOverview() {
   } catch (error) {
     console.error('❌ Proje özeti yüklenemedi:', error);
     showAlert('Proje özeti yüklenemedi: ' + error.message, 'danger');
+  }
+}
+
+/**
+ * Render Client View - Müşteri için özelleştirilmiş görünüm
+ */
+async function renderClientView() {
+  console.log('👁️ Müşteri görünümü render ediliyor...');
+  
+  // Hide edit button for clients
+  const editBtn = document.getElementById('editProjectBtn');
+  if (editBtn) editBtn.style.display = 'none';
+  
+  // Load client-specific data
+  const logsRef = collection(db, 'projects', currentProjectId, 'logs');
+  const logsSnap = await getDocs(logsRef);
+  const logsCountEl = document.getElementById('overviewLogsCount');
+  if (logsCountEl) logsCountEl.textContent = logsSnap.size;
+  
+  // Load recent activities for client
+  const progressPaymentsRef = collection(db, 'progress_payments');
+  const progressPaymentsQuery = await getDocs(progressPaymentsRef);
+  let projectPaymentsCount = 0;
+  let totalPaidByClient = 0;
+  
+  progressPaymentsQuery.forEach(doc => {
+    if (doc.data().projectId === currentProjectId) {
+      projectPaymentsCount++;
+      totalPaidByClient += doc.data().netAmount || 0;
+    }
+  });
+  
+  const paymentsCountEl = document.getElementById('overviewPaymentsCount');
+  if (paymentsCountEl) paymentsCountEl.textContent = projectPaymentsCount;
+  
+  // Calculate progress percentage
+  const budget = parseFloat(currentProject.budget || 0);
+  const progressPercentage = budget > 0 ? ((totalPaidByClient / budget) * 100).toFixed(1) : 0;
+  
+  const budgetUsageEl = document.getElementById('overviewBudgetUsage');
+  if (budgetUsageEl) {
+    budgetUsageEl.textContent = progressPercentage + '%';
+    budgetUsageEl.parentElement.querySelector('.stat-label').textContent = 'İlerleme Durumu';
+  }
+  
+  // Hide stock count for clients (private info)
+  const stocksCard = document.getElementById('overviewStocksCount')?.parentElement;
+  if (stocksCard) stocksCard.style.display = 'none';
+  
+  // Update quick actions for clients (hide admin actions)
+  const quickActionsCard = document.querySelector('.card h3')?.parentElement;
+  if (quickActionsCard && quickActionsCard.querySelector('h3')?.textContent.includes('Hızlı İşlemler')) {
+    quickActionsCard.innerHTML = `
+      <h3 style="margin-bottom: 1rem; color: var(--brand-red);">📊 Proje Görüntüleme</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <button class="btn btn-primary" onclick="window.location.href='santiye-gunlugu.html' + window.location.search" style="padding: 1rem;">
+          📔 Şantiye Günlüğü
+        </button>
+        <button class="btn btn-primary" onclick="window.location.href='hakedis-takibi.html' + window.location.search" style="padding: 1rem;">
+          💰 Hakediş Takibi
+        </button>
+      </div>
+    `;
+  }
+  
+  // Add client message if exists
+  const clientMessage = currentProject.clientMessage || currentProject.clientNote;
+  if (clientMessage) {
+    const projectInfoCard = document.querySelector('.card');
+    if (projectInfoCard) {
+      const messageHTML = `
+        <div style="margin-top: 1.5rem; padding: 1.5rem; background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%); border-radius: 8px; border-left: 4px solid #2196F3;">
+          <h4 style="margin: 0 0 0.75rem 0; color: #1976D2; display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-size: 1.5rem;">💬</span>
+            Sizin İçin Özel Bilgilendirme
+          </h4>
+          <p style="margin: 0; line-height: 1.6; color: #1565C0; white-space: pre-wrap;">${clientMessage}</p>
+        </div>
+      `;
+      projectInfoCard.insertAdjacentHTML('beforeend', messageHTML);
+    }
+  }
+  
+  // Add project timeline/milestones
+  await renderProjectTimeline();
+  
+  console.log('✅ Müşteri görünümü hazır');
+}
+
+/**
+ * Render Admin View - Yönetici için tam görünüm
+ */
+async function renderAdminView() {
+  console.log('🔧 Yönetici görünümü render ediliyor...');
+  
+  const overviewDescription = document.getElementById('overviewDescription');
+  if (overviewDescription) {
+    overviewDescription.textContent = currentProject.description || 'Açıklama eklenmemiş';
+  }
+
+  // Load counts
+  const logsRef = collection(db, 'projects', currentProjectId, 'logs');
+  const logsSnap = await getDocs(logsRef);
+  const logsCountEl = document.getElementById('overviewLogsCount');
+  if (logsCountEl) {
+    logsCountEl.textContent = logsSnap.size;
+  }
+
+  const stocksRef = collection(db, 'projects', currentProjectId, 'stocks');
+  const stocksSnap = await getDocs(stocksRef);
+  const stocksCountEl = document.getElementById('overviewStocksCount');
+  if (stocksCountEl) {
+    stocksCountEl.textContent = stocksSnap.size;
+  }
+
+  // Progress payments (new collection)
+  const progressPaymentsRef = collection(db, 'progress_payments');
+  const progressPaymentsQuery = await getDocs(progressPaymentsRef);
+  let projectPaymentsCount = 0;
+  progressPaymentsQuery.forEach(doc => {
+    if (doc.data().projectId === currentProjectId) {
+      projectPaymentsCount++;
+    }
+  });
+  const paymentsCountEl = document.getElementById('overviewPaymentsCount');
+  if (paymentsCountEl) {
+    paymentsCountEl.textContent = projectPaymentsCount;
+  }
+
+  // Budget usage
+  const budget = parseFloat(currentProject.budget || 0);
+  let totalSpent = 0;
+
+  // Calculate from budget expenses
+  const expensesRef = collection(db, 'projects', currentProjectId, 'budget_expenses');
+  const expensesSnap = await getDocs(expensesRef);
+  expensesSnap.forEach(doc => {
+    totalSpent += doc.data().amount || 0;
+  });
+
+  // Add stocks total
+  stocksSnap.forEach(doc => {
+    const stock = doc.data();
+    totalSpent += (stock.quantity || 0) * (stock.unitPrice || 0);
+  });
+
+  // Add progress payments total (netAmount)
+  progressPaymentsQuery.forEach(doc => {
+    if (doc.data().projectId === currentProjectId) {
+      totalSpent += doc.data().netAmount || 0;
+    }
+  });
+
+  const budgetUsage = budget > 0 ? ((totalSpent / budget) * 100).toFixed(1) : 0;
+  const budgetUsageEl = document.getElementById('overviewBudgetUsage');
+  if (budgetUsageEl) {
+    budgetUsageEl.textContent = budgetUsage + '%';
+  }
+  
+  console.log('✅ Yönetici görünümü hazır');
+}
+
+/**
+ * Render Project Timeline for Clients
+ */
+async function renderProjectTimeline() {
+  try {
+    // Get project logs
+    const logsRef = collection(db, 'projects', currentProjectId, 'logs');
+    const logsSnap = await getDocs(logsRef);
+    
+    const logs = [];
+    logsSnap.forEach(doc => {
+      logs.push({ id: doc.id, ...doc.data() });
+    });
+    
+    // Sort by date descending
+    logs.sort((a, b) => {
+      const dateA = a.date?.toDate?.() || new Date(0);
+      const dateB = b.date?.toDate?.() || new Date(0);
+      return dateB - dateA;
+    });
+    
+    // Create timeline HTML
+    const timelineHTML = `
+      <div class="card" style="margin-top: 1.5rem;">
+        <h3 style="margin-bottom: 1rem; color: var(--brand-red); display: flex; align-items: center; gap: 0.5rem;">
+          <span>📅</span> Proje Güncellemeleri
+        </h3>
+        ${logs.length > 0 ? `
+          <div style="max-height: 400px; overflow-y: auto;">
+            ${logs.slice(0, 10).map(log => `
+              <div style="padding: 1rem; margin-bottom: 0.75rem; background: var(--hover-bg); border-radius: 8px; border-left: 3px solid #2196F3;">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                  <span style="font-weight: 600; color: var(--text-primary);">
+                    ${log.title || 'Günlük Rapor'}
+                  </span>
+                  <span style="font-size: 0.85rem; color: var(--text-secondary);">
+                    ${log.date?.toDate?.() ? log.date.toDate().toLocaleDateString('tr-TR') : 'Tarih yok'}
+                  </span>
+                </div>
+                ${log.description ? `
+                  <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5;">
+                    ${log.description}
+                  </p>
+                ` : ''}
+                ${log.weather ? `
+                  <div style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-secondary);">
+                    🌤️ Hava: ${log.weather}
+                  </div>
+                ` : ''}
+              </div>
+            `).join('')}
+          </div>
+        ` : `
+          <p style="text-align: center; color: var(--text-secondary); padding: 2rem;">
+            Henüz günlük rapor eklenmemiş
+          </p>
+        `}
+      </div>
+    `;
+    
+    // Insert after quick actions
+    const quickActionsCard = document.querySelector('.card:last-of-type');
+    if (quickActionsCard) {
+      quickActionsCard.insertAdjacentHTML('afterend', timelineHTML);
+    }
+    
+  } catch (error) {
+    console.error('❌ Timeline render hatası:', error);
   }
 }
 
